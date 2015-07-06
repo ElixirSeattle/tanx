@@ -57,7 +57,7 @@ defmodule Tanx.BasicPlayerTest do
     :ok = player1 |> Tanx.Core.Player.new_tank()
     :already_present = player1 |> Tanx.Core.Player.new_tank()
     :ok = player1 |> Tanx.Core.Player.destroy_tank()
-    :not_present = player1 |> Tanx.Core.Player.destroy_tank()
+    :no_tank = player1 |> Tanx.Core.Player.destroy_tank()
     {:ok, view} = player1 |> Tanx.Core.Player.view()
     assert view == %Tanx.Core.View{my_player: %Tanx.Core.View.Player{name: "daniel"},
       arena: %Tanx.Core.View.Arena{}}

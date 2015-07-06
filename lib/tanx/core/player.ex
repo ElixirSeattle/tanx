@@ -10,6 +10,10 @@ defmodule Tanx.Core.Player do
     GenServer.call(player_pid, {:destroy_tank})
   end
 
+  def control_tank(player_pid, params) do
+    GenServer.call(player_pid, {:control_tank, params})
+  end
+
   def view(player_pid) do
     GenServer.call(player_pid, {:view})
   end
@@ -40,6 +44,10 @@ defmodule Tanx.Core.Player do
 
   def handle_call({:destroy_tank}, _from, state = %State{game_pid: game_pid}) do
     {:reply, GenServer.call(game_pid, {:destroy_tank}), state}
+  end
+
+  def handle_call({:control_tank, params}, _from, state = %State{game_pid: game_pid}) do
+    {:reply, GenServer.call(game_pid, {:control_tank, params}), state}
   end
 
   def handle_call({:view}, _from, state = %State{game_pid: game_pid}) do

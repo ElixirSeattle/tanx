@@ -18,6 +18,10 @@ defmodule Tanx.Core.Game do
     GenServer.call(game_pid, {:terminate})
   end
 
+  def advance_to_time(game_pid, time) do
+    GenServer.call(game_pid, {:update, time})
+  end
+
 
   # GenServer callbacks
 
@@ -87,10 +91,20 @@ defmodule Tanx.Core.Game do
   def handle_call({:destroy_tank}, {from, _}, state = %State{objects: objects}) do
     {my_tank, nobjects} = objects |> Enum.partition(_tank_detector(from))
     if Enum.empty?(my_tank) do
-      {:reply, :not_present, state}
+      {:reply, :no_tank, state}
     else
       # TODO: add explosion
       {:reply, :ok, %State{state | objects: nobjects}}
+    end
+  end
+
+  def handle_call({:control_tank, params}, {from, _}, state = %State{objects: objects}) do
+    {my_tank, other_objects} = objects |> Enum.partition(_tank_detector(from))
+    if Enum.empty?(my_tank) do
+      {:reply, :no_tank, state}
+    else
+      updated_tank = elem(List.first(my_tank), 1) |> Tanx.Core.Object.control(params)
+      {:reply, :ok, %State{state | objects: [{from, updated_tank} | other_objects]}}
     end
   end
 
@@ -98,11 +112,13 @@ defmodule Tanx.Core.Game do
     {:stop, :normal, :ok, state}
   end
 
-  def handle_call({:update, time}, _from, state = %State{objects: objects}) do
-    nobjects = objects |> Enum.map(fn
-      ({player, object}) -> {player, object |> Tanx.Core.Object.update(time)}
-    end)
-    {:reply, :ok, %State{state | objects: nobjects, t: time}}
+  def handle_call({:update, new_time}, _from, state = %State{objects: objects, t: time}) do
+    if new_time > time do
+      objects = objects |> Enum.map(fn
+        ({player, object}) -> {player, object |> Tanx.Core.Object.update(new_time)}
+      end)
+    end
+    {:reply, :ok, %State{state | objects: objects, t: new_time}}
   end
 
 

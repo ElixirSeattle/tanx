@@ -1,4 +1,5 @@
 defprotocol Tanx.Core.Object do
   def view(object)
-  def update(object, clock, params \\ [])
+  def update(object, time)
+  def control(object, params)
 end
