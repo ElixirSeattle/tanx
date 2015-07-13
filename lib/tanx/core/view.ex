@@ -1,17 +1,30 @@
 defmodule Tanx.Core.View do
 
-  defstruct my_player: nil, other_players: [], arena: nil
+  # This is a collection of structs that represent views returned from Game and Player
+  # view calls.
+
 
   defmodule Player do
-    defstruct name: "", kills: 0, deaths: 0
+    @moduledoc """
+    A view of a player.
+    """
+    defstruct name: "", is_me: false, kills: 0, deaths: 0
   end
+
 
   defmodule Arena do
-    defstruct radius: 10.0, my_tank: nil, objects: []
+    @moduledoc """
+    A view of the arena state.
+    """
+    defstruct structure: %Tanx.Core.Structure{}, tanks: []
   end
 
+
   defmodule Tank do
-    defstruct x: 0.0, y: 0.0, a: 0.0, v: 0.0, av: 0.0
+    @moduledoc """
+    A view of a tank.
+    """
+    defstruct is_me: false, name: "", x: 0.0, y: 0.0, a: 0.0
   end
 
 end

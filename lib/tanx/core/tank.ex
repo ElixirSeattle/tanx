@@ -1,34 +1,47 @@
 defmodule Tanx.Core.Tank do
 
-  defstruct t: 0, x: 0.0, y: 0.0, a: 0.0, v: 0.0, av: 0.0
+  # GenServer callbacks
 
-  def init(time, x, y) do
-    %Tanx.Core.Tank{t: time, x: x, y: y}
+  use GenServer
+
+  defmodule State do
+    defstruct player: nil, x: 0.0, y: 0.0, a: 0.0, v: 0.0, av: 0.0
   end
 
 
-  defimpl Tanx.Core.Object do
-
-    def view(object) do
-      %Tanx.Core.View.Tank{x: object.x, y: object.y, a: object.a, v: object.v, av: object.av}
-    end
-
-    def update(object, time) do
-      dt = max((time - object.t) / 1000, 0.0)
-      a = object.a
-      v = object.v
-      na = a + object.av * dt
-      nx = object.x + v * dt * :math.cos(a)
-      ny = object.y + v * dt * :math.sin(a)
-      %Tanx.Core.Tank{object | t: time, x: nx, y: ny, a: na}
-    end
-
-    def control(object, params) do
-      v = params[:v] || object.v
-      av = params[:av] || object.av
-      %Tanx.Core.Tank{object | v: v, av: av}
-    end
-
+  def init({player, params}) do
+    x = Keyword.get(params, :x, 0)
+    y = Keyword.get(params, :y, 0)
+    a = Keyword.get(params, :a, 0)
+    {:ok, %State{player: player, x: x, y: y, a: a}}
   end
+
+
+  def handle_call({:control_movement, v, av}, _from, state) do
+    {:reply, :ok, %State{state | v: v || state.v, av: av || state.av}}
+  end
+
+  def handle_call(:ping, _from, state) do
+    {:reply, :ok, state}
+  end
+
+
+  def handle_cast({:update, last_time, time, updater}, state) do
+    dt = max((time - last_time) / 1000, 0.0)
+    a = state.a
+    v = state.v
+    na = a + state.av * dt
+    nx = state.x + v * dt * :math.cos(a)
+    ny = state.y + v * dt * :math.sin(a)
+    state = %State{state | x: nx, y: ny, a: na}
+    update = %Tanx.Core.Updates.MoveTank{player: state.player, x: nx, y: ny, a: na}
+    GenServer.cast(updater, {:update_reply, self, update})
+    {:noreply, state}
+  end
+
+  def handle_cast(:die, state) do
+    {:stop, :normal, state}
+  end
+
 
 end

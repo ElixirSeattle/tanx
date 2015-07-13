@@ -1,31 +1,143 @@
 defmodule Tanx.Core.Clock do
 
-  def start_link(game_pid, interval_millis) do
-    spawn_link(fn -> _run_clock(game_pid, interval_millis, 0) end)
+  @moduledoc """
+  The Clock process implements a clock that sends a tick message to a recipient process
+  on an interval schedule with millisecond accuracy.
+
+  It waits for the recipient to acknowledge with a "tock" that it has completed processing
+  before sending the next tick, to ensure that a long running periodic task doesn't overlap
+  itself. As a result, the interval may be variable. For instance, suppose a clock is running
+  with an interval of 20 milliseconds, and most tocks come back after 10 milliseconds, but
+  one tock doesn't come back until 30 milliseconds after the tick. It might look like this:
+  - **time=0** Tick sent
+  - **time=10** Tock received (after 10 milliseconds)
+  - **time=20** Tick sent (20 millisecond interval)
+  - **time=30** Waiting for Tock... nothing happens...
+  - **time=40** 20 milliseconds have elapsed, but no tock received yet, so tick not sent.
+  - **time=50** Tock finally received (after 30 milliseconds this time). Tick sent immediately.
+  - **time=60** Tock received (after 10 milliseconds)
+  - **time=70** Tick sent (20 millisecond interval, but now offset)
+
+  If you set the interval to nil, automatic ticks are disabled. You can then send manual
+  ticks using the manual_tick function. This is useful for unit testing.
+  """
+
+
+  #### Public API
+
+
+  @doc """
+  Start a new clock with a recipient GenServer PID and an interval in milliseconds.
+
+  Provide a nil interval to disable automatic ticking.
+  """
+  def start_link(recipient_pid, interval_millis) do
+    GenServer.start_link(__MODULE__, {recipient_pid, interval_millis})
   end
 
 
-  defp _run_clock(game_pid, interval_millis, last_millis) do
-    if interval_millis >= 0 do
-      cur_millis = _cur_millis()
-      timeout = max(last_millis + interval_millis - cur_millis, 0)
-      next_millis = cur_millis + timeout
-    else
-      next_millis = last_millis
-      timeout = 5000
-    end
-    receive do
-      {_sender, {:set_interval, new_interval}} ->
-        _run_clock(game_pid, new_interval, last_millis)
-      after timeout ->
-        if interval_millis >= 0 and game_pid != nil do
-          GenServer.call(game_pid, {:update, next_millis})
+  @doc """
+  Send a manual tick with the given time value, and waits for the responding tock to arrive.
+  Returns one of the following:
+  - **:ok** The tick was sent and the tock was received.
+  - **{:error, :currently_ticking}** The tick was not sent because the last tick has not yet been
+    acknowledged with a tock.
+  - **{:error, :backwards_time}** The tick was not sent because the given time value is less than the
+    last time value.
+  - **{:error, :automatically_ticking}** The manual tick was not sent because this clock is
+    automatically ticking.
+  """
+  def manual_tick(clock, time_millis) do
+    case GenServer.call(clock, {:manual_tick, time_millis}) do
+      :ok ->
+        receive do
+          {:clock_tock, ^clock} -> :ok
         end
-        _run_clock(game_pid, interval_millis, next_millis)
+      err -> err
+    end
+  end
+
+
+  @doc """
+  Returns the current tick time for this clock.
+  """
+  def last_time(clock) do
+    GenServer.call(clock, :last_time)
+  end
+
+
+  #### GenServer callbacks
+
+  use GenServer
+
+
+  defmodule State do
+    defstruct recipient_pid: nil, interval: nil, last: 0, is_waiting: false
+  end
+
+
+  def init({recipient_pid, interval}) do
+    initial_time = if interval == nil, do: 0, else: _cur_millis()
+    {:ok, %State{recipient_pid: recipient_pid, interval: interval, last: initial_time}}
+  end
+
+
+  def handle_call(:last_time, _from, state) do
+    {:reply, state.last, state}
+  end
+
+  def handle_call({:manual_tick, _time}, _from, state = %State{interval: interval}) when interval != nil do
+    {:reply, {:error, :automatically_ticking}, state, _timeout(state)}
+  end
+  def handle_call({:manual_tick, _time}, _from, state = %State{is_waiting: true}) do
+    {:reply, {:error, :currently_ticking}, state}
+  end
+  def handle_call({:manual_tick, time}, _from, state = %State{last: last}) when time < last do
+    {:reply, {:error, :backwards_time}, state}
+  end
+  def handle_call({:manual_tick, time}, {from, _}, state) do
+    GenServer.cast(state.recipient_pid, {:clock_tick, self, state.last, time})
+    state = %State{state | is_waiting: from, last: time}
+    {:reply, :ok, state}
+  end
+
+
+  def handle_cast({:set_interval, new_interval}, state) do
+    state = %State{state | interval: new_interval}
+    {:noreply, state, _timeout(state)}
+  end
+
+  def handle_cast(:clock_tock, state) do
+    if is_pid(state.is_waiting) do
+      send(state.is_waiting, {:clock_tock, self})
+    end
+    state = %State{state | is_waiting: false}
+    {:noreply, state, _timeout(state)}
+  end
+
+
+  def handle_info(:timeout, state) do
+    cur = _cur_millis()
+    GenServer.cast(state.recipient_pid, {:clock_tick, self, state.last, cur})
+    state = %State{state | is_waiting: true, last: cur}
+    {:noreply, state}
+  end
+
+  def handle_info(request, state), do: super(request, state)
+
+
+  #### Internal utils
+
+  defp _timeout(state) do
+    if state.is_waiting || state.interval == nil do
+      :infinity
+    else
+      max(state.last + state.interval - _cur_millis(), 0)
     end
   end
 
   defp _cur_millis() do
+    # TODO: Use new time API in Erlang 18
     {gs, s, ms} = :erlang.now()
     gs * 1000000000 + s * 1000 + div(ms, 1000)
   end
