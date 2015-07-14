@@ -99,7 +99,7 @@ defmodule Tanx.Core.ArenaUpdater do
     player_view = GenServer.call(state.player_manager, {:view_player, response.player})
     if player_view do
       tank = %Tanx.Core.ArenaView.TankInfo{player: response.player, name: player_view.name,
-        x: response.x, y: response.y, a: response.a}
+        x: response.x, y: response.y, heading: response.heading}
       {state, [tank | tanks]}
     else
       {state, tanks}

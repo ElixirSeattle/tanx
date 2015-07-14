@@ -35,10 +35,10 @@ defmodule Tanx.TankUpdateTest do
 
   # Utils
 
-  defp _check_tank(player, x, y, a) do
+  defp _check_tank(player, x, y, heading) do
     view = player |> Tanx.Core.Player.view_arena()
     got = view.tanks |> hd()
-    want = %Tanx.Core.View.Tank{is_me: true, name: "daniel", x: x, y: y, a: a}
+    want = %Tanx.Core.View.Tank{is_me: true, name: "daniel", x: x, y: y, heading: heading}
     assert got == want
   end
 

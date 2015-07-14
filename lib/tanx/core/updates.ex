@@ -7,7 +7,7 @@ defmodule Tanx.Core.Updates do
     @moduledoc """
     An update command that moves the current tank.
     """
-    defstruct player: nil, x: 0.0, y: 0.0, a: 0.0
+    defstruct player: nil, x: 0.0, y: 0.0, heading: 0.0
   end
 
 end
