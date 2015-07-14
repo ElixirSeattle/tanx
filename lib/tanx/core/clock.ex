@@ -78,7 +78,8 @@ defmodule Tanx.Core.Clock do
 
   def init({recipient_pid, interval}) do
     initial_time = if interval == nil, do: 0, else: _cur_millis()
-    {:ok, %State{recipient_pid: recipient_pid, interval: interval, last: initial_time}}
+    state = %State{recipient_pid: recipient_pid, interval: interval, last: initial_time}
+    {:ok, state, _timeout(state)}
   end
 
 
