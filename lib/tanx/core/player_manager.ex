@@ -24,13 +24,19 @@ defmodule Tanx.Core.PlayerManager do
   # The state for this process. Includes handles to other processes needed by players, and
   # a mapping of player process IDs to PlayerInfo structs.
   defmodule State do
-    defstruct arena_objects: nil, arena_view: nil, players: HashDict.new
+    defstruct arena_objects: nil, arena_view: nil, players: HashDict.new, broadcaster: nil
   end
 
 
-  def init({arena_objects, arena_view}) do
+  def init({arena_objects, arena_view, change_handler, handler_args}) do
     Process.flag(:trap_exit, true)
-    {:ok, %State{arena_objects: arena_objects, arena_view: arena_view}}
+    if change_handler do
+      {:ok, broadcaster} = GenEvent.start_link()
+      :ok = broadcaster |> GenEvent.add_handler(change_handler, handler_args)
+    else
+      broadcaster = nil
+    end
+    {:ok, %State{arena_objects: arena_objects, arena_view: arena_view, broadcaster: broadcaster}}
   end
 
 
@@ -42,7 +48,9 @@ defmodule Tanx.Core.PlayerManager do
       {self, state.arena_objects, state.arena_view})
     player_info = %PlayerInfo{name: name}
     players = state.players |> Dict.put(player, player_info)
-    {:reply, {:ok, player}, %State{state | players: players}}
+    state = %State{state | players: players}
+    _broadcast_change(state)
+    {:reply, {:ok, player}, state}
   end
 
 
@@ -54,6 +62,7 @@ defmodule Tanx.Core.PlayerManager do
         ({player, %PlayerInfo{name: name, kills: kills, deaths: deaths}}) ->
           %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths, is_me: from == player}
       end)
+      |> _sort_views()
     {:reply, player_views, state}
   end
 
@@ -70,14 +79,41 @@ defmodule Tanx.Core.PlayerManager do
   end
 
 
-  # Sets the name of the given player. Returns :ok or :not_found.
-  def handle_call({:set_name, player, name}, _from, state) do
-    {reply, state} = case state.players[player] do
+  # Sets the name of the calling player. Returns :ok or :not_found.
+  def handle_call({:rename, name}, {from, _}, state) do
+    {reply, state} = case state.players[from] do
       nil -> {:not_found, state}
       player_info ->
         player_info = %PlayerInfo{player_info | name: name}
+        {:ok, %State{state | players: state.players |> Dict.put(from, player_info)}}
+    end
+    _broadcast_change(state)
+    {:reply, reply, state}
+  end
+
+
+  # Increments kill count of the given player. Returns :ok or :not_found.
+  def handle_call({:inc_kills, player}, _from, state) do
+    {reply, state} = case state.players[player] do
+      nil -> {:not_found, state}
+      player_info ->
+        player_info = player_info |> Dict.update!(:kills, &(&1 + 1))
         {:ok, %State{state | players: state.players |> Dict.put(player, player_info)}}
     end
+    _broadcast_change(state)
+    {:reply, reply, state}
+  end
+
+
+  # Increments death count of the given player. Returns :ok or :not_found.
+  def handle_call({:inc_deaths, player}, _from, state) do
+    {reply, state} = case state.players[player] do
+      nil -> {:not_found, state}
+      player_info ->
+        player_info = player_info |> Dict.update!(:deaths, &(&1 + 1))
+        {:ok, %State{state | players: state.players |> Dict.put(player, player_info)}}
+    end
+    _broadcast_change(state)
     {:reply, reply, state}
   end
 
@@ -103,7 +139,27 @@ defmodule Tanx.Core.PlayerManager do
   # Remove the given player from the current list.
   defp _remove_player(player, state) do
     GenServer.call(state.arena_objects, {:player_left, player})
-    %State{state | players: state.players |> Dict.delete(player)}
+    state = %State{state | players: state.players |> Dict.delete(player)}
+    _broadcast_change(state)
+    state
+  end
+
+  defp _broadcast_change(state = %State{broadcaster: nil}), do: state
+  defp _broadcast_change(state) do
+    player_views = state.players
+      |> Enum.map(fn
+        ({_, %PlayerInfo{name: name, kills: kills, deaths: deaths}}) ->
+          %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths}
+      end)
+      |> _sort_views()
+    GenEvent.notify(state.broadcaster, {:player_views, player_views})
+    state
+  end
+
+  defp _sort_views(views) do
+    views |> Enum.sort_by(fn
+      %Tanx.Core.View.Player{name: name, is_me: is_me} -> {!is_me, name}
+    end)
   end
 
 end

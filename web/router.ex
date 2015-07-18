@@ -18,8 +18,9 @@ defmodule Tanx.Router do
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", Tanx do
-  #   pipe_through :api
-  # end
+  socket "/ws", Tanx do
+    channel "lobby", LobbyChannel
+    channel "player", PlayerChannel
+  end
+
 end

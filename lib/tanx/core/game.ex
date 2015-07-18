@@ -5,6 +5,8 @@ defmodule Tanx.Core.Game do
   Using this module you can view the current player list and connect as a new player.
   """
 
+  require Logger
+
 
   #### Public API
 
@@ -19,7 +21,12 @@ defmodule Tanx.Core.Game do
     Set to nil to disable automatic clock ticks (useful for unit testing).
   """
   def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts)
+    Logger.info("Starting game core")
+    genserver_opts = []
+    if opts |> Keyword.has_key?(:name) do
+      genserver_opts = genserver_opts |> Keyword.put(:name, opts[:name])
+    end
+    GenServer.start_link(__MODULE__, opts, genserver_opts)
   end
 
 
@@ -80,10 +87,12 @@ defmodule Tanx.Core.Game do
   def init(opts) do
     structure = Keyword.get(opts, :structure, %Tanx.Core.Structure{})
     clock_interval = Keyword.get(opts, :clock_interval, 20)
+    {change_handler, handler_args} = Keyword.get(opts, :player_change_handler, {nil, nil})
 
     {:ok, arena_objects} = GenServer.start_link(Tanx.Core.ArenaObjects, nil)
     {:ok, arena_view} = GenServer.start_link(Tanx.Core.ArenaView, {structure})
-    {:ok, player_manager} = GenServer.start_link(Tanx.Core.PlayerManager, {arena_objects, arena_view})
+    {:ok, player_manager} = GenServer.start_link(Tanx.Core.PlayerManager,
+      {arena_objects, arena_view, change_handler, handler_args})
     {:ok, clock} = GenServer.start_link(Tanx.Core.Clock, {self, clock_interval})
 
     {:ok, %State{structure: structure, player_manager: player_manager,

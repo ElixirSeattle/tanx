@@ -29,6 +29,14 @@ defmodule Tanx.Core.Player do
 
 
   @doc """
+  Sets the player name
+  """
+  def rename(player, name) do
+    GenServer.call(player, {:rename, name})
+  end
+
+
+  @doc """
   Returns a view of the current arena state, as a Tanx.Core.View.Arena struct.
   The current player's tank (if any) will have its :is_me field set to true.
   """
@@ -80,6 +88,10 @@ defmodule Tanx.Core.Player do
 
   #### GenServer callbacks
 
+  @forward_velocity 1.0
+  @angular_velocity 1.0
+
+
   use GenServer
 
 
@@ -110,10 +122,10 @@ defmodule Tanx.Core.Player do
 
   def handle_call({:control_tank, button, is_down}, _from, state) do
     state = _movement_state(state, button, is_down)
-    v = if state.fwdown, do: 1.0, else: 0.0
+    v = if state.fwdown, do: @forward_velocity, else: 0.0
     av = cond do
-      state.ltdown -> 1.0
-      state.rtdown -> -1.0
+      state.ltdown -> @angular_velocity
+      state.rtdown -> -@angular_velocity
       true -> 0.0
     end
     case _maybe_call_tank(state, {:control_movement, v, av}) do
@@ -135,6 +147,11 @@ defmodule Tanx.Core.Player do
   def handle_call(:view_arena, _from, state) do
     view = GenServer.call(state.arena_view, :get)
     {:reply, view, state}
+  end
+
+  def handle_call({:rename, name}, _from, state) do
+    reply = GenServer.call(state.player_manager, {:rename, name})
+    {:reply, reply, state}
   end
 
   def handle_call(:leave, _from, state) do

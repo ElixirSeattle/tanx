@@ -11,8 +11,8 @@ defmodule Tanx do
       supervisor(Tanx.Endpoint, []),
       # Start the Ecto repository
       worker(Tanx.Repo, []),
-      # Here you could define other workers and supervisors as children
-      # worker(Tanx.Worker, [arg1, arg2, arg3]),
+      # Start a GameManager
+      worker(Tanx.GameManager, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
