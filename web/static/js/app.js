@@ -117,19 +117,24 @@ class TanxApp {
   keyEvent(which, isDown) {
     console.log("Key " + which + " " + (isDown ? "down" : "up"));
     switch (which) {
-      case 37:
+      case 37: // left arrow
+      case 74: // J
         if (this.leftKey != isDown) {
           this.leftKey = isDown;
           this.channel.push("control_tank", {button: "left", down: isDown})
         }
         break;
-      case 39:
+      case 39: // right arrow
+      case 76: // L
         if (this.rightKey != isDown) {
           this.rightKey = isDown;
           this.channel.push("control_tank", {button: "right", down: isDown})
         }
         break;
-      case 38:
+      case 38: // up arrow
+      case 40: // down arrow
+      case 73: // I
+      case 75: // K
         if (this.upKey != isDown) {
           this.upKey = isDown;
           this.channel.push("control_tank", {button: "forward", down: isDown})

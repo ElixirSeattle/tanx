@@ -197,5 +197,7 @@ defmodule Tanx.Core.Player do
   defp _movement_state(state, "right", true), do: %State{state | rtdown: true, ltdown: false}
   defp _movement_state(state, "right", false), do: %State{state | rtdown: false}
   defp _movement_state(state, "forward", value), do: %State{state | fwdown: value}
+  # TODO: Fire button
+  defp _movement_state(state, _button, _down), do: state
 
 end
