@@ -62,6 +62,14 @@ defmodule Tanx.Core.Player do
 
 
   @doc """
+  Removes the tank for the player, and returns either :ok or :no_tank.
+  """
+  def remove_tank(player) do
+    GenServer.call(player, :remove_tank)
+  end
+
+
+  @doc """
   Sends a control message to the tank in the form of a button press or release.
 
   Supported buttons are:
@@ -89,7 +97,7 @@ defmodule Tanx.Core.Player do
   #### GenServer callbacks
 
   @forward_velocity 1.0
-  @angular_velocity 1.0
+  @angular_velocity 2.0
 
 
   use GenServer
@@ -113,6 +121,16 @@ defmodule Tanx.Core.Player do
         {:reply, :ok, %State{state | current_tank: tank}}
       {:ok, _, state} ->
         {:reply, :already_present, state}
+    end
+  end
+
+  def handle_call(:remove_tank, _from, state) do
+    tank = state.current_tank
+    if tank do
+      GenServer.cast(tank, :die)
+      {:reply, :ok, %State{state | current_tank: nil}}
+    else
+      {:reply, :no_tank, state}
     end
   end
 
@@ -174,10 +192,10 @@ defmodule Tanx.Core.Player do
     end
   end
 
-  defp _movement_state(state, :left, true), do: %State{state | ltdown: true, rtdown: false}
-  defp _movement_state(state, :left, false), do: %State{state | ltdown: false}
-  defp _movement_state(state, :right, true), do: %State{state | rtdown: true, ltdown: false}
-  defp _movement_state(state, :right, false), do: %State{state | rtdown: false}
-  defp _movement_state(state, :forward, value), do: %State{state | fwdown: value}
+  defp _movement_state(state, "left", true), do: %State{state | ltdown: true, rtdown: false}
+  defp _movement_state(state, "left", false), do: %State{state | ltdown: false}
+  defp _movement_state(state, "right", true), do: %State{state | rtdown: true, ltdown: false}
+  defp _movement_state(state, "right", false), do: %State{state | rtdown: false}
+  defp _movement_state(state, "forward", value), do: %State{state | fwdown: value}
 
 end

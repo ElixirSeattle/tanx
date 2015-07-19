@@ -28,7 +28,6 @@ defmodule Tanx.GameChannel do
     {:noreply, socket}
   end
 
-
   def handle_in("view_players", _msg, socket) do
     player = socket.assigns[:player]
     players_view = if player do
@@ -53,6 +52,30 @@ defmodule Tanx.GameChannel do
     player = socket.assigns[:player]
     if player do
       :ok = player |> Tanx.Core.Player.rename(name)
+    end
+    {:noreply, socket}
+  end
+
+  def handle_in("launch_tank", _msg, socket) do
+    player = socket.assigns[:player]
+    if player do
+      player |> Tanx.Core.Player.new_tank
+    end
+    {:noreply, socket}
+  end
+
+  def handle_in("remove_tank", _msg, socket) do
+    player = socket.assigns[:player]
+    if player do
+      player |> Tanx.Core.Player.remove_tank
+    end
+    {:noreply, socket}
+  end
+
+  def handle_in("control_tank", %{"button" => button, "down" => down}, socket) do
+    player = socket.assigns[:player]
+    if player do
+      player |> Tanx.Core.Player.control_tank(button, down)
     end
     {:noreply, socket}
   end

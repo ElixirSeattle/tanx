@@ -8,8 +8,13 @@ class TanxApp {
     this.channel = this.socket.chan("game", {});
 
     this.hasPlayer = false;
+    this.hasTank = false;
     this.timestamps = null;
     this.numTimestamps = 10;
+
+    this.upKey = false;
+    this.leftKey = false;
+    this.rightKey = false;
 
     this.channel.on("view_players", players => {
       this.updatePlayers(players.players);
@@ -36,6 +41,18 @@ class TanxApp {
     $('#tanx-rename-btn').on('click', () => {
       this.renamePlayer($('#tanx-name-field').val());
     });
+    $('#tanx-launch-tank-btn').on('click', () => {
+      this.launchTank();
+    });
+    $('#tanx-remove-tank-btn').on('click', () => {
+      this.removeTank();
+    });
+    $('#tanx-arena').on('keydown', (event) => {
+      this.keyEvent(event.which, true);
+    });
+    $('#tanx-arena').on('keyup', (event) => {
+      this.keyEvent(event.which, false);
+    });
   }
 
 
@@ -43,11 +60,11 @@ class TanxApp {
     $('#tanx-join-btn').show();
     $('#tanx-rename-btn').hide();
     $('#tanx-leave-btn').hide();
-    $('#tanx-arena').hide();
-    $('#tanx-frame-rate').hide();
+    $('#tanx-arena-container').hide();
 
     if (this.hasPlayer) {
       this.hasPlayer = false;
+      this.hasTank = false;
       this.channel.push("leave", {})
     }
 
@@ -58,21 +75,60 @@ class TanxApp {
     $('#tanx-join-btn').hide();
     $('#tanx-rename-btn').show();
     $('#tanx-leave-btn').show();
-    $('#tanx-arena').show();
-    $('#tanx-frame-rate').show();
+    $('#tanx-arena-container').show();
 
     if (!this.hasPlayer) {
       this.hasPlayer = true;
       this.timestamps = [];
-      this.channel.push("join", {name: name})
+      this.channel.push("join", {name: name});
     }
   }
 
 
   renamePlayer(name) {
-    if (!this.hasPlayer) return;
+    if (this.hasPlayer) {
+      this.channel.push("rename", {name: name});
+    }
+  }
 
-    this.channel.push("rename", {name: name})
+
+  launchTank() {
+    if (this.hasPlayer) {
+      this.channel.push("launch_tank", {});
+      $('#tanx-arena').focus();
+    }
+  }
+
+
+  removeTank() {
+    if (this.hasPlayer) {
+      this.channel.push("remove_tank", {});
+    }
+  }
+
+
+  keyEvent(which, isDown) {
+    console.log("Key " + which + " " + (isDown ? "down" : "up"));
+    switch (which) {
+      case 37:
+        if (this.leftKey != isDown) {
+          this.leftKey = isDown;
+          this.channel.push("control_tank", {button: "left", down: isDown})
+        }
+        break;
+      case 39:
+        if (this.rightKey != isDown) {
+          this.rightKey = isDown;
+          this.channel.push("control_tank", {button: "right", down: isDown})
+        }
+        break;
+      case 38:
+        if (this.upKey != isDown) {
+          this.upKey = isDown;
+          this.channel.push("control_tank", {button: "forward", down: isDown})
+        }
+        break;
+    }
   }
 
 
@@ -104,7 +160,10 @@ class TanxApp {
       let fps = Math.round(1000 * len / (this.timestamps[len] - this.timestamps[0]));
       $('#tanx-fps').text(fps);
     }
-    $('#tanx-arena').text(JSON.stringify(arena));
+    $('#tanx-arena-text').text(JSON.stringify(arena, null, 4));
+    let hasTank = arena.tanks.some(tank => tank.is_me);
+    $('#tanx-launch-tank-btn').toggle(!hasTank);
+    $('#tanx-remove-tank-btn').toggle(hasTank);
   }
 
 }

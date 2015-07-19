@@ -37,12 +37,19 @@ defmodule Tanx.Core.Tank do
 
   def handle_cast({:update, last_time, time, updater}, state) do
     dt = max((time - last_time) / 1000, 0.0)
+
     heading = state.heading
-    velocity = state.velocity
     new_heading = heading + state.angular_velocity * dt
+    pi = :math.pi()
+    new_heading = cond do
+      new_heading > pi -> new_heading - (2 * pi)
+      new_heading < -pi -> new_heading + (2 * pi)
+      true -> new_heading
+    end
+
+    velocity = state.velocity
     new_x = state.x + velocity * dt * :math.cos(new_heading)
     new_y = state.y + velocity * dt * :math.sin(new_heading)
-
     max = state.structure.radius - @tank_radius
     new_x = cond do
       new_x > max -> max
