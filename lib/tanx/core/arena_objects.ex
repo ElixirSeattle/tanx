@@ -18,19 +18,19 @@ defmodule Tanx.Core.ArenaObjects do
 
   # The objects field is a map from process ID to owning player.
   defmodule State do
-    defstruct updater: nil, objects: HashDict.new
+    defstruct structure: nil, updater: nil, objects: HashDict.new
   end
 
 
-  def init(_) do
+  def init({structure}) do
     Process.flag(:trap_exit, true)
-    {:ok, %State{}}
+    {:ok, %State{structure: structure}}
   end
 
 
   # Create a new tank process. This must be called from the player that will own the tank.
   def handle_call({:create_tank, params}, {from, _}, state) do
-    {:ok, tank} = GenServer.start_link(Tanx.Core.Tank, {from, params})
+    {:ok, tank} = GenServer.start_link(Tanx.Core.Tank, {from, state.structure, params})
     {:reply, tank, %State{state | objects: state.objects |> Dict.put(tank, from)}}
   end
 

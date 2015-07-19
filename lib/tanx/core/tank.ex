@@ -5,15 +5,23 @@ defmodule Tanx.Core.Tank do
   use GenServer
 
   defmodule State do
-    defstruct player: nil, x: 0.0, y: 0.0, heading: 0.0, velocity: 0.0, angular_velocity: 0.0
+    defstruct structure: nil,
+              player: nil,
+              x: 0.0,
+              y: 0.0,
+              heading: 0.0,
+              velocity: 0.0,
+              angular_velocity: 0.0
   end
 
+  @tank_radius 0.5
 
-  def init({player, params}) do
+
+  def init({player, structure, params}) do
     x = Keyword.get(params, :x, 0)
     y = Keyword.get(params, :y, 0)
     heading = Keyword.get(params, :heading, 0)
-    {:ok, %State{player: player, x: x, y: y, heading: heading}}
+    {:ok, %State{structure: structure, player: player, x: x, y: y, heading: heading}}
   end
 
 
@@ -34,9 +42,22 @@ defmodule Tanx.Core.Tank do
     new_heading = heading + state.angular_velocity * dt
     new_x = state.x + velocity * dt * :math.cos(new_heading)
     new_y = state.y + velocity * dt * :math.sin(new_heading)
+
+    max = state.structure.radius - @tank_radius
+    new_x = cond do
+      new_x > max -> max
+      new_x < -max -> -max
+      true -> new_x
+    end
+    new_y = cond do
+      new_y > max -> max
+      new_y < -max -> -max
+      true -> new_y
+    end
+
     state = %State{state | x: new_x, y: new_y, heading: new_heading}
     update = %Tanx.Core.Updates.MoveTank{player: state.player,
-      x: new_x, y: new_y, heading: new_heading}
+      x: new_x, y: new_y, heading: new_heading, radius: @tank_radius}
     GenServer.cast(updater, {:update_reply, self, update})
     {:noreply, state}
   end

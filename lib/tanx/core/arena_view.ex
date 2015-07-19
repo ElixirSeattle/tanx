@@ -19,7 +19,7 @@ defmodule Tanx.Core.ArenaView do
   end
 
   defmodule TankInfo do
-    defstruct player: nil, name: "", x: 0.0, y: 0.0, heading: 0.0
+    defstruct player: nil, name: "", x: 0.0, y: 0.0, heading: 0.0, radius: 0.5
   end
 
 
@@ -34,7 +34,7 @@ defmodule Tanx.Core.ArenaView do
     tanks = state.tanks
       |> Enum.map(fn tank_info ->
         %Tanx.Core.View.Tank{is_me: tank_info.player == from, name: tank_info.name,
-          x: tank_info.x, y: tank_info.y, heading: tank_info.heading}
+          x: tank_info.x, y: tank_info.y, heading: tank_info.heading, radius: tank_info.radius}
       end)
     {:reply, %Tanx.Core.View.Arena{structure: state.structure, tanks: tanks}, state}
   end
