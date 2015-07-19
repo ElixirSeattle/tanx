@@ -11,11 +11,7 @@ defmodule Tanx.GameManager do
     use GenEvent
 
     def handle_event({:player_views, player_views}, state) do
-      # Broadcast the player list to clients in the lobby
-      Tanx.Endpoint.broadcast!("lobby", "view_players", %{players: player_views})
-      # Clients that have a player should get a customized view. Broadcast an empty payload,
-      # and the handle_out callbacks will take care of generating the view.
-      Tanx.Endpoint.broadcast!("player", "view_players", %{})
+      Tanx.Endpoint.broadcast!("game", "view_players", %{players: player_views})
       {:ok, state}
     end
 

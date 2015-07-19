@@ -5,18 +5,33 @@ class TanxApp {
   constructor() {
     this.socket = new Socket("/ws");
     this.socket.connect()
-    this.lobbyChan = null;
-    this.playerChan = null;
+    this.channel = this.socket.chan("game", {});
+
+    this.hasPlayer = false;
     this.timestamps = null;
     this.numTimestamps = 10;
 
-    this.joinLobby();
+    this.channel.on("view_players", players => {
+      this.updatePlayers(players.players);
+    });
+    this.channel.on("view_arena", arena => {
+      if (this.hasPlayer) {
+        this.updateArena(arena);
+        this.channel.push("view_arena", {});
+      }
+    });
+
+    this.channel.join().receive("ok", chan => {
+      this.channel.push("view_players", {});
+    });
+
+    this.leavePlayer();
 
     $('#tanx-join-btn').on('click', () => {
       this.joinPlayer($('#tanx-name-field').val());
     });
     $('#tanx-leave-btn').on('click', () => {
-      this.joinLobby();
+      this.leavePlayer();
     });
     $('#tanx-rename-btn').on('click', () => {
       this.renamePlayer($('#tanx-name-field').val());
@@ -24,68 +39,40 @@ class TanxApp {
   }
 
 
-  joinLobby() {
-    if (this.lobbyChan) return;
-
-    if (this.playerChan) {
-      this.playerChan.leave();
-      this.playerChan = null;
-    }
-    this.lobbyChan = this.socket.chan("lobby", {});
-    this.lobbyChan.on("view_players", players => {
-      if (this.lobbyChan) {
-        this.updatePlayers(players.players);
-      }
-    });
-    this.lobbyChan.join().receive("ok", chan => {
-      this.lobbyChan.push("view_players", {});
-    });
-
+  leavePlayer() {
     $('#tanx-join-btn').show();
     $('#tanx-rename-btn').hide();
     $('#tanx-leave-btn').hide();
     $('#tanx-arena').hide();
     $('#tanx-frame-rate').hide();
+
+    if (this.hasPlayer) {
+      this.hasPlayer = false;
+      this.channel.push("leave", {})
+    }
+
   }
 
 
   joinPlayer(name) {
-    if (this.playerChan) return;
-
-    if (this.lobbyChan) {
-      this.lobbyChan.leave();
-      this.lobbyChan = null;
-    }
-    this.playerChan = this.socket.chan("player", {name: name});
-    this.timestamps = [];
-    this.playerChan.on("view_players", players => {
-      if (this.playerChan) {
-        this.updatePlayers(players.players);
-      }
-    });
-    this.playerChan.on("view_arena", arena => {
-      if (this.playerChan) {
-        this.updateArena(arena);
-        this.playerChan.push("view_arena", {});
-      }
-    });
-    this.playerChan.join().receive('ok', chan => {
-      this.playerChan.push("view_players", {});
-      this.playerChan.push("view_arena", {});
-    });
-
     $('#tanx-join-btn').hide();
     $('#tanx-rename-btn').show();
     $('#tanx-leave-btn').show();
     $('#tanx-arena').show();
     $('#tanx-frame-rate').show();
+
+    if (!this.hasPlayer) {
+      this.hasPlayer = true;
+      this.timestamps = [];
+      this.channel.push("join", {name: name})
+    }
   }
 
 
   renamePlayer(name) {
-    if (!this.playerChan) return;
+    if (!this.hasPlayer) return;
 
-    this.playerChan.push("rename", {name: name})
+    this.channel.push("rename", {name: name})
   }
 
 

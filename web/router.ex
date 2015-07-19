@@ -19,8 +19,7 @@ defmodule Tanx.Router do
   end
 
   socket "/ws", Tanx do
-    channel "lobby", LobbyChannel
-    channel "player", PlayerChannel
+    channel "game", GameChannel
   end
 
 end
