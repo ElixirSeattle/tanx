@@ -27,7 +27,7 @@
 
     <div id="tanx-arena-container">
       <div id="tanx-arena" tabindex="0">
-        <pre id="tanx-arena-text"></pre>
+        <pre></pre>
       </div>
       <div>
         Frame rate: <span id="tanx-fps"></span>

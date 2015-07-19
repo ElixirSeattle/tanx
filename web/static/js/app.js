@@ -2,149 +2,59 @@ import {Socket} from "phoenix"
 
 class TanxApp {
 
+  // TODO: Break this up into multiple classes.
+
   constructor() {
-    this.socket = new Socket("/ws");
-    this.socket.connect()
-    this.channel = this.socket.chan("game", {});
+    this.setupChannel();
+    this.setupPlayerList();
+    this.setupPlayerControl();
+    this.setupArenaControls();
+    this.setupArenaAnimation();
+  }
 
-    this.hasPlayer = false;
-    this.hasTank = false;
-    this.timestamps = null;
-    this.numTimestamps = 10;
 
-    this.upKey = false;
-    this.leftKey = false;
-    this.rightKey = false;
+  //////////////////////////////////////////////////////////////////////////////
+  // CHANNEL CONTROL
 
-    this.channel.on("view_players", players => {
-      this.updatePlayers(players.players);
-    });
-    this.channel.on("view_arena", arena => {
-      if (this.hasPlayer) {
-        this.updateArena(arena);
-        this.channel.push("view_arena", {});
-      }
-    });
 
-    this.channel.join().receive("ok", chan => {
-      this.channel.push("view_players", {});
-    });
+  setupChannel() {
+    let socket = new Socket("/ws");
+    socket.connect()
+    this._channel = socket.chan("game", {});
 
-    this.leavePlayer();
-
-    $('#tanx-join-btn').on('click', () => {
-      this.joinPlayer($('#tanx-name-field').val());
-    });
-    $('#tanx-leave-btn').on('click', () => {
-      this.leavePlayer();
-    });
-    $('#tanx-rename-btn').on('click', () => {
-      this.renamePlayer($('#tanx-name-field').val());
-    });
-    $('#tanx-launch-tank-btn').on('click', () => {
-      this.launchTank();
-    });
-    $('#tanx-remove-tank-btn').on('click', () => {
-      this.removeTank();
-    });
-
-    $('#tanx-name-field').on('keypress', (event) => {
-      if (event.which == 13) {
-        $('#tanx-rename-btn:visible').click();
-        $('#tanx-join-btn:visible').click();
-      }
-    });
-    $('#tanx-arena').on('keydown', (event) => {
-      this.keyEvent(event.which, true);
-    });
-    $('#tanx-arena').on('keyup', (event) => {
-      this.keyEvent(event.which, false);
+    this._channel.join().receive("ok", chan => {
+      this.setupPlayerList();
     });
   }
 
 
-  leavePlayer() {
-    $('#tanx-join-btn').show();
-    $('#tanx-rename-btn').hide();
-    $('#tanx-leave-btn').hide();
-    $('#tanx-arena-container').hide();
-
-    if (this.hasPlayer) {
-      this.hasPlayer = false;
-      this.hasTank = false;
-      this.channel.push("leave", {})
-    }
-
+  pushToChannel(event, payload) {
+    if (!payload) payload = {};
+    this._channel.push(event, payload);
   }
 
 
-  joinPlayer(name) {
-    $('#tanx-join-btn').hide();
-    $('#tanx-rename-btn').show();
-    $('#tanx-leave-btn').show();
-    $('#tanx-arena-container').show();
-
-    if (!this.hasPlayer) {
-      this.hasPlayer = true;
-      this.timestamps = [];
-      this.channel.push("join", {name: name});
-    }
+  onChannelEvent(event, callback) {
+    this._channel.on(event, callback);
   }
 
 
-  renamePlayer(name) {
-    if (this.hasPlayer) {
-      this.channel.push("rename", {name: name});
-    }
+  //////////////////////////////////////////////////////////////////////////////
+  // PLAYER LIST VIEW
+
+
+  setupPlayerList() {
+    // Make sure we get an initial view. Subsequent changes will be broadcasted
+    // from the server.
+    this.pushToChannel("view_players");
+
+    this.onChannelEvent("view_players", players => {
+      this.renderPlayersTable(players.players);
+    });
   }
 
 
-  launchTank() {
-    if (this.hasPlayer) {
-      this.channel.push("launch_tank", {});
-      $('#tanx-arena').focus();
-    }
-  }
-
-
-  removeTank() {
-    if (this.hasPlayer) {
-      this.channel.push("remove_tank", {});
-    }
-  }
-
-
-  keyEvent(which, isDown) {
-    console.log("Key " + which + " " + (isDown ? "down" : "up"));
-    switch (which) {
-      case 37: // left arrow
-      case 74: // J
-        if (this.leftKey != isDown) {
-          this.leftKey = isDown;
-          this.channel.push("control_tank", {button: "left", down: isDown})
-        }
-        break;
-      case 39: // right arrow
-      case 76: // L
-        if (this.rightKey != isDown) {
-          this.rightKey = isDown;
-          this.channel.push("control_tank", {button: "right", down: isDown})
-        }
-        break;
-      case 38: // up arrow
-      case 40: // down arrow
-      case 73: // I
-      case 75: // K
-        if (this.upKey != isDown) {
-          this.upKey = isDown;
-          this.channel.push("control_tank", {button: "forward", down: isDown})
-        }
-        break;
-    }
-  }
-
-
-  updatePlayers(players) {
+  renderPlayersTable(players) {
     let playerTable = $('#player-rows');
     playerTable.empty();
     if (players.length == 0) {
@@ -163,19 +73,214 @@ class TanxApp {
   }
 
 
-  updateArena(arena) {
-    if (this.timestamps.push(Date.now()) > this.numTimestamps) {
-      this.timestamps.shift();
+  //////////////////////////////////////////////////////////////////////////////
+  // PLAYER JOINING AND RENAMING CONTROL
+
+
+  setupPlayerControl() {
+    this._hasPlayer = false;
+
+    $('#tanx-join-btn').on('click', () => {
+      this.joinPlayer();
+    });
+    $('#tanx-leave-btn').on('click', () => {
+      this.leavePlayer();
+    });
+    $('#tanx-rename-btn').on('click', () => {
+      this.renamePlayer();
+    });
+
+    $('#tanx-name-field').on('keypress', (event) => {
+      if (event.which == 13) {
+        $('#tanx-rename-btn:visible').click();
+        $('#tanx-join-btn:visible').click();
+      }
+    });
+
+    this.leavePlayer();
+  }
+
+
+  joinPlayer() {
+    $('#tanx-join-btn').hide();
+    $('#tanx-rename-btn').show();
+    $('#tanx-leave-btn').show();
+    $('#tanx-arena-container').show();
+
+    if (!this._hasPlayer) {
+      this._hasPlayer = true;
+      this.pushToChannel("join", {name: $('#tanx-name-field').val()});
+      this.startArenaAnimation();
     }
-    let len = this.timestamps.length - 1
+  }
+
+
+  leavePlayer() {
+    $('#tanx-join-btn').show();
+    $('#tanx-rename-btn').hide();
+    $('#tanx-leave-btn').hide();
+    $('#tanx-arena-container').hide();
+
+    if (this._hasPlayer) {
+      this._hasPlayer = false;
+      this.pushToChannel("leave");
+    }
+  }
+
+
+  renamePlayer() {
+    if (this.hasPlayer()) {
+      this.pushToChannel("rename", {name: $('#tanx-name-field').val()});
+    }
+  }
+
+
+  hasPlayer() {
+    return this._hasPlayer;
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // ARENA CONTROLS
+
+
+  setupArenaControls() {
+    this._upKey = false;
+    this._leftKey = false;
+    this._rightKey = false;
+
+    $('#tanx-arena').on('keydown', (event) => {
+      this.arenaKeyEvent(event.which, true);
+    });
+    $('#tanx-arena').on('keyup', (event) => {
+      this.arenaKeyEvent(event.which, false);
+    });
+
+    $('#tanx-launch-tank-btn').on('click', () => {
+      this.launchTank();
+    });
+    $('#tanx-remove-tank-btn').on('click', () => {
+      this.removeTank();
+    });
+  }
+
+
+  arenaKeyEvent(which, isDown) {
+    switch (which) {
+      case 37: // left arrow
+      case 74: // J
+        if (this._leftKey != isDown) {
+          this._leftKey = isDown;
+          this.pushToChannel("control_tank", {button: "left", down: isDown})
+        }
+        break;
+      case 39: // right arrow
+      case 76: // L
+        if (this._rightKey != isDown) {
+          this._rightKey = isDown;
+          this.pushToChannel("control_tank", {button: "right", down: isDown})
+        }
+        break;
+      case 38: // up arrow
+      case 40: // down arrow
+      case 73: // I
+      case 75: // K
+        if (this._upKey != isDown) {
+          this._upKey = isDown;
+          this.pushToChannel("control_tank", {button: "forward", down: isDown})
+        }
+        break;
+    }
+  }
+
+
+  launchTank() {
+    if (this.hasPlayer()) {
+      this.pushToChannel("launch_tank", {});
+      $('#tanx-arena').focus();
+    }
+  }
+
+
+  removeTank() {
+    if (this.hasPlayer()) {
+      this.pushToChannel("remove_tank", {});
+    }
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // ARENA ANIMATION
+
+
+  setupArenaAnimation() {
+    this.NUM_TIMESTAMPS = 10;
+    this._timestamps = null;
+    this._receivedArena = null;
+    this._receivedFrame = false;
+
+    this.onChannelEvent("view_arena", arena => {
+      if (this.hasPlayer()) {
+        if (this._receivedFrame) {
+          this.updateArena(arena);
+        } else {
+          this._receivedArena = arena;
+        }
+      }
+    });
+  }
+
+
+  startArenaAnimation() {
+    this._timestamps = [];
+    this.runAnimation();
+  }
+
+
+  runAnimation() {
+    this._receivedArena = null;
+    this._receivedFrame = false;
+
+    this.pushToChannel("view_arena");
+
+    window.requestAnimationFrame(ignore => {
+      if (this.hasPlayer()) {
+        if (this._receivedArena) {
+          this.updateArena(this._receivedArena);
+        } else {
+          this._receivedFrame = true;
+        }
+      }
+    })
+  }
+
+
+  updateArena(arena) {
+    // Render the frame
+    this.renderArena(arena);
+
+    // Update FPS indicator
+    if (this._timestamps.push(Date.now()) > this.NUM_TIMESTAMPS) {
+      this._timestamps.shift();
+    }
+    let len = this._timestamps.length - 1
     if (len > 0) {
-      let fps = Math.round(1000 * len / (this.timestamps[len] - this.timestamps[0]));
+      let fps = Math.round(1000 * len / (this._timestamps[len] - this._timestamps[0]));
       $('#tanx-fps').text(fps);
     }
-    $('#tanx-arena-text').text(JSON.stringify(arena, null, 4));
+
+    // Update tank launch/remove buttons
     let hasTank = arena.tanks.some(tank => tank.is_me);
     $('#tanx-launch-tank-btn').toggle(!hasTank);
     $('#tanx-remove-tank-btn').toggle(hasTank);
+
+    // Request next frame
+    this.runAnimation();
+  }
+
+
+  renderArena(arena) {
+    $('#tanx-arena pre').text(JSON.stringify(arena, null, 4));
   }
 
 }

@@ -13,8 +13,6 @@ defmodule Tanx.GameChannel do
     if !socket.assigns[:player] do
       {:ok, player} = :game_core |> Tanx.Core.Game.connect(name: player_name)
       socket = assign(socket, :player, player)
-      arena_view = player |> Tanx.Core.Player.view_arena()
-      push(socket, "view_arena", arena_view)
     end
     {:noreply, socket}
   end
