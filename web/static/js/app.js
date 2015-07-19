@@ -47,6 +47,14 @@ class TanxApp {
     $('#tanx-remove-tank-btn').on('click', () => {
       this.removeTank();
     });
+
+    $('#tanx-name-field').on('keypress', (event) => {
+      if (event.which == 13) {
+        $('#tanx-rename-btn:visible').click();
+        $('#tanx-join-btn:visible').click();
+      }
+      this.removeTank();
+    });
     $('#tanx-arena').on('keydown', (event) => {
       this.keyEvent(event.which, true);
     });

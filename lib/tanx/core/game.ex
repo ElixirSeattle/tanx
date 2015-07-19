@@ -39,7 +39,11 @@ defmodule Tanx.Core.Game do
   - **:name** The player name.
   """
   def connect(game, opts \\ []) do
-    GenServer.call(game, {:connect, opts[:name] || "Anonymous Coward"})
+    name = opts[:name]
+    if name == nil or name == "" do
+      name = "Anonymous Coward"
+    end
+    GenServer.call(game, {:connect, name})
   end
 
 
