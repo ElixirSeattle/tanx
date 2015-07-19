@@ -37,9 +37,9 @@ defmodule Tanx.TankUpdateTest do
   test "tank rotates with constant velocity", %{game: game, player: player} do
     :ok = player |> Tanx.Core.Player.new_tank()
     :ok = player |> Tanx.Core.Player.control_tank(:right, true)
-    game |> Tanx.Core.Game.manual_clock_tick(2000)
+    game |> Tanx.Core.Game.manual_clock_tick(1500)
     _check_tank(player, 0.0, 0.0, -1.0)
-    game |> Tanx.Core.Game.manual_clock_tick(4000)
+    game |> Tanx.Core.Game.manual_clock_tick(2500)
     _check_tank(player, 0.0, 0.0, -3.0)
   end
 

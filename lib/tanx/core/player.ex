@@ -138,6 +138,9 @@ defmodule Tanx.Core.Player do
     {:reply, state.current_tank != nil, state}
   end
 
+  def handle_call({:control_tank, button, is_down}, from, state) when is_atom(button) do
+    handle_call({:control_tank, Atom.to_string(button), is_down}, from, state)
+  end
   def handle_call({:control_tank, button, is_down}, _from, state) do
     state = _movement_state(state, button, is_down)
     v = if state.fwdown, do: @forward_velocity, else: 0.0
