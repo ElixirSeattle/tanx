@@ -1,6 +1,13 @@
-defmodule Tanx.Core.Tank do
+  defmodule Tanx.Core.Tank do
 
+<<<<<<< HEAD
   # GenServer callbacks
+=======
+  # what is t, a, v and av?
+  # What is the difference between Tanx.Core.view.Tank and
+  # Tank.Core.Tank? 
+  defstruct t: 0, x: 0.0, y: 0.0, a: 0.0, v: 0.0, av: 0.0
+>>>>>>> dca3e04...  Add a missile
 
   use GenServer
 
@@ -17,6 +24,7 @@ defmodule Tanx.Core.Tank do
   @tank_radius 0.5
 
 
+<<<<<<< HEAD
   def init({player, structure, params}) do
     x = Keyword.get(params, :x, 0)
     y = Keyword.get(params, :y, 0)
