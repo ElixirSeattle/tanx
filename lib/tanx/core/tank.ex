@@ -1,13 +1,8 @@
   defmodule Tanx.Core.Tank do
 
-<<<<<<< HEAD
+
   # GenServer callbacks
-=======
-  # what is t, a, v and av?
-  # What is the difference between Tanx.Core.view.Tank and
-  # Tank.Core.Tank? 
-  defstruct t: 0, x: 0.0, y: 0.0, a: 0.0, v: 0.0, av: 0.0
->>>>>>> dca3e04...  Add a missile
+
 
   use GenServer
 
@@ -23,8 +18,6 @@
 
   @tank_radius 0.5
 
-
-<<<<<<< HEAD
   def init({player, structure, params}) do
     x = Keyword.get(params, :x, 0)
     y = Keyword.get(params, :y, 0)
@@ -32,6 +25,9 @@
     {:ok, %State{structure: structure, player: player, x: x, y: y, heading: heading}}
   end
 
+  def handle_call(:tank, _from, state) do
+    {:reply, state, state}
+  end
 
   def handle_call({:control_movement, velocity, angular_velocity}, _from, state) do
     {:reply, :ok, %State{state | velocity: velocity || state.velocity,
@@ -73,6 +69,7 @@
     state = %State{state | x: new_x, y: new_y, heading: new_heading}
     update = %Tanx.Core.Updates.MoveTank{player: state.player,
       x: new_x, y: new_y, heading: new_heading, radius: @tank_radius}
+
     GenServer.cast(updater, {:update_reply, self, update})
     {:noreply, state}
   end

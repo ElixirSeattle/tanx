@@ -42,7 +42,7 @@ defmodule Tanx.Core.ArenaUpdater do
   def init({structure, arena_objects, arena_view, player_manager, clock, last_time, time}) do
     objects = GenServer.call(arena_objects, :get)
     if Enum.empty?(objects) do
-      :ok = GenServer.call(arena_view, {:update, []})
+      :ok = GenServer.call(arena_view, {:update, {[], []}})
       GenServer.cast(clock, :clock_tock)
       :ignore
     else
@@ -54,7 +54,7 @@ defmodule Tanx.Core.ArenaUpdater do
     end
   end
 
-
+  
   def handle_cast({:update_reply, object, update}, state) do
     received = [update | state.received]
     expected = state.expected |> Set.delete(object)
@@ -85,26 +85,41 @@ defmodule Tanx.Core.ArenaUpdater do
   end
 
   defp _process_responses(state) do
-    # TODO: Add missiles, explosions, other objects to this tuple
-    {_, tanks} = state.received |> Enum.reduce({state, []}, &_process_response/2)
+    # TODO: explosions, other objects to this tuple
+    {_, tanks, missiles} = state.received |> Enum.reduce({state, [], []}, &_process_response/2)
 
     # TODO: Collision detection
 
-    :ok = GenServer.call(state.arena_view, {:update, tanks})
+    :ok = GenServer.call(state.arena_view, {:update, {tanks,missiles}})
+
     GenServer.cast(state.clock, :clock_tock)
     %State{state | expected: nil, received: nil}
   end
 
-  defp _process_response(response = %Tanx.Core.Updates.MoveTank{}, {state, tanks}) do
+  defp _process_response(response = %Tanx.Core.Updates.MoveTank{}, {state, tanks, missiles}) do
     player_view = GenServer.call(state.player_manager, {:view_player, response.player})
     if player_view do
       tank = %Tanx.Core.ArenaView.TankInfo{player: response.player, name: player_view.name,
         x: response.x, y: response.y, heading: response.heading, radius: response.radius}
-      {state, [tank | tanks]}
+    
+      {state, [tank | tanks], missiles}
     else
-      {state, tanks}
+      {state, tanks, missiles}
     end
   end
+
+  defp _process_response(response = %Tanx.Core.Updates.MoveMissile{}, {state, tanks, missiles}) do
+    player_view = GenServer.call(state.player_manager, {:view_player, response.player})
+    if player_view do
+      missile = %Tanx.Core.ArenaView.MissileInfo{player: response.player, name: player_view.name,
+        x: response.x, y: response.y, a: response.a}
+      {state, tanks, [missile | missiles]}
+>>>>>>> 9db9486... adds a missile objects to the game
+    else
+      {state, tanks, missiles}
+    end
+  end
+
   # TODO: Other updates
 
 end
