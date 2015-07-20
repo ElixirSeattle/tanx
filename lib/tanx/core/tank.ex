@@ -24,6 +24,9 @@ defmodule Tanx.Core.Tank do
     {:ok, %State{structure: structure, player: player, x: x, y: y, heading: heading}}
   end
 
+  def handle_call(:tank, _from, state) do
+    {:reply, state, state}
+  end
 
   def handle_call({:control_movement, velocity, angular_velocity}, _from, state) do
     {:reply, :ok, %State{state | velocity: velocity || state.velocity,
@@ -65,6 +68,7 @@ defmodule Tanx.Core.Tank do
     state = %State{state | x: new_x, y: new_y, heading: new_heading}
     update = %Tanx.Core.Updates.MoveTank{player: state.player,
       x: new_x, y: new_y, heading: new_heading, radius: @tank_radius}
+
     GenServer.cast(updater, {:update_reply, self, update})
     {:noreply, state}
   end

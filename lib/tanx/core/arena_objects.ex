@@ -18,6 +18,12 @@ defmodule Tanx.Core.ArenaObjects do
 
   # The objects field is a map from process ID to owning player.
   defmodule State do
+    @moduledoc """
+      This struct holds all the objects in the arena.
+      updater - this is the PID of the ArenaUpdater process.
+      objects - this is a Dict with the keys being the PIDs of the objects and
+                the values being pid of the the Player process it belongs to.
+    """
     defstruct structure: nil, updater: nil, objects: HashDict.new
   end
 
@@ -29,13 +35,19 @@ defmodule Tanx.Core.ArenaObjects do
 
 
   # Create a new tank process. This must be called from the player that will own the tank.
+  # This is called by the 'player' process.  
   def handle_call({:create_tank, params}, {from, _}, state) do
     {:ok, tank} = GenServer.start_link(Tanx.Core.Tank, {from, state.structure, params})
     {:reply, tank, %State{state | objects: state.objects |> Dict.put(tank, from)}}
   end
 
 
-  # TODO: create_missile
+  # Create a new missile process. This must be called from the player that fired the missile.
+  def handle_call({:create_missile, params}, {player, _}, state) do 
+    {:ok, missile}  = Tanx.Core.Missile.start_link(player, params)
+    {:reply, missile, %State{state | objects: state.objects |> Dict.put(missile, player)}}
+  end
+
   # TODO: create_explosion
 
 

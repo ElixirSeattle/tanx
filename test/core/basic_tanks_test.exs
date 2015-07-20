@@ -47,4 +47,78 @@ defmodule Tanx.BasicTanksTest do
     assert view == %Tanx.Core.View.Arena{}
   end
 
+  test "one player fires a missile", %{game: game} do
+    {:ok, player1} = game |> Tanx.Core.Game.connect(name: "Kyle")
+    :ok = player1 |> Tanx.Core.Player.new_tank()
+    :ok = player1 |> Tanx.Core.Player.new_missile()
+    assert player1 |> Tanx.Core.Player.missile_count == 1
+    :ok = game |> Tanx.Core.Game.manual_clock_tick(1000)  
+
+    view = player1 |> Tanx.Core.Player.view_arena()
+    assert view == %Tanx.Core.View.Arena{
+      missiles: [
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0}
+      ],
+      tanks: [
+        %Tanx.Core.View.Tank{is_me: true, name: "Kyle"} 
+      ]
+    }
+
+  end
+
+  test "one player fires 2 missiles", %{game: game} do
+    {:ok, player1} = game |> Tanx.Core.Game.connect(name: "Kyle")
+    :ok = player1 |> Tanx.Core.Player.new_tank()
+    :ok = player1 |> Tanx.Core.Player.new_missile()
+    :ok = player1 |> Tanx.Core.Player.new_missile()    
+    assert player1 |> Tanx.Core.Player.missile_count == 2
+
+    :ok = game |> Tanx.Core.Game.manual_clock_tick(1000)  
+
+    view = player1 |> Tanx.Core.Player.view_arena()
+    assert view == %Tanx.Core.View.Arena{
+      missiles: [
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0}
+      ],
+      tanks: [
+        %Tanx.Core.View.Tank{is_me: true, name: "Kyle"} 
+      ]
+    }
+
+  end
+
+  test "one player fires a missile without tank", %{game: game} do
+    {:ok, player1} = game |> Tanx.Core.Game.connect(name: "Kyle")
+    assert :no_tank == player1 |> Tanx.Core.Player.new_missile()
+    assert player1 |> Tanx.Core.Player.missile_count == 0
+  end
+
+  test "one player fires a too many missiles", %{game: game} do
+    {:ok, player1} = game |> Tanx.Core.Game.connect(name: "Kyle")
+    :ok = player1 |> Tanx.Core.Player.new_tank()
+    :ok = player1 |> Tanx.Core.Player.new_missile()
+    :ok = player1 |> Tanx.Core.Player.new_missile()
+    :ok = player1 |> Tanx.Core.Player.new_missile()
+    :ok = player1 |> Tanx.Core.Player.new_missile()
+    :ok = player1 |> Tanx.Core.Player.new_missile()
+    assert :at_limit == player1 |> Tanx.Core.Player.new_missile()     
+    assert player1 |> Tanx.Core.Player.missile_count == 5
+
+    :ok = game |> Tanx.Core.Game.manual_clock_tick(1000)  
+
+    view = player1 |> Tanx.Core.Player.view_arena()
+    assert view == %Tanx.Core.View.Arena{
+      missiles: [
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0}
+      ],
+      tanks: [
+        %Tanx.Core.View.Tank{is_me: true, name: "Kyle"} 
+      ]
+    }
+  end
 end

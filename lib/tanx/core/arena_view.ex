@@ -15,11 +15,21 @@ defmodule Tanx.Core.ArenaView do
   use GenServer
 
   defmodule State do
-    defstruct structure: nil, tanks: []
+    @moduledoc """
+      This struct holds the current state of the arena
+      structure - This a Tanx.Core.Structure which describes the shape of the 
+                  areana.
+      tanks - this is a collection of 
+    """
+    defstruct structure: nil, tanks: [], missiles: []
   end
 
   defmodule TankInfo do
     defstruct player: nil, name: "", x: 0.0, y: 0.0, heading: 0.0, radius: 0.5
+  end
+
+  defmodule MissileInfo do 
+    defstruct player: nil, name: "", x: 0.0, y: 0.0, a: 0.0
   end
 
 
@@ -36,13 +46,23 @@ defmodule Tanx.Core.ArenaView do
         %Tanx.Core.View.Tank{is_me: tank_info.player == from, name: tank_info.name,
           x: tank_info.x, y: tank_info.y, heading: tank_info.heading, radius: tank_info.radius}
       end)
-    {:reply, %Tanx.Core.View.Arena{structure: state.structure, tanks: tanks}, state}
+
+    missiles = state.missiles
+      |> Enum.map(fn missile_info ->
+        %Tanx.Core.View.Missile{is_mine: missile_info.player == from, name: missile_info.name,
+          x: missile_info.x, y: missile_info.y, a: missile_info.a}
+      end)
+
+    {:reply, %Tanx.Core.View.Arena{structure: state.structure, 
+                                   tanks: tanks, 
+                                   missiles: missiles}, state}
   end
 
 
   # This is called from an updater to update the view with a new state.
-  def handle_call({:update, tanks}, _from, state) do
-    {:reply, :ok, %State{state | tanks: tanks}}
+  def handle_call({:update, {tanks, missiles}}, _from, state) do
+    {:reply, :ok, %State{state | tanks: tanks, missiles: missiles}}
   end
+
 
 end

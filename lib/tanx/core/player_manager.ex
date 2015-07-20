@@ -40,7 +40,7 @@ defmodule Tanx.Core.PlayerManager do
   end
 
 
-  # Called to create a Player. Returns:
+  # Called by the 'game' process to create a Player when one connects. Returns:
   # - {:ok, player} if successful
   # - {:error, reason} if not
   def handle_call({:create_player, name}, _from, state) do
