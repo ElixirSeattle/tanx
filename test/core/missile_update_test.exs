@@ -23,7 +23,7 @@ defmodule Tanx.MissileUpdateTest do
     game |> Tanx.Core.Game.manual_clock_tick(2000)
     :ok = player |> Tanx.Core.Player.new_missile()
     game |> Tanx.Core.Game.manual_clock_tick(4000)
-    _check_missile(player, 1.0806046117362795, -1.682941969615793, -1.0) #Need to double check these numbers
+    _check_missile(player, -0.8322936730942848, -1.8185948536513634, -2.0) #Need to double check these numbers
   end
 
 

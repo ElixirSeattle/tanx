@@ -157,7 +157,7 @@ defmodule Tanx.Core.Player do
         {:not_found, state} ->
           {:reply, :no_tank, state}
         {:ok, tank, state } -> 
-          missile = GenServer.call(state.arena_objects, {:create_missile, {tank.x, tank.y, tank.a}})
+          missile = GenServer.call(state.arena_objects, {:create_missile, {tank.x, tank.y, tank.heading}})
           {:reply,:ok, %State{state | missiles: [missile | state.missiles]}}
       end
       
@@ -217,10 +217,7 @@ defmodule Tanx.Core.Player do
     {:stop, :normal, :ok, %State{}}
   end
 
-
   #### Internal utils
-
-
   defp _maybe_call_tank(state = %State{current_tank: nil}, _call) do
     {:not_found, state}
   end
@@ -233,7 +230,7 @@ defmodule Tanx.Core.Player do
     end
   end
 
-<<<<<<< HEAD
+
   defp _movement_state(state, "left", true), do: %State{state | ltdown: true, rtdown: false}
   defp _movement_state(state, "left", false), do: %State{state | ltdown: false}
   defp _movement_state(state, "right", true), do: %State{state | rtdown: true, ltdown: false}
@@ -241,14 +238,6 @@ defmodule Tanx.Core.Player do
   defp _movement_state(state, "forward", value), do: %State{state | fwdown: value}
   # TODO: Fire button
   defp _movement_state(state, _button, _down), do: state
-=======
- 
 
-  defp _movement_state(state, :left, true), do: %State{state | ltdown: true, rtdown: false}
-  defp _movement_state(state, :left, false), do: %State{state | ltdown: false}
-  defp _movement_state(state, :right, true), do: %State{state | rtdown: true, ltdown: false}
-  defp _movement_state(state, :right, false), do: %State{state | rtdown: false}
-  defp _movement_state(state, :forward, value), do: %State{state | fwdown: value}
->>>>>>> 9db9486... adds a missile objects to the game
 
 end

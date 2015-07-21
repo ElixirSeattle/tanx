@@ -114,7 +114,6 @@ defmodule Tanx.Core.ArenaUpdater do
       missile = %Tanx.Core.ArenaView.MissileInfo{player: response.player, name: player_view.name,
         x: response.x, y: response.y, a: response.a}
       {state, tanks, [missile | missiles]}
->>>>>>> 9db9486... adds a missile objects to the game
     else
       {state, tanks, missiles}
     end
