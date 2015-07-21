@@ -319,7 +319,7 @@ class TanxApp {
       context.fillStyle = "#FF0000";
     }
 
-    context.rotate(tank.heading);
+    context.rotate(-tank.heading);
 
     // TODO: Replace this with some nice graphics
     context.fillRect(-tankRect.width/2, -tankRect.height/2, tankRect.width, tankRect.height);
@@ -334,7 +334,7 @@ class TanxApp {
     let missileRect = this.onScreenRect(missile.x, missile.y, 0.2, 0.2);
     context.translate(missileRect.x, missileRect.y);
 
-    context.rotate(missile.heading);
+    context.rotate(-missile.heading);
 
     // TODO: Replace this with some nice graphics
     context.fillStyle = "#00FF00";
@@ -351,8 +351,8 @@ class TanxApp {
     let offset = this.canvas().width / 2;
     let scaleFactor = 10; // TODO: This should be calculated with: offset / arena.radius
 
-    let screenX = (x * scaleFactor) + offset;
-    let screenY = (y * scaleFactor) + offset;
+    let screenX = offset + (x * scaleFactor);
+    let screenY = offset - (y * scaleFactor);
     return {x: screenX, y: screenY};
   }
 
