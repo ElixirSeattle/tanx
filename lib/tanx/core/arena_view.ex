@@ -29,7 +29,7 @@ defmodule Tanx.Core.ArenaView do
   end
 
   defmodule MissileInfo do 
-    defstruct player: nil, name: "", x: 0.0, y: 0.0, a: 0.0
+    defstruct player: nil, name: "", x: 0.0, y: 0.0, heading: 0.0, radius: 0.1
   end
 
 
@@ -50,7 +50,7 @@ defmodule Tanx.Core.ArenaView do
     missiles = state.missiles
       |> Enum.map(fn missile_info ->
         %Tanx.Core.View.Missile{is_mine: missile_info.player == from, name: missile_info.name,
-          x: missile_info.x, y: missile_info.y, a: missile_info.a}
+          x: missile_info.x, y: missile_info.y, heading: missile_info.heading}
       end)
 
     {:reply, %Tanx.Core.View.Arena{structure: state.structure, 

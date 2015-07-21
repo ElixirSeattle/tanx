@@ -60,6 +60,12 @@ defmodule Tanx.Core.Player do
     GenServer.call(player, :new_missile)
   end
 
+  @doc """
+    Remove a specific missile from a specific player.
+  """
+  def explode_missile(player, missile) do
+    GenServer.call(player, {:explode_missile, missile})
+  end
 
   @doc """
   Returns true if the player currently has a live tank in the arena.
@@ -120,7 +126,7 @@ defmodule Tanx.Core.Player do
 
   defmodule State do
     defstruct player_manager: nil, arena_objects: nil, arena_view: nil, current_tank: nil,
-      fwdown: false, ltdown: false, rtdown: false, missiles: []
+      fwdown: false, ltdown: false, rtdown: false, missiles: [], last_fired: 0
   end
 
   # This is called by the 'player manager' when creating a new player
@@ -152,17 +158,33 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call(:new_missile, _from, state) do 
-    if Dict.size(state.missiles) < 5 do
+    curr_time = _cur_millis
+    if (Dict.size(state.missiles) < 5) and ((curr_time - state.last_fired) > 500) do
+
       case _maybe_call_tank(state, :tank) do
         {:not_found, state} ->
           {:reply, :no_tank, state}
         {:ok, tank, state } -> 
-          missile = GenServer.call(state.arena_objects, {:create_missile, {tank.x, tank.y, tank.heading}})
-          {:reply,:ok, %State{state | missiles: [missile | state.missiles]}}
+          missile = GenServer.call(state.arena_objects, 
+                                   {:create_missile, {tank.x, tank.y, tank.heading}})
+          {:reply,:ok, %State{state | 
+                                missiles: [missile | state.missiles], 
+                                last_fired: curr_time}
+                              }
       end
       
     else
       {:reply, :at_limit, state}
+    end
+  end
+
+  def handle_call({:explode_missile, missile}, _from, state) do 
+    tank = state.current_tank
+    if tank do
+      GenServer.cast(missile, :die)
+      {:reply, :ok, %State{state | missiles: List.remove(state.missiles, missile)}}
+    else
+      {:reply, :no_missile, state}
     end
   end
 
@@ -177,6 +199,7 @@ defmodule Tanx.Core.Player do
   def handle_call(:missile_count, _from, state) do
     {:reply, Dict.size(state.missiles), state}
   end
+
 
   def handle_call({:control_tank, button, is_down}, _from, state) do
     state = _movement_state(state, button, is_down)
@@ -236,8 +259,12 @@ defmodule Tanx.Core.Player do
   defp _movement_state(state, "right", true), do: %State{state | rtdown: true, ltdown: false}
   defp _movement_state(state, "right", false), do: %State{state | rtdown: false}
   defp _movement_state(state, "forward", value), do: %State{state | fwdown: value}
-  # TODO: Fire button
+  # TODO: Fire button - do we need a fire button state?
   defp _movement_state(state, _button, _down), do: state
 
-
+  defp _cur_millis() do
+    # TODO: Use new time API in Erlang 18
+    {gs, s, ms} = :erlang.now()
+    gs * 1000000000 + s * 1000 + div(ms, 1000)
+  end
 end

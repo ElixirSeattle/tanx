@@ -90,6 +90,8 @@ defmodule Tanx.Core.ArenaUpdater do
 
     # TODO: Collision detection
 
+
+
     :ok = GenServer.call(state.arena_view, {:update, {tanks,missiles}})
 
     GenServer.cast(state.clock, :clock_tock)
@@ -112,7 +114,7 @@ defmodule Tanx.Core.ArenaUpdater do
     player_view = GenServer.call(state.player_manager, {:view_player, response.player})
     if player_view do
       missile = %Tanx.Core.ArenaView.MissileInfo{player: response.player, name: player_view.name,
-        x: response.x, y: response.y, a: response.a}
+        x: response.x, y: response.y, heading: response.heading}
       {state, tanks, [missile | missiles]}
     else
       {state, tanks, missiles}

@@ -32,7 +32,7 @@ defmodule Tanx.MissileUpdateTest do
   defp _check_missile(player, x, y, a) do
     view = player |> Tanx.Core.Player.view_arena()
     got = view.missiles |> hd()
-    want = %Tanx.Core.View.Missile{is_mine: true, name: "Ben", x: x, y: y, a: a}
+    want = %Tanx.Core.View.Missile{is_mine: true, name: "Ben", x: x, y: y, heading: a}
     assert got == want
   end
 

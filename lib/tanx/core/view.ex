@@ -31,7 +31,7 @@ defmodule Tanx.Core.View do
     @moduledoc """
     A view of a missile.
     """
-    defstruct is_mine: false, name: "", x: 0.0, y: 0.0, a: 0.0
+    defstruct is_mine: false, name: "", x: 0.0, y: 0.0, heading: 0.0
   end
 
 end

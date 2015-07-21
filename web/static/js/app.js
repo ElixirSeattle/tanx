@@ -174,6 +174,12 @@ class TanxApp {
           this.pushToChannel("control_tank", {button: "left", down: isDown})
         }
         break;
+      case 32: // space
+        if (this._spaceKey != isDown) {
+          this._spaceKey = isDown;
+          this.pushToChannel("fire_missile", {button: "space", down: isDown})
+        }
+        break;
       case 39: // right arrow
       case 76: // L
         if (this._rightKey != isDown) {

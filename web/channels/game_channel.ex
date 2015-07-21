@@ -78,6 +78,14 @@ defmodule Tanx.GameChannel do
     {:noreply, socket}
   end
 
+  def handle_in("fire_missile", _msg, socket) do
+    player = socket.assigns[:player]
+    if player do
+      player |> Tanx.Core.Player.new_missile()
+    end
+    {:noreply, socket}
+  end
+
   def handle_in(msg, payload, socket) do
     Logger.error("Unknown message received on game channel: #{inspect(msg)}: #{inspect(payload)}")
     {:noreply, socket}

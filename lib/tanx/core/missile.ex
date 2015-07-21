@@ -1,7 +1,7 @@
 defmodule Tanx.Core.Missile do 
 
   defmodule State do 
-    defstruct player: nil, x: 0.0, y: 0.0, a: 0.0, av: 0.0, v: 1.0 
+    defstruct player: nil, x: 0.0, y: 0.0, heading: 0.0, av: 0.0, v: 1.0 
   end
 
   ############
@@ -30,18 +30,18 @@ defmodule Tanx.Core.Missile do
   #GenServer Implementation
 
   def init({player, {x, y, a}}) do
-    {:ok, %Tanx.Core.Missile.State{player: player, x: x, y: y, a: a}}  
+    {:ok, %Tanx.Core.Missile.State{player: player, x: x, y: y, heading: a}}  
   end
 
   def handle_cast({:update, last_time, time, updater}, state) do 
     dt = max((time - last_time) / 1000, 0.0)
-    a = state.a
+    a = state.heading
     v = state.v
     na = a + state.av * dt
     nx = state.x + v * dt * :math.cos(na)
     ny = state.y + v * dt * :math.sin(na)
-    state = %State{state | x: nx, y: ny, a: na}
-    update = %Tanx.Core.Updates.MoveMissile{player: state.player, x: nx, y: ny, a: na}
+    state = %State{state | x: nx, y: ny, heading: na}
+    update = %Tanx.Core.Updates.MoveMissile{player: state.player, x: nx, y: ny, heading: na}
     GenServer.cast(updater, {:update_reply, self, update})
     {:noreply, state}
   end

@@ -33,7 +33,7 @@ defmodule Tanx.Core.ArenaObjects do
     {:ok, %State{structure: structure}}
   end
 
-
+    
   # Create a new tank process. This must be called from the player that will own the tank.
   # This is called by the 'player' process.  
   def handle_call({:create_tank, params}, {from, _}, state) do
