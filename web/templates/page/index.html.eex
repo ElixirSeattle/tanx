@@ -27,6 +27,7 @@
 
     <div id="tanx-arena-container">
       <div id="tanx-arena" tabindex="0">
+        <canvas id="tanx-canvas" width="200" height="200"></canvas>
         <pre></pre>
       </div>
       <div>

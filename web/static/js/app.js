@@ -278,10 +278,86 @@ class TanxApp {
     this.runAnimation();
   }
 
-
   renderArena(arena) {
     $('#tanx-arena pre').text(JSON.stringify(arena, null, 4));
+
+    if(this.canvas()) {
+      var context = this.canvas().getContext("2d");
+
+      // Clear the canvas
+      context.clearRect(0, 0, this.canvas().width, this.canvas().height);
+
+      // Draw tanks
+      arena.tanks.forEach(tank => {
+        this.renderTank(context, tank);
+      });
+
+      // Draw missiles
+      arena.missiles.forEach(missile => {
+        this.renderMissile(context, missile);
+      });
+    }
   }
+
+  renderTank(context, tank) {
+    context.save();
+
+    let tankRect = this.onScreenRect(tank.x, tank.y, tank.radius*2, tank.radius*2);
+    let barrelRect = this.onScreenRect(tank.x, tank.y, 1, 0.2);
+
+    context.translate(tankRect.x, tankRect.y);
+
+    context.rotate(tank.heading);
+
+    // TODO: Replace this with some nice graphics
+    if(tank.is_me) {
+      context.fillStyle = "#0000FF";
+    } else {
+      context.fillStyle = "#FF0000";
+    }
+    context.fillRect(-tankRect.width/2, -tankRect.height/2, tankRect.width, tankRect.height);
+    context.fillRect(0, -barrelRect.height/2, barrelRect.width, barrelRect.height)
+
+    context.restore();
+  }
+
+  renderMissile(context, missile) {
+    context.save();
+
+    let missileRect = this.onScreenRect(missile.x, missile.y, 0.2, 0.2);
+    context.translate(missileRect.x, missileRect.y);
+
+    context.rotate(missile.heading);
+
+    // TODO: Replace this with some nice graphics
+    context.fillStyle = "#00FF00";
+    context.fillRect(-missileRect.width/2, -missileRect.height/2, missileRect.width, missileRect.height);
+
+    context.restore();
+  }
+
+  canvas() {
+    return $('#tanx-arena canvas').get(0);
+  }
+
+  onScreenPoint(x, y) {
+    let offset = this.canvas().width / 2;
+    let scaleFactor = 10; // TODO: This should be calculated with: offset / arena.radius
+
+    let screenX = (x * scaleFactor) + offset;
+    let screenY = (y * scaleFactor) + offset;
+    return {x: screenX, y: screenY};
+  }
+
+  onScreenRect(x, y, width, height) {
+    let scaleFactor = 10; // TODO: This should be calculated with: offset / arena.radius
+
+    let screenPoint = this.onScreenPoint(x, y);
+    let screenWidth = width * scaleFactor;
+    let screenHeight = height * scaleFactor;
+    return {x: screenPoint.x, y: screenPoint.y, width: screenWidth, height: screenHeight};
+  }
+
 
 }
 
