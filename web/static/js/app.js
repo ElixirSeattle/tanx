@@ -307,14 +307,21 @@ class TanxApp {
 
     context.translate(tankRect.x, tankRect.y);
 
+    if(tank.is_me) {
+      // my tank color
+      context.fillStyle = "#0000FF";
+    } else {
+      // Add names above enemies
+      context.textAlign = "center";
+      context.fillText(tank.name, 0, -11);
+
+      // enemy tank color
+      context.fillStyle = "#FF0000";
+    }
+
     context.rotate(tank.heading);
 
     // TODO: Replace this with some nice graphics
-    if(tank.is_me) {
-      context.fillStyle = "#0000FF";
-    } else {
-      context.fillStyle = "#FF0000";
-    }
     context.fillRect(-tankRect.width/2, -tankRect.height/2, tankRect.width, tankRect.height);
     context.fillRect(0, -barrelRect.height/2, barrelRect.width, barrelRect.height)
 
