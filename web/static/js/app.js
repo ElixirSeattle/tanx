@@ -150,10 +150,10 @@ class TanxApp {
     this._rightKey = false;
 
     $('#tanx-arena').on('keydown', (event) => {
-      this.arenaKeyEvent(event.which, true);
+      this.arenaKeyEvent(event, true);
     });
     $('#tanx-arena').on('keyup', (event) => {
-      this.arenaKeyEvent(event.which, false);
+      this.arenaKeyEvent(event, false);
     });
 
     $('#tanx-launch-tank-btn').on('click', () => {
@@ -165,20 +165,22 @@ class TanxApp {
   }
 
 
-  arenaKeyEvent(which, isDown) {
-    switch (which) {
+  arenaKeyEvent(event, isDown) {
+    switch (event.which) {
       case 37: // left arrow
       case 74: // J
         if (this._leftKey != isDown) {
           this._leftKey = isDown;
           this.pushToChannel("control_tank", {button: "left", down: isDown})
         }
+        event.preventDefault();
         break;
       case 32: // space
         if (this._spaceKey != isDown) {
           this._spaceKey = isDown;
           this.pushToChannel("fire_missile", {button: "space", down: isDown})
         }
+        event.preventDefault();
         break;
       case 39: // right arrow
       case 76: // L
@@ -186,6 +188,7 @@ class TanxApp {
           this._rightKey = isDown;
           this.pushToChannel("control_tank", {button: "right", down: isDown})
         }
+        event.preventDefault();
         break;
       case 38: // up arrow
       case 40: // down arrow
@@ -195,6 +198,7 @@ class TanxApp {
           this._upKey = isDown;
           this.pushToChannel("control_tank", {button: "forward", down: isDown})
         }
+        event.preventDefault();
         break;
     }
   }
