@@ -57,7 +57,7 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena()
     assert view == %Tanx.Core.View.Arena{
       missiles: [
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0}
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0}
       ],
       tanks: [
         %Tanx.Core.View.Tank{is_me: true, name: "Kyle"} 
@@ -78,7 +78,7 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena()
     assert view == %Tanx.Core.View.Arena{
       missiles: [
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
       ],
       tanks: [
         %Tanx.Core.View.Tank{is_me: true, name: "Kyle"} 
@@ -100,8 +100,8 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena()
     assert view == %Tanx.Core.View.Arena{
       missiles: [
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0}
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0}
       ],
       tanks: [
         %Tanx.Core.View.Tank{is_me: true, name: "Kyle"} 
@@ -137,11 +137,11 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena()
     assert view == %Tanx.Core.View.Arena{
       missiles: [
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 1.0}
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0}
       ],
       tanks: [
         %Tanx.Core.View.Tank{is_me: true, name: "Kyle"} 

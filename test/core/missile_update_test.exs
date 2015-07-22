@@ -13,7 +13,7 @@ defmodule Tanx.MissileUpdateTest do
     :ok = player |> Tanx.Core.Player.new_missile()
 
     game |> Tanx.Core.Game.manual_clock_tick(2000)
-    _check_missile(player, 1.0, 0.0, 0.0)
+    _check_missile(player, 10.0, 0.0, 0.0)
   end
 
   test "missile moves on an angle with constant velocity", %{game: game, player: player} do
@@ -30,7 +30,7 @@ defmodule Tanx.MissileUpdateTest do
     game |> Tanx.Core.Game.manual_clock_tick(4000)
 
     # Missile should have changed position, but maintained the same angle.
-    _check_missile(player, -0.8322936730942848, -1.8185948536513634, -2.0)
+    _check_missile(player, -8.322936730942848, -18.185948536513635, -2.0)
   end
 
   # Utils
