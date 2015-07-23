@@ -381,8 +381,6 @@ class TanxApp {
   }
 
   onScreenRect(x, y, width, height) {
-    let scaleFactor = 10; // TODO: This should be calculated with: offset / arena.radius
-
     let screenPoint = this.onScreenPoint(x, y);
     let screenWidth = width * this._scaleFactor;
     let screenHeight = height * this._scaleFactor;

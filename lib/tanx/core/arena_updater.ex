@@ -54,7 +54,7 @@ defmodule Tanx.Core.ArenaUpdater do
     end
   end
 
-  
+
   def handle_cast({:update_reply, object, update}, state) do
     received = [update | state.received]
     expected = state.expected |> Set.delete(object)
@@ -103,7 +103,7 @@ defmodule Tanx.Core.ArenaUpdater do
     if player_view do
       tank = %Tanx.Core.ArenaView.TankInfo{player: response.player, name: player_view.name,
         x: response.x, y: response.y, heading: response.heading, radius: response.radius}
-    
+
       {state, [tank | tanks], missiles}
     else
       {state, tanks, missiles}

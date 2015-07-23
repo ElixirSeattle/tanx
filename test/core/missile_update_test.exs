@@ -23,7 +23,7 @@ defmodule Tanx.MissileUpdateTest do
     :ok = player |> Tanx.Core.Player.new_missile()
 
     game |> Tanx.Core.Game.manual_clock_tick(2000)
-    
+
     # Missile has been created at the origin
     _check_missile(player, 0, 0, -2.0)
 

@@ -19,19 +19,19 @@ defmodule Tanx.TankUpdateTest do
     :ok = player |> Tanx.Core.Player.new_tank()
     :ok = player |> Tanx.Core.Player.control_tank(:forward, true)
     game |> Tanx.Core.Game.manual_clock_tick(2000)
-    _check_tank(player, 1.0, 0.0, 0.0)
+    _check_tank(player, 2.0, 0.0, 0.0)
     game |> Tanx.Core.Game.manual_clock_tick(4000)
-    _check_tank(player, 3.0, 0.0, 0.0)
+    _check_tank(player, 6.0, 0.0, 0.0)
   end
 
   test "tank stops at arena edge", %{game: game, player: player} do
     :ok = player |> Tanx.Core.Player.new_tank()
     :ok = player |> Tanx.Core.Player.control_tank(:forward, true)
-    game |> Tanx.Core.Game.manual_clock_tick(10000)
+    game |> Tanx.Core.Game.manual_clock_tick(5500)
     _check_tank(player, 9.0, 0.0, 0.0)
-    game |> Tanx.Core.Game.manual_clock_tick(11000)
+    game |> Tanx.Core.Game.manual_clock_tick(6000)
     _check_tank(player, 9.5, 0.0, 0.0)
-    game |> Tanx.Core.Game.manual_clock_tick(12000)
+    game |> Tanx.Core.Game.manual_clock_tick(6500)
     _check_tank(player, 9.5, 0.0, 0.0)
   end
 

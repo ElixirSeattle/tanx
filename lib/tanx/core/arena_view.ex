@@ -17,9 +17,9 @@ defmodule Tanx.Core.ArenaView do
   defmodule State do
     @moduledoc """
       This struct holds the current state of the arena
-      structure - This a Tanx.Core.Structure which describes the shape of the 
+      structure - This a Tanx.Core.Structure which describes the shape of the
                   areana.
-      tanks - this is a collection of 
+      tanks - this is a collection of
     """
     defstruct structure: nil, tanks: [], missiles: []
   end
@@ -28,7 +28,7 @@ defmodule Tanx.Core.ArenaView do
     defstruct player: nil, name: "", x: 0.0, y: 0.0, heading: 0.0, radius: 0.5
   end
 
-  defmodule MissileInfo do 
+  defmodule MissileInfo do
     defstruct player: nil, name: "", x: 0.0, y: 0.0, heading: 0.0, radius: 0.1
   end
 
@@ -53,8 +53,8 @@ defmodule Tanx.Core.ArenaView do
           x: missile_info.x, y: missile_info.y, heading: missile_info.heading}
       end)
 
-    {:reply, %Tanx.Core.View.Arena{structure: state.structure, 
-                                   tanks: tanks, 
+    {:reply, %Tanx.Core.View.Arena{structure: state.structure,
+                                   tanks: tanks,
                                    missiles: missiles}, state}
   end
 

@@ -33,9 +33,9 @@ defmodule Tanx.Core.ArenaObjects do
     {:ok, %State{structure: structure}}
   end
 
-    
+
   # Create a new tank process. This must be called from the player that will own the tank.
-  # This is called by the 'player' process.  
+  # This is called by the 'player' process.
   def handle_call({:create_tank, params}, {from, _}, state) do
     {:ok, tank} = GenServer.start_link(Tanx.Core.Tank, {from, state.structure, params})
     {:reply, tank, %State{state | objects: state.objects |> Dict.put(tank, from)}}
@@ -43,7 +43,7 @@ defmodule Tanx.Core.ArenaObjects do
 
 
   # Create a new missile process. This must be called from the player that fired the missile.
-  def handle_call({:create_missile, params}, {player, _}, state) do 
+  def handle_call({:create_missile, params}, {player, _}, state) do
     {:ok, missile}  = Tanx.Core.Missile.start_link(player, params)
     {:reply, missile, %State{state | objects: state.objects |> Dict.put(missile, player)}}
   end
