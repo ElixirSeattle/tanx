@@ -18,7 +18,6 @@
     </div>
     <div>
       <button class="btn btn-primary btn-sm" id="tanx-join-btn">Join Game</button>
-      <button class="btn btn-primary btn-sm" id="tanx-rename-btn">Change Name</button>
       <button class="btn btn-default btn-sm" id="tanx-leave-btn">Leave Game</button>
     </div>
 

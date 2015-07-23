@@ -91,16 +91,17 @@ class TanxApp {
     $('#tanx-leave-btn').on('click', () => {
       this.leavePlayer();
     });
-    $('#tanx-rename-btn').on('click', () => {
-      this.renamePlayer();
-    });
 
-    $('#tanx-name-field').on('keypress', (event) => {
-      if (event.which == 13) {
-        $('#tanx-rename-btn:visible').click();
-        $('#tanx-join-btn:visible').click();
-      }
-    });
+    $('#tanx-name-field')
+      .on('keyup', (event) => {
+        if (this._hasPlayer) {
+          this.renamePlayer();
+        } else {
+          if (event.which == 13) {
+            this.joinPlayer();
+          }
+        }
+      });
 
     this.leavePlayer();
   }
@@ -337,7 +338,7 @@ class TanxApp {
     } else {
       // Add names above enemies
       context.textAlign = "center";
-      context.fillText(tank.name, 0, -11);
+      context.fillText(tank.name, 0, -tankRect.height);
 
       // enemy tank color
       context.fillStyle = "#FF0000";

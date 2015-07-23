@@ -60,6 +60,9 @@ defmodule Tanx.Core.PlayerManager do
     player_views = state.players
       |> Enum.map(fn
         ({player, %PlayerInfo{name: name, kills: kills, deaths: deaths}}) ->
+          if name == nil or name == "" do
+            name = "Anonymous Coward"
+          end
           %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths, is_me: from == player}
       end)
       |> _sort_views()
@@ -73,6 +76,9 @@ defmodule Tanx.Core.PlayerManager do
     reply = case state.players[player] do
       nil -> nil
       %PlayerInfo{name: name, kills: kills, deaths: deaths} ->
+        if name == nil or name == "" do
+          name = "Anonymous Coward"
+        end
         %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths, is_me: from == player}
     end
     {:reply, reply, state}
