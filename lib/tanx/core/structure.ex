@@ -3,5 +3,6 @@ defmodule Tanx.Core.Structure do
   The Structure module defines the static structure of an arena, including its size, shape,
   and walls.
   """
-  defstruct radius: 10.0
+  defstruct width: 20.0,
+            height: 20.0
 end

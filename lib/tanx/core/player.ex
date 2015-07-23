@@ -117,7 +117,7 @@ defmodule Tanx.Core.Player do
 
   #### GenServer callbacks
 
-  @forward_velocity 1.0
+  @forward_velocity 2.0
   @angular_velocity 2.0
 
 
@@ -134,7 +134,7 @@ defmodule Tanx.Core.Player do
     {:ok, %State{player_manager: player_manager, arena_objects: arena_objects, arena_view: arena_view}}
   end
 
-  #This is called by the new tank API. 
+  #This is called by the new tank API.
   def handle_call(:new_tank, _from, state) do
 
     case _maybe_call_tank(state, :ping) do
@@ -157,28 +157,28 @@ defmodule Tanx.Core.Player do
     end
   end
 
-  def handle_call(:new_missile, _from, state) do 
+  def handle_call(:new_missile, _from, state) do
     curr_time = _cur_millis
     if (Dict.size(state.missiles) < 5) and ((curr_time - state.last_fired) > 500) do
 
       case _maybe_call_tank(state, :tank) do
         {:not_found, state} ->
           {:reply, :no_tank, state}
-        {:ok, tank, state } -> 
-          missile = GenServer.call(state.arena_objects, 
+        {:ok, tank, state } ->
+          missile = GenServer.call(state.arena_objects,
                                    {:create_missile, {tank.x, tank.y, tank.heading}})
-          {:reply,:ok, %State{state | 
-                                missiles: [missile | state.missiles], 
+          {:reply,:ok, %State{state |
+                                missiles: [missile | state.missiles],
                                 last_fired: curr_time}
                               }
       end
-      
+
     else
       {:reply, :at_limit, state}
     end
   end
 
-  def handle_call({:explode_missile, missile}, _from, state) do 
+  def handle_call({:explode_missile, missile}, _from, state) do
     tank = state.current_tank
     if tank do
       GenServer.cast(missile, :die)

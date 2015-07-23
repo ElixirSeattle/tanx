@@ -5,6 +5,11 @@ class TanxApp {
   // TODO: Break this up into multiple classes.
 
   constructor() {
+    // Configuration
+    this.NUM_TIMESTAMPS = 10;
+    this.MAX_CANVAS_WIDTH = 400;
+    this.MAX_CANVAS_HEIGHT = 400;
+
     this.setupChannel();
     this.setupPlayerList();
     this.setupPlayerControl();
@@ -149,10 +154,10 @@ class TanxApp {
     this._leftKey = false;
     this._rightKey = false;
 
-    $('#tanx-arena').on('keydown', (event) => {
+    $('#tanx-canvas').on('keydown', (event) => {
       this.arenaKeyEvent(event, true);
     });
-    $('#tanx-arena').on('keyup', (event) => {
+    $('#tanx-canvas').on('keyup', (event) => {
       this.arenaKeyEvent(event, false);
     });
 
@@ -207,7 +212,7 @@ class TanxApp {
   launchTank() {
     if (this.hasPlayer()) {
       this.pushToChannel("launch_tank", {});
-      $('#tanx-arena').focus();
+      $('#tanx-canvas').focus();
     }
   }
 
@@ -224,13 +229,21 @@ class TanxApp {
 
 
   setupArenaAnimation() {
-    this.NUM_TIMESTAMPS = 10;
     this._timestamps = null;
     this._receivedArena = null;
     this._receivedFrame = false;
 
     this.onChannelEvent("view_arena", arena => {
       if (this.hasPlayer()) {
+        if (!this._scaleFactor) {
+          let xScale = this.MAX_CANVAS_WIDTH / arena.structure.width;
+          let yScale = this.MAX_CANVAS_HEIGHT / arena.structure.height;
+          this._scaleFactor = xScale < yScale ? xScale : yScale;
+          $('#tanx-canvas').attr({
+            width: this._scaleFactor * arena.structure.width,
+            height: this._scaleFactor * arena.structure.height
+          });
+        }
         if (this._receivedFrame) {
           this.updateArena(arena);
         } else {
@@ -242,6 +255,7 @@ class TanxApp {
 
 
   startArenaAnimation() {
+    this._scaleFactor = null;
     this._timestamps = [];
     this.runAnimation();
   }
@@ -289,7 +303,7 @@ class TanxApp {
   }
 
   renderArena(arena) {
-    $('#tanx-arena pre').text(JSON.stringify(arena, null, 4));
+    $('#tanx-arena-json').text(JSON.stringify(arena, null, 4));
 
     if(this.canvas()) {
       var context = this.canvas().getContext("2d");
@@ -354,15 +368,15 @@ class TanxApp {
   }
 
   canvas() {
-    return $('#tanx-arena canvas').get(0);
+    return $('#tanx-canvas').get(0);
   }
 
   onScreenPoint(x, y) {
-    let offset = this.canvas().width / 2;
-    let scaleFactor = 10; // TODO: This should be calculated with: offset / arena.radius
+    let xOffset = this.canvas().width / 2;
+    let yOffset = this.canvas().height / 2;
 
-    let screenX = offset + (x * scaleFactor);
-    let screenY = offset - (y * scaleFactor);
+    let screenX = xOffset + (x * this._scaleFactor);
+    let screenY = yOffset - (y * this._scaleFactor);
     return {x: screenX, y: screenY};
   }
 
@@ -370,8 +384,8 @@ class TanxApp {
     let scaleFactor = 10; // TODO: This should be calculated with: offset / arena.radius
 
     let screenPoint = this.onScreenPoint(x, y);
-    let screenWidth = width * scaleFactor;
-    let screenHeight = height * scaleFactor;
+    let screenWidth = width * this._scaleFactor;
+    let screenHeight = height * this._scaleFactor;
     return {x: screenPoint.x, y: screenPoint.y, width: screenWidth, height: screenHeight};
   }
 

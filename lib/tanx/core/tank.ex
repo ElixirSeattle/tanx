@@ -54,15 +54,16 @@
     velocity = state.velocity
     new_x = state.x + velocity * dt * :math.cos(new_heading)
     new_y = state.y + velocity * dt * :math.sin(new_heading)
-    max = state.structure.radius - @tank_radius
+    max_x = state.structure.width / 2 - @tank_radius
+    max_y = state.structure.height / 2 - @tank_radius
     new_x = cond do
-      new_x > max -> max
-      new_x < -max -> -max
+      new_x > max_x -> max_x
+      new_x < -max_x -> -max_x
       true -> new_x
     end
     new_y = cond do
-      new_y > max -> max
-      new_y < -max -> -max
+      new_y > max_y -> max_y
+      new_y < -max_y -> -max_y
       true -> new_y
     end
 

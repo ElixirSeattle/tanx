@@ -2,7 +2,8 @@ defmodule Tanx.TankUpdateTest do
   use ExUnit.Case
 
   setup do
-    {:ok, game} = Tanx.Core.Game.start_link(clock_interval: nil)
+    {:ok, game} = Tanx.Core.Game.start_link(clock_interval: nil,
+      structure: %Tanx.Core.Structure{height: 20.0, width: 20.0})
     game |> Tanx.Core.Game.manual_clock_tick(1000)
     {:ok, player} = game |> Tanx.Core.Game.connect(name: "daniel")
     {:ok, game: game, player: player}
