@@ -19,3 +19,31 @@ body {
 #tanx-arena-json {
   font-size: 10px;
 }
+
+@mixin tank-sprite-sheet() {
+  background-image: url('/images/tank_sprite.png');
+}
+
+.tanx-canvas-background {
+  @include tank-sprite-sheet();
+  zoom: .5;
+  height: 85px;
+  width: 90px;
+  background-position: 0px 0px;
+}
+
+.green-tank {
+  @include tank-sprite-sheet();
+  zoom: .5;
+  height: 85px;
+  width: 78px;
+  background-position: -90px 0px;
+}
+
+.blue-tank {
+  @include tank-sprite-sheet();
+  zoom: .5;
+  height: 85px;
+  width: 78px;
+  background-position: -90px -84px;
+}
