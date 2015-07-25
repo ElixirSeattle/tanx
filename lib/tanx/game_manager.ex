@@ -26,7 +26,15 @@ defmodule Tanx.GameManager do
   def init(_opts) do
     Tanx.Core.Game.start_link(name: :game_core,
       player_change_handler: {PlayerEvent, nil},
-      structure: %Tanx.Core.Structure{width: 24.0, height: 24.0})
+      structure: %Tanx.Core.Structure{
+        width: 24.0, height: 24.0,
+        walls: [
+          [{-3, 8}, {3, 8}, {0, 4}],
+          [{8, 3}, {8, -3}, {4, 0}],
+          [{3, -8}, {-3, -8}, {0, -4}],
+          [{-8, -3}, {-8, 3}, {-4, 0}]
+        ]
+      })
   end
 
 end

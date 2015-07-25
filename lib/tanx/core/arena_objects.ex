@@ -24,20 +24,26 @@ defmodule Tanx.Core.ArenaObjects do
       objects - this is a Dict with the keys being the PIDs of the objects and
                 the values being pid of the the Player process it belongs to.
     """
-    defstruct structure: nil, updater: nil, objects: HashDict.new
+    defstruct structure: nil,
+              updater: nil,
+              objects: HashDict.new,
+              decomposed_walls: []
   end
 
 
   def init({structure}) do
     Process.flag(:trap_exit, true)
-    {:ok, %State{structure: structure}}
+    decomposed_walls = structure.walls
+      |> Enum.map(&Tanx.Core.Obstacles.decompose_wall/1)
+    {:ok, %State{structure: structure, decomposed_walls: decomposed_walls}}
   end
 
 
   # Create a new tank process. This must be called from the player that will own the tank.
   # This is called by the 'player' process.
   def handle_call({:create_tank, params}, {from, _}, state) do
-    {:ok, tank} = GenServer.start_link(Tanx.Core.Tank, {from, state.structure, params})
+    {:ok, tank} = GenServer.start_link(Tanx.Core.Tank,
+      {state.structure.width, state.structure.height, state.decomposed_walls, from, params})
     {:reply, tank, %State{state | objects: state.objects |> Dict.put(tank, from)}}
   end
 

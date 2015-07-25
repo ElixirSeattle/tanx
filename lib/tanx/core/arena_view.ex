@@ -34,7 +34,8 @@ defmodule Tanx.Core.ArenaView do
 
 
   def init({structure}) do
-    {:ok, %State{structure: structure || %Tanx.Core.Structure{}}}
+    structure = (structure || %Tanx.Core.Structure{}) |> Tanx.Core.View.Structure.from_structure
+    {:ok, %State{structure: structure}}
   end
 
 

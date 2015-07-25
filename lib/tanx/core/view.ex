@@ -12,6 +12,24 @@ defmodule Tanx.Core.View do
   end
 
 
+  defmodule Structure do
+    @moduledoc """
+    A view of the arena structure.
+    """
+    defstruct height: 0.0,
+              width: 0.0,
+              walls: []
+
+    def from_structure(struct) do
+      walls = struct.walls
+        |> Enum.map(fn wall ->
+          wall |> Enum.flat_map(&Tuple.to_list/1)
+        end)
+      %Structure{height: struct.height, width: struct.width, walls: walls}
+    end
+  end
+
+
   defmodule Arena do
     @moduledoc """
     A view of the arena state.

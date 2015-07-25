@@ -48,8 +48,8 @@ defmodule Tanx.Core.Player do
   @doc """
   Starts a new tank for the player, and returns either :ok or :already_present.
   """
-  def new_tank(player) do
-    GenServer.call(player, :new_tank)
+  def new_tank(player, params \\ []) do
+    GenServer.call(player, {:new_tank, params})
   end
 
   @doc """
@@ -134,12 +134,12 @@ defmodule Tanx.Core.Player do
     {:ok, %State{player_manager: player_manager, arena_objects: arena_objects, arena_view: arena_view}}
   end
 
-  #This is called by the new tank API.
-  def handle_call(:new_tank, _from, state) do
 
+  #This is called by the new tank API.
+  def handle_call({:new_tank, params}, _from, state) do
     case _maybe_call_tank(state, :ping) do
       {:not_found, state} ->
-        tank = GenServer.call(state.arena_objects, {:create_tank, []})
+        tank = GenServer.call(state.arena_objects, {:create_tank, params})
         {:reply, :ok, %State{state | current_tank: tank}}
       {:ok, _, state} ->
         {:reply, :already_present, state}

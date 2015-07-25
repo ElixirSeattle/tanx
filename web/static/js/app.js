@@ -283,6 +283,7 @@ class TanxApp {
   updateArena(arena) {
     // Render the frame
     this.renderArena(arena);
+    $('#tanx-arena-json').text(JSON.stringify(arena, null, 4));
 
     // Update FPS indicator
     if (this._timestamps.push(Date.now()) > this.NUM_TIMESTAMPS) {
@@ -303,9 +304,8 @@ class TanxApp {
     this.runAnimation();
   }
 
-  renderArena(arena) {
-    $('#tanx-arena-json').text(JSON.stringify(arena, null, 4));
 
+  renderArena(arena) {
     if(this.canvas()) {
       var context = this.canvas().getContext("2d");
 
@@ -321,8 +321,30 @@ class TanxApp {
       arena.missiles.forEach(missile => {
         this.renderMissile(context, missile);
       });
+
+      // Draw maze walls
+      arena.structure.walls.forEach(wall => {
+        this.renderWall(context, wall);
+      });
     }
   }
+
+
+  renderWall(context, wall) {
+    context.save();
+    context.strokeStyle = '#888';
+    context.beginPath();
+    let point = this.onScreenPoint(wall[0], wall[1]);
+    context.moveTo(point.x, point.y);
+    for (let i=2; i<wall.length; i += 2) {
+      point = this.onScreenPoint(wall[i], wall[i+1]);
+      context.lineTo(point.x, point.y);
+    }
+    context.closePath();
+    context.stroke();
+    context.restore();
+  }
+
 
   renderTank(context, tank) {
     context.save();
@@ -353,6 +375,7 @@ class TanxApp {
     context.restore();
   }
 
+
   renderMissile(context, missile) {
     context.save();
 
@@ -368,9 +391,11 @@ class TanxApp {
     context.restore();
   }
 
+
   canvas() {
     return $('#tanx-canvas').get(0);
   }
+
 
   onScreenPoint(x, y) {
     let xOffset = this.canvas().width / 2;
@@ -380,6 +405,7 @@ class TanxApp {
     let screenY = yOffset - (y * this._scaleFactor);
     return {x: screenX, y: screenY};
   }
+
 
   onScreenRect(x, y, width, height) {
     let screenPoint = this.onScreenPoint(x, y);
