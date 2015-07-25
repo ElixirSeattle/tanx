@@ -24,23 +24,81 @@ defmodule Tanx.Core.Obstacles do
   def decompose_wall(points = [p0, p1 | _]) do
     {concave, convex, segments} = (points ++ [p0, p1])
       |> Enum.chunk(3, 1)
-      |> Enum.reduce({[], [], []}, &_decompose_wall_triplet/2)
-    concave ++ convex ++ segments
+      |> Enum.reduce({[], [], []}, &decompose_wall_triplet/2)
+    {concave ++ convex ++ segments, segments}
   end
-  def decompose_wall(_points), do: []
+  def decompose_wall(_points), do: {[], []}
 
 
-  defp _decompose_wall_triplet([p0, p1, p2], {concave, convex, segments}) do
-    segments = [{p0, p1} | segments]
-    if _cross_magnitude(p0, p1, p2) <= 0 do
-      convex = [{vdiff(p1, p0) |> _left |> vadd(p1), p1, vdiff(p1, p2) |> _right |> vadd(p1)} | convex]
+  @doc """
+  Given a decomposed wall, and an object represented by a point and radius,
+  returns the force applied by the wall against the object.
+  """
+  def force_from_decomposed_wall({elements, _segments}, p, radius) do
+    force = elements
+      |> Enum.find_value(&(element_force(&1, p, radius)))
+    if force == nil, do: {0.0, 0.0}, else: force
+  end
+
+
+  @doc """
+  Given a list of decomposed walls, and an object represented by a point and radius,
+  returns the total force applied by all walls against the object.
+  """
+  def force_from_decomposed_walls(decomposed_walls, p, radius) do
+    decomposed_walls
+      |> Enum.reduce({0.0, 0.0}, fn (wall, acc) ->
+        force_from_decomposed_wall(wall, p, radius) |> vadd(acc)
+      end)
+  end
+
+
+  @doc """
+  Given a fixed point, and an object represented by a point and radius,
+  returns the force applied by the fixed point against the object.
+  """
+  def force_from_point(from, p, radius) do
+    case force_from_point_internal(from, p, radius) do
+      nil -> {0.0, 0.0}
+      force -> force
+    end
+  end
+
+
+  @doc """
+  Given a decomposed wall, and two points representing two locations of a point object,
+  returns either the point of impact on the wall, or nil for no impact.
+  """
+  def collision_with_decomposed_wall({_elements, segments}, from, to) do
+    segments |> Enum.find_value(&(segment_intersection(&1, from, to)))
+  end
+
+
+  defp segment_intersection({p0, p1}, from, to) do
+    from_mag = cross_magnitude(p0, from, p1)
+    to_mag = cross_magnitude(p0, to, p1)
+    if from_mag < 0 and to_mag >= 0 and
+        cross_magnitude(from, p0, to) >= 0 and cross_magnitude(from, p1, to) <= 0 do
+      ratio = from_mag / (from_mag - to_mag)
+      vdiff(to, from) |> vscale(ratio) |> vadd(from)
     else
-      dir0 = vdiff(p0, p1) |> _normalize
-      dir2 = vdiff(p2, p1) |> _normalize
-      dir1 = vadd(dir0, dir2) |> _normalize
-      dist0 = _dist(p0, p1)
-      dist2 = _dist(p2, p1)
-      csquared = _dist_squared(p2, p0)
+      nil
+    end
+  end
+
+
+  defp decompose_wall_triplet([p0, p1, p2], {concave, convex, segments}) do
+    segments = [{p0, p1} | segments]
+    if cross_magnitude(p0, p1, p2) <= 0 do
+      elem = {vdiff(p1, p0) |> turn_left |> vadd(p1), p1, vdiff(p1, p2) |> turn_right |> vadd(p1)}
+      convex = [elem | convex]
+    else
+      dir0 = vdiff(p0, p1) |> normalize
+      dir2 = vdiff(p2, p1) |> normalize
+      dir1 = vadd(dir0, dir2) |> normalize
+      dist0 = vdist(p0, p1)
+      dist2 = vdist(p2, p1)
+      csquared = dist_squared(p2, p0)
       denom = csquared - (dist2 - dist0) * (dist2 - dist0)
       t_ratio = :math.sqrt(((dist0 + dist2) * (dist0 + dist2) - csquared) / denom)
       s_ratio = :math.sqrt(4.0 * dist0 * dist2 / denom)
@@ -50,39 +108,16 @@ defmodule Tanx.Core.Obstacles do
   end
 
 
-  def force_from_decomposed_wall(decomposed_wall, p, radius) do
-    force = decomposed_wall
-      |> Enum.find_value(&(element_force(&1, p, radius)))
-    if force == nil, do: {0.0, 0.0}, else: force
-  end
-
-
-  def force_from_decomposed_walls(decomposed_walls, p, radius) do
-    decomposed_walls
-      |> Enum.reduce({0.0, 0.0}, fn (wall, acc) ->
-        force_from_decomposed_wall(wall, p, radius) |> vadd(acc)
-      end)
-  end
-
-
-  def force_from_point(from, p, radius) do
-    case force_from_point_internal(from, p, radius) do
-      nil -> {0.0, 0.0}
-      force -> force
-    end
-  end
-
-
   defp force_from_point_internal(from, p, radius) do
     normal = vdiff(p, from)
-    dist = _norm(normal)
+    dist = vnorm(normal)
     if dist < radius do
       if dist == 0 do
         # TODO: Change to :rand once we're on Erlang 18
         ang = :random.uniform() * :math.pi() * 2
         {radius * :math.cos(ang), radius * :math.sin(ang)}
       else
-        normal |> _scale((radius - dist) / dist)
+        normal |> vscale((radius - dist) / dist)
       end
     else
       nil
@@ -92,12 +127,12 @@ defmodule Tanx.Core.Obstacles do
 
   # Force for a wall segment
   defp element_force({p0, p1}, p, radius) do
-    if _cross_magnitude(p0, p, p1) < 0 do
+    if cross_magnitude(p0, p, p1) < 0 do
       a = vdiff(p, p0)
       b = vdiff(p1, p0)
-      factor = vdot(a, b) / _norm_squared(b)
+      factor = vdot(a, b) / norm_squared(b)
       if factor >= 0.0 and factor <= 1.0 do
-        proj = _scale(b, factor) |> vadd(p0)
+        proj = vscale(b, factor) |> vadd(p0)
         force_from_point_internal(proj, p, radius)
       else
         nil
@@ -109,7 +144,7 @@ defmodule Tanx.Core.Obstacles do
 
   # Force for a convex corner
   defp element_force({n0, p1, n2}, p, radius) do
-    if _cross_magnitude(n0, p1, p) >= 0 && _cross_magnitude(p, p1, n2) >= 0 do
+    if cross_magnitude(n0, p1, p) >= 0 and cross_magnitude(p, p1, n2) >= 0 do
       force_from_point_internal(p1, p, radius)
     else
       nil
@@ -118,11 +153,11 @@ defmodule Tanx.Core.Obstacles do
 
   # Force for a concave corner
   defp element_force({p1, dir0, dir1, dir2, t_ratio, s_ratio}, p, radius) do
-    p0 = _scale(dir0, radius * t_ratio) |> vadd(p1)
-    p2 = _scale(dir2, radius * t_ratio) |> vadd(p1)
-    p3 = _scale(dir1, radius * s_ratio) |> vadd(p1)
-    if _cross_magnitude(p, p0, p1) >= 0 && _cross_magnitude(p, p1, p2) >= 0 &&
-        _cross_magnitude(p, p2, p3) >= 0 && _cross_magnitude(p, p3, p0) >= 0 do
+    p0 = vscale(dir0, radius * t_ratio) |> vadd(p1)
+    p2 = vscale(dir2, radius * t_ratio) |> vadd(p1)
+    p3 = vscale(dir1, radius * s_ratio) |> vadd(p1)
+    if cross_magnitude(p, p0, p1) >= 0 and cross_magnitude(p, p1, p2) >= 0 and
+        cross_magnitude(p, p2, p3) >= 0 and cross_magnitude(p, p3, p0) >= 0 do
       vdiff(p3, p)
     else
       nil
@@ -136,24 +171,24 @@ defmodule Tanx.Core.Obstacles do
 
   defp vdot({x0, y0}, {x1, y1}), do: x0 * x1 + y0 * y1
 
-  defp _right({x, y}), do: {y, -x}
+  defp turn_right({x, y}), do: {y, -x}
 
-  defp _left({x, y}), do: {-y, x}
+  defp turn_left({x, y}), do: {-y, x}
 
-  defp _cross_magnitude({x0, y0}, {x1, y1}, {x2, y2}) do
+  defp cross_magnitude({x0, y0}, {x1, y1}, {x2, y2}) do
     (x1 - x0) * (y2 - y1) - (x2 - x1) * (y1 - y0)
   end
 
-  defp _scale({x, y}, r), do: {x * r, y * r}
+  defp vscale({x, y}, r), do: {x * r, y * r}
 
-  defp _norm_squared({x, y}), do: x * x + y * y
+  defp norm_squared({x, y}), do: x * x + y * y
 
-  defp _norm(p), do: p |> _norm_squared |> :math.sqrt
+  defp vnorm(p), do: p |> norm_squared |> :math.sqrt
 
-  defp _dist_squared(p0, p1), do: vdiff(p0, p1) |> _norm_squared
+  defp dist_squared(p0, p1), do: vdiff(p0, p1) |> norm_squared
 
-  defp _dist(p0, p1), do: _dist_squared(p0, p1) |> :math.sqrt
+  defp vdist(p0, p1), do: dist_squared(p0, p1) |> :math.sqrt
 
-  defp _normalize(p), do: _scale(p, 1 / _norm(p))
+  defp normalize(p), do: vscale(p, 1 / vnorm(p))
 
 end
