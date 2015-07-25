@@ -161,12 +161,12 @@ defmodule Tanx.Core.Player do
     curr_time = _cur_millis
     if (Dict.size(state.missiles) < 5) and ((curr_time - state.last_fired) > 500) do
 
-      case _maybe_call_tank(state, :tank) do
+      case _maybe_call_tank(state, :get_position) do
         {:not_found, state} ->
           {:reply, :no_tank, state}
-        {:ok, tank, state } ->
+        {:ok, {x, y, heading}, state } ->
           missile = GenServer.call(state.arena_objects,
-                                   {:create_missile, {tank.x, tank.y, tank.heading}})
+                                   {:create_missile, {x, y, heading}})
           {:reply,:ok, %State{state |
                                 missiles: [missile | state.missiles],
                                 last_fired: curr_time}

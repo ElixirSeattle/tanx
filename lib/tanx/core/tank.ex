@@ -1,4 +1,10 @@
-  defmodule Tanx.Core.Tank do
+defmodule Tanx.Core.Tank do
+
+  @tank_radius 0.5
+  @tank_collision_buffer 0.1
+
+
+  def collision_radius(), do: @tank_radius + @tank_collision_buffer
 
 
   # GenServer callbacks
@@ -11,15 +17,11 @@
               arena_height: 20.0,
               decomposed_walls: [],
               player: nil,
-              x: 0.0,
-              y: 0.0,
+              pos: {0.0, 0.0},
               heading: 0.0,
               velocity: 0.0,
               angular_velocity: 0.0
   end
-
-  @tank_radius 0.5
-  @tank_wall_buffer 0.1
 
   def init({arena_width, arena_height, decomposed_walls, player, params}) do
     x = Keyword.get(params, :x, 0)
@@ -27,12 +29,13 @@
     heading = Keyword.get(params, :heading, 0)
     state = %State{arena_width: arena_width, arena_height: arena_height,
       decomposed_walls: decomposed_walls,
-      player: player, x: x, y: y, heading: heading}
+      player: player, pos: {x, y}, heading: heading}
     {:ok, state}
   end
 
-  def handle_call(:tank, _from, state) do
-    {:reply, state, state}
+  def handle_call(:get_position, _from, state) do
+    {x, y} = state.pos
+    {:reply, {x, y, state.heading}, state}
   end
 
   def handle_call({:control_movement, velocity, angular_velocity}, _from, state) do
@@ -49,16 +52,24 @@
     dt = max((time - last_time) / 1000, 0.0)
 
     new_heading = _new_heading(state, dt)
-    {new_x, new_y} = _new_pos(state, new_heading, dt)
-    {new_x, new_y} = _check_walls(new_x, new_y, state.decomposed_walls)
+    pos = _new_pos(state, new_heading, dt)
 
-    state = %State{state | x: new_x, y: new_y, heading: new_heading}
-    update = %Tanx.Core.Updates.MoveTank{player: state.player,
-      x: new_x, y: new_y, heading: new_heading, radius: @tank_radius}
+    force = Tanx.Core.Obstacles.force_from_decomposed_walls(
+      state.decomposed_walls, pos, @tank_radius + @tank_collision_buffer)
+
+    state = %State{state | pos: pos, heading: new_heading}
+    update = %Tanx.Core.Updates.MoveTank{tank: self, player: state.player,
+      pos: pos, heading: new_heading, radius: @tank_radius, force: force}
 
     GenServer.cast(updater, {:update_reply, self, update})
     {:noreply, state}
   end
+
+
+  def handle_cast({:moveto, x, y}, state) do
+    {:noreply, %State{state | pos: {x, y}}}
+  end
+
 
   def handle_cast(:die, state) do
     {:stop, :normal, state}
@@ -77,8 +88,9 @@
 
   defp _new_pos(state, new_heading, dt) do
     dist = state.velocity * dt
-    new_x = state.x + dist * :math.cos(new_heading)
-    new_y = state.y + dist * :math.sin(new_heading)
+    {x, y} = state.pos
+    new_x = x + dist * :math.cos(new_heading)
+    new_y = y + dist * :math.sin(new_heading)
     max_x = state.arena_width / 2 - @tank_radius
     max_y = state.arena_height / 2 - @tank_radius
     new_x = cond do
@@ -92,12 +104,6 @@
       true -> new_y
     end
     {new_x, new_y}
-  end
-
-  defp _check_walls(x, y, decomposed_walls) do
-    {fx, fy} = Tanx.Core.Obstacles.force_from_decomposed_walls(
-      decomposed_walls, {x, y}, @tank_radius + @tank_wall_buffer)
-    {x + fx, y + fy}
   end
 
 end

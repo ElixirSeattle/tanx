@@ -16,17 +16,9 @@ defmodule Tanx.Core.View do
     @moduledoc """
     A view of the arena structure.
     """
-    defstruct height: 0.0,
-              width: 0.0,
+    defstruct height: 20.0,
+              width: 20.0,
               walls: []
-
-    def from_structure(struct) do
-      walls = struct.walls
-        |> Enum.map(fn wall ->
-          wall |> Enum.flat_map(&Tuple.to_list/1)
-        end)
-      %Structure{height: struct.height, width: struct.width, walls: walls}
-    end
   end
 
 
@@ -34,7 +26,7 @@ defmodule Tanx.Core.View do
     @moduledoc """
     A view of the arena state.
     """
-    defstruct structure: %Tanx.Core.Structure{}, tanks: [], missiles: []
+    defstruct structure: %Structure{}, tanks: [], missiles: []
   end
 
 
@@ -49,7 +41,7 @@ defmodule Tanx.Core.View do
     @moduledoc """
     A view of a missile.
     """
-    defstruct is_mine: false, name: "", x: 0.0, y: 0.0, heading: 0.0
+    defstruct is_mine: false, x: 0.0, y: 0.0, heading: 0.0
   end
 
 end

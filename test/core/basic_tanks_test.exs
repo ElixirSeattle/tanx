@@ -24,13 +24,13 @@ defmodule Tanx.BasicTanksTest do
     {:ok, player1} = game |> Tanx.Core.Game.connect(name: "daniel")
     {:ok, player2} = game |> Tanx.Core.Game.connect(name: "greg")
     :ok = player1 |> Tanx.Core.Player.new_tank()
-    :ok = player2 |> Tanx.Core.Player.new_tank()
+    :ok = player2 |> Tanx.Core.Player.new_tank(x: 2)
     :ok = game |> Tanx.Core.Game.manual_clock_tick(1000)
     view = player1 |> Tanx.Core.Player.view_arena()
     got = view.tanks |> Enum.into(HashSet.new)
     want = [
       %Tanx.Core.View.Tank{is_me: true, name: "daniel"},
-      %Tanx.Core.View.Tank{is_me: false, name: "greg"}
+      %Tanx.Core.View.Tank{is_me: false, name: "greg", x: 2.0}
     ] |> Enum.into(HashSet.new)
     assert got == want
   end
@@ -57,7 +57,7 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena()
     assert view == %Tanx.Core.View.Arena{
       missiles: [
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0}
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0}
       ],
       tanks: [
         %Tanx.Core.View.Tank{is_me: true, name: "Kyle"}
@@ -78,7 +78,7 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena()
     assert view == %Tanx.Core.View.Arena{
       missiles: [
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0},
       ],
       tanks: [
         %Tanx.Core.View.Tank{is_me: true, name: "Kyle"}
@@ -100,8 +100,8 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena()
     assert view == %Tanx.Core.View.Arena{
       missiles: [
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0}
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0}
       ],
       tanks: [
         %Tanx.Core.View.Tank{is_me: true, name: "Kyle"}
@@ -137,11 +137,11 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena()
     assert view == %Tanx.Core.View.Arena{
       missiles: [
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0},
-        %Tanx.Core.View.Missile{is_mine: true, name: "Kyle", x: 10.0}
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0},
+        %Tanx.Core.View.Missile{is_mine: true, x: 10.0}
       ],
       tanks: [
         %Tanx.Core.View.Tank{is_me: true, name: "Kyle"}

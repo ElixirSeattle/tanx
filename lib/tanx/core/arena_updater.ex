@@ -58,69 +58,114 @@ defmodule Tanx.Core.ArenaUpdater do
   def handle_cast({:update_reply, object, update}, state) do
     received = [update | state.received]
     expected = state.expected |> Set.delete(object)
-    state = _check_responses(%State{state | received: received, expected: expected})
-    _final_reply(state)
+    state = check_responses(%State{state | received: received, expected: expected})
+    final_reply(state)
   end
 
   def handle_cast({:object_died, object}, state) do
     expected = state.expected |> Set.delete(object)
-    state = _check_responses(%State{state | expected: expected})
-    _final_reply(state)
+    state = check_responses(%State{state | expected: expected})
+    final_reply(state)
   end
 
 
-  defp _final_reply(state = %State{expected: nil}) do
+  defp final_reply(state = %State{expected: nil}) do
     {:stop, :normal, state}
   end
-  defp _final_reply(state) do
+  defp final_reply(state) do
     {:noreply, state}
   end
 
-  defp _check_responses(state) do
+
+  defp check_responses(state) do
     if Enum.empty?(state.expected) do
-      _process_responses(state)
+      process_responses(state)
     else
       state
     end
   end
 
-  defp _process_responses(state) do
-    # TODO: explosions, other objects to this tuple
-    {_, tanks, missiles} = state.received |> Enum.reduce({state, [], []}, &_process_response/2)
 
-    # TODO: Collision detection
+  defp process_responses(state) do
+    categorized_responses = state.received
+      |> Enum.group_by(fn
+        %Tanx.Core.Updates.MoveTank{} -> :tank
+        %Tanx.Core.Updates.MoveMissile{} -> :missile
+        _ -> :unknown
+      end)
+    tank_responses = Dict.get(categorized_responses, :tank, [])
+    missile_responses = Dict.get(categorized_responses, :missile, [])
 
+    tank_responses = resolve_tank_forces(tank_responses)
 
+    # TODO: Tank-missile collisions
 
-    :ok = GenServer.call(state.arena_view, {:update, {tanks,missiles}})
+    send_revised_tanks(tank_responses)
+    tank_views = create_tank_views(state, tank_responses)
+    missile_views = create_missile_views(missile_responses)
+
+    :ok = GenServer.call(state.arena_view, {:update, {tank_views, missile_views}})
 
     GenServer.cast(state.clock, :clock_tock)
     %State{state | expected: nil, received: nil}
   end
 
-  defp _process_response(response = %Tanx.Core.Updates.MoveTank{}, {state, tanks, missiles}) do
-    player_view = GenServer.call(state.player_manager, {:view_player, response.player})
-    if player_view do
-      tank = %Tanx.Core.ArenaView.TankInfo{player: response.player, name: player_view.name,
-        x: response.x, y: response.y, heading: response.heading, radius: response.radius}
 
-      {state, [tank | tanks], missiles}
-    else
-      {state, tanks, missiles}
-    end
+  defp resolve_tank_forces(tank_responses) do
+    radius = Tanx.Core.Tank.collision_radius() * 2
+    tank_responses |> Enum.map(fn tank1 ->
+      player1 = tank1.player
+      pos1 = tank1.pos
+      tank1 = tank_responses |> Enum.reduce(tank1, fn (tank2, cur_tank1) ->
+        if tank2.player == player1 do
+          cur_tank1
+        else
+          {fx, fy} = force = Tanx.Core.Obstacles.force_from_point(tank2.pos, pos1, radius)
+          if fx == 0 and fy == 0 do
+            cur_tank1
+          else
+            %Tanx.Core.Updates.MoveTank{cur_tank1 | force: vadd(cur_tank1.force, force)}
+          end
+        end
+      end)
+      new_pos = vadd(tank1.pos, tank1.force)
+      %Tanx.Core.Updates.MoveTank{tank1 | pos: new_pos}
+    end)
   end
 
-  defp _process_response(response = %Tanx.Core.Updates.MoveMissile{}, {state, tanks, missiles}) do
-    player_view = GenServer.call(state.player_manager, {:view_player, response.player})
-    if player_view do
-      missile = %Tanx.Core.ArenaView.MissileInfo{player: response.player, name: player_view.name,
+
+  defp send_revised_tanks(responses) do
+    responses |> Enum.each(fn
+      tank ->
+        {newx, newy} = tank.pos
+        GenServer.cast(tank.tank, {:moveto, newx, newy})
+    end)
+  end
+
+
+  defp create_tank_views(state, responses) do
+    responses |> Enum.flat_map(fn response ->
+      player_view = GenServer.call(state.player_manager, {:view_player, response.player})
+      if player_view do
+        {x, y} = response.pos
+        tank = %Tanx.Core.ArenaView.TankInfo{player: response.player, name: player_view.name,
+          x: x, y: y, heading: response.heading, radius: response.radius}
+        [tank]
+      else
+        []
+      end
+    end)
+  end
+
+
+  defp create_missile_views(responses) do
+    responses |> Enum.map(fn response ->
+      %Tanx.Core.ArenaView.MissileInfo{player: response.player,
         x: response.x, y: response.y, heading: response.heading}
-      {state, tanks, [missile | missiles]}
-    else
-      {state, tanks, missiles}
-    end
+    end)
   end
 
-  # TODO: Other updates
+
+  defp vadd({x0, y0}, {x1, y1}), do: {x0 + x1, y0 + y1}
 
 end

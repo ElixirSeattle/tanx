@@ -29,13 +29,21 @@ defmodule Tanx.Core.ArenaView do
   end
 
   defmodule MissileInfo do
-    defstruct player: nil, name: "", x: 0.0, y: 0.0, heading: 0.0, radius: 0.1
+    defstruct player: nil, x: 0.0, y: 0.0, heading: 0.0, radius: 0.1
   end
 
 
   def init({structure}) do
-    structure = (structure || %Tanx.Core.Structure{}) |> Tanx.Core.View.Structure.from_structure
-    {:ok, %State{structure: structure}}
+    walls = structure.walls
+      |> Enum.map(fn wall ->
+        wall |> Enum.flat_map(&Tuple.to_list/1)
+      end)
+    structure_view = %Tanx.Core.View.Structure{
+      height: structure.height,
+      width: structure.width,
+      walls: walls
+    }
+    {:ok, %State{structure: structure_view}}
   end
 
 
@@ -50,7 +58,7 @@ defmodule Tanx.Core.ArenaView do
 
     missiles = state.missiles
       |> Enum.map(fn missile_info ->
-        %Tanx.Core.View.Missile{is_mine: missile_info.player == from, name: missile_info.name,
+        %Tanx.Core.View.Missile{is_mine: missile_info.player == from,
           x: missile_info.x, y: missile_info.y, heading: missile_info.heading}
       end)
 
