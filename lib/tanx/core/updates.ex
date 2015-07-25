@@ -15,6 +15,17 @@ defmodule Tanx.Core.Updates do
               force: {0.0, 0.0}
   end
 
+
+  defmodule Explosion do
+    @moduledoc """
+    An update command that advances an explosion.
+    """
+    defstruct pos: {0.0, 0.0},
+              radius: 1.0,
+              age: 0.0
+  end
+
+
   defmodule MoveMissile do
     @moduledoc """
     An update command that moves the missile along its path.

@@ -21,7 +21,7 @@ defmodule Tanx.Core.ArenaView do
                   areana.
       tanks - this is a collection of
     """
-    defstruct structure: nil, tanks: [], missiles: []
+    defstruct structure: nil, tanks: [], missiles: [], explosions: []
   end
 
   defmodule TankInfo do
@@ -30,6 +30,10 @@ defmodule Tanx.Core.ArenaView do
 
   defmodule MissileInfo do
     defstruct player: nil, x: 0.0, y: 0.0, heading: 0.0, radius: 0.1
+  end
+
+  defmodule ExplosionInfo do
+    defstruct x: 0.0, y: 0.0, radius: 1.0, age: 0.0
   end
 
 
@@ -64,13 +68,14 @@ defmodule Tanx.Core.ArenaView do
 
     {:reply, %Tanx.Core.View.Arena{structure: state.structure,
                                    tanks: tanks,
-                                   missiles: missiles}, state}
+                                   missiles: missiles,
+                                   explosions: state.explosions}, state}
   end
 
 
   # This is called from an updater to update the view with a new state.
-  def handle_call({:update, {tanks, missiles}}, _from, state) do
-    {:reply, :ok, %State{state | tanks: tanks, missiles: missiles}}
+  def handle_call({:update, tanks, missiles, explosions}, _from, state) do
+    {:reply, :ok, %State{state | tanks: tanks, missiles: missiles, explosions: explosions}}
   end
 
 

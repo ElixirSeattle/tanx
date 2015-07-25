@@ -42,7 +42,7 @@ defmodule Tanx.Core.ArenaUpdater do
   def init({structure, arena_objects, arena_view, player_manager, clock, last_time, time}) do
     objects = GenServer.call(arena_objects, :get)
     if Enum.empty?(objects) do
-      :ok = GenServer.call(arena_view, {:update, {[], []}})
+      :ok = GenServer.call(arena_view, {:update, [], [], []})
       GenServer.cast(clock, :clock_tock)
       :ignore
     else
@@ -91,10 +91,12 @@ defmodule Tanx.Core.ArenaUpdater do
       |> Enum.group_by(fn
         %Tanx.Core.Updates.MoveTank{} -> :tank
         %Tanx.Core.Updates.MoveMissile{} -> :missile
+        %Tanx.Core.Updates.Explosion{} -> :explosion
         _ -> :unknown
       end)
     tank_responses = Dict.get(categorized_responses, :tank, [])
     missile_responses = Dict.get(categorized_responses, :missile, [])
+    explosion_responses = Dict.get(categorized_responses, :explosion, [])
 
     tank_responses = resolve_tank_forces(tank_responses)
 
@@ -103,8 +105,9 @@ defmodule Tanx.Core.ArenaUpdater do
     send_revised_tanks(tank_responses)
     tank_views = create_tank_views(state, tank_responses)
     missile_views = create_missile_views(missile_responses)
+    explosion_views = create_explosion_views(explosion_responses)
 
-    :ok = GenServer.call(state.arena_view, {:update, {tank_views, missile_views}})
+    :ok = GenServer.call(state.arena_view, {:update, tank_views, missile_views, explosion_views})
 
     GenServer.cast(state.clock, :clock_tock)
     %State{state | expected: nil, received: nil}
@@ -138,7 +141,7 @@ defmodule Tanx.Core.ArenaUpdater do
     responses |> Enum.each(fn
       tank ->
         {newx, newy} = tank.pos
-        GenServer.cast(tank.tank, {:moveto, newx, newy})
+        GenServer.cast(tank.tank, {:move_to, newx, newy})
     end)
   end
 
@@ -162,6 +165,14 @@ defmodule Tanx.Core.ArenaUpdater do
     responses |> Enum.map(fn response ->
       %Tanx.Core.ArenaView.MissileInfo{player: response.player,
         x: response.x, y: response.y, heading: response.heading}
+    end)
+  end
+
+
+  defp create_explosion_views(responses) do
+    responses |> Enum.map(fn response ->
+      {x, y} = response.pos
+      %Tanx.Core.View.Explosion{x: x, y: y, radius: response.radius, age: response.age}
     end)
   end
 

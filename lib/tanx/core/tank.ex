@@ -23,6 +23,7 @@ defmodule Tanx.Core.Tank do
               angular_velocity: 0.0
   end
 
+
   def init({arena_width, arena_height, decomposed_walls, player, params}) do
     x = Keyword.get(params, :x, 0)
     y = Keyword.get(params, :y, 0)
@@ -33,15 +34,18 @@ defmodule Tanx.Core.Tank do
     {:ok, state}
   end
 
+
   def handle_call(:get_position, _from, state) do
     {x, y} = state.pos
     {:reply, {x, y, state.heading}, state}
   end
 
+
   def handle_call({:control_movement, velocity, angular_velocity}, _from, state) do
     {:reply, :ok, %State{state | velocity: velocity || state.velocity,
       angular_velocity: angular_velocity || state.angular_velocity}}
   end
+
 
   def handle_call(:ping, _from, state) do
     {:reply, :ok, state}
@@ -66,7 +70,7 @@ defmodule Tanx.Core.Tank do
   end
 
 
-  def handle_cast({:moveto, x, y}, state) do
+  def handle_cast({:move_to, x, y}, state) do
     {:noreply, %State{state | pos: {x, y}}}
   end
 
