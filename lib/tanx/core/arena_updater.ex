@@ -44,9 +44,9 @@ defmodule Tanx.Core.ArenaUpdater do
 
 
   def init({structure, arena_objects, arena_view, player_manager, clock, last_time, time}) do
-    objects = GenServer.call(arena_objects, :get)
+    objects = arena_objects |> Tanx.Core.ArenaObjects.get_objects
     if Enum.empty?(objects) do
-      :ok = GenServer.call(arena_view, {:update, [], [], []})
+      :ok = arena_view |> Tanx.Core.ArenaView.clear_objects
       GenServer.cast(clock, :clock_tock)
       :ignore
     else
@@ -111,7 +111,8 @@ defmodule Tanx.Core.ArenaUpdater do
     missile_views = create_missile_views(missile_responses)
     explosion_views = create_explosion_views(explosion_responses)
 
-    :ok = GenServer.call(state.arena_view, {:update, tank_views, missile_views, explosion_views})
+    :ok = state.arena_view |> Tanx.Core.ArenaView.set_objects(
+        tank_views, missile_views, explosion_views)
 
     GenServer.cast(state.clock, :clock_tock)
     %State{state | expected: nil, received: nil}

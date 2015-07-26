@@ -155,7 +155,7 @@ defmodule Tanx.Core.Player do
   def handle_call({:new_tank, params}, _from, state) do
     case _maybe_call_tank(state, :ping) do
       {:not_found, state} ->
-        tank = GenServer.call(state.arena_objects, {:create_tank, params})
+        tank = state.arena_objects |> Tanx.Core.ArenaObjects.create_tank(params)
         {:reply, :ok, %State{state | current_tank: tank}}
       {:ok, _, state} ->
         {:reply, :already_present, state}
@@ -173,6 +173,7 @@ defmodule Tanx.Core.Player do
     end
   end
 
+
   def handle_call(:new_missile, _from, state) do
     curr_time = _cur_millis
     if (Dict.size(state.missiles) < 5) and ((curr_time - state.last_fired) > 500) do
@@ -183,8 +184,7 @@ defmodule Tanx.Core.Player do
         {:ok, nil, state} ->
           {:reply, :no_tank, state}
         {:ok, {x, y, heading}, state } ->
-          missile = GenServer.call(state.arena_objects,
-                                   {:create_missile, {x, y, heading}})
+          missile = state.arena_objects |> Tanx.Core.ArenaObjects.create_missile(x, y, heading)
           {:reply,:ok, %State{state |
                                 missiles: [missile | state.missiles],
                                 last_fired: curr_time}
@@ -194,6 +194,7 @@ defmodule Tanx.Core.Player do
       {:reply, :at_limit, state}
     end
   end
+
 
   def handle_call({:explode_missile, missile}, _from, state) do
     tank = state.current_tank
@@ -243,12 +244,12 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call(:view_arena_objects, _from, state) do
-    view = GenServer.call(state.arena_view, :get_objects)
+    view = state.arena_view |> Tanx.Core.ArenaView.get_objects()
     {:reply, view, state}
   end
 
   def handle_call(:view_arena_structure, _from, state) do
-    view = GenServer.call(state.arena_view, :get_structure)
+    view = state.arena_view |> Tanx.Core.ArenaView.get_structure()
     {:reply, view, state}
   end
 

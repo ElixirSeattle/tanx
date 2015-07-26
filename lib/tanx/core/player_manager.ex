@@ -10,6 +10,19 @@ defmodule Tanx.Core.PlayerManager do
   """
 
 
+  #### Public API
+
+
+  @doc """
+    Starts a PlayerManager process. This should be called only from a Game process.
+  """
+  def start_link(arena_objects, arena_view, change_handler, handler_args) do
+    {:ok, pid} = GenServer.start_link(__MODULE__,
+        {arena_objects, arena_view, change_handler, handler_args})
+    pid
+  end
+
+
   #### GenServer callbacks
 
   use GenServer
@@ -149,11 +162,12 @@ defmodule Tanx.Core.PlayerManager do
 
   # Remove the given player from the current list.
   defp _remove_player(player, state) do
-    GenServer.call(state.arena_objects, {:player_left, player})
+    :ok = state.arena_objects |> Tanx.Core.ArenaObjects.kill_player_objects(player)
     state = %State{state | players: state.players |> Dict.delete(player)}
     _broadcast_change(state)
     state
   end
+
 
   defp _broadcast_change(state = %State{broadcaster: nil}), do: state
   defp _broadcast_change(state) do
@@ -166,6 +180,7 @@ defmodule Tanx.Core.PlayerManager do
     GenEvent.notify(state.broadcaster, {:player_views, player_views})
     state
   end
+
 
   defp _sort_views(views) do
     views |> Enum.sort_by(fn

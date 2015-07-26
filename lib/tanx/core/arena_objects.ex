@@ -11,7 +11,57 @@ defmodule Tanx.Core.ArenaObjects do
   """
 
 
-  # GenServer callbacks
+  #### Public API
+
+
+  @doc """
+    Starts an ArenaObjects process. This should be called only from a Game process.
+  """
+  def start_link(structure) do
+    {:ok, pid} = GenServer.start_link(__MODULE__, {structure})
+    pid
+  end
+
+
+  @doc """
+    Create a new tank process. This must be called from the player that will own the tank.
+
+    The keyword list may include the following:
+
+    - **:x** The initial x position.
+    - **:y** The initial y position.
+    - **:heading** The initial heading in radians (where 0 is to the right).
+  """
+  def create_tank(arena_objects, params \\ []) do
+    GenServer.call(arena_objects, {:create_tank, params})
+  end
+
+
+  @doc """
+    Create a new missile process. This must be called from the player that will own the missile.
+  """
+  def create_missile(arena_objects, x, y, heading) do
+    GenServer.call(arena_objects, {:create_missile, x, y, heading})
+  end
+
+
+  @doc """
+    Get a list of all live arena objects. This may be called only by an ArenaUpdater.
+  """
+  def get_objects(arena_objects) do
+    GenServer.call(arena_objects, :get_objects)
+  end
+
+
+  @doc """
+    Kill all objects owned by the given player
+  """
+  def kill_player_objects(arena_objects, player) do
+    GenServer.call(arena_objects, {:player_left, player})
+  end
+
+
+  #### GenServer callbacks
 
   use GenServer
 
@@ -49,17 +99,15 @@ defmodule Tanx.Core.ArenaObjects do
 
 
   # Create a new missile process. This must be called from the player that fired the missile.
-  def handle_call({:create_missile, params}, {player, _}, state) do
-    {:ok, missile}  = Tanx.Core.Missile.start_link(player, params)
+  def handle_call({:create_missile, x, y, heading}, {player, _}, state) do
+    {:ok, missile}  = Tanx.Core.Missile.start_link(player, {x, y, heading})
     {:reply, missile, %State{state | objects: state.objects |> Dict.put(missile, player)}}
   end
-
-  # TODO: create_explosion
 
 
   # Get a snapshot of the current list of objects. This is called from an updater as the
   # first step in its update process.
-  def handle_call(:get, {from, _}, state) do
+  def handle_call(:get_objects, {from, _}, state) do
     {:reply, state.objects |> Dict.keys(), %State{state | updater: from}}
   end
 

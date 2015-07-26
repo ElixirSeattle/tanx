@@ -10,7 +10,55 @@ defmodule Tanx.Core.ArenaView do
   """
 
 
-  # GenServer callbacks
+  #### Public API
+
+
+  @doc """
+  Starts an ArenaView process. This should be called only from a Game process.
+  """
+  def start_link(structure) do
+    {:ok, pid} = GenServer.start_link(__MODULE__, {structure})
+    pid
+  end
+
+
+  @doc """
+  Gets the arena's Tanx.Core.View.Structure.
+  """
+  def get_structure(arena_view) do
+    GenServer.call(arena_view, :get_structure)
+  end
+
+
+  @doc """
+  Gets the current list of arena objects as a Tanx.Core.View.Arena.
+
+  If this function is called by a Player process, that player's tanks will have
+  the :is_me field set to true, and that player's missiles will have the
+  :is_mine field set to true.
+  """
+  def get_objects(arena_view) do
+    GenServer.call(arena_view, :get_objects)
+  end
+
+
+  @doc """
+    Update the object list.
+  """
+  def set_objects(arena_view, tanks, missiles, explosions) do
+    GenServer.call(arena_view, {:update, tanks, missiles, explosions})
+  end
+
+
+  @doc """
+    Clear the object list.
+  """
+  def clear_objects(arena_view) do
+    set_objects(arena_view, [], [], [])
+  end
+
+
+  #### GenServer callbacks
 
   use GenServer
 
