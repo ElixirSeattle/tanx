@@ -26,12 +26,13 @@ body {
 
 #tanx-canvas {
   background-image: url('/images/canvas_background.png');
+  background-size: 50px 50px;
   background-repeat: repeat;
 }
 
 .green-tank {
   @include tank-sprite-sheet();
-  zoom: .5;
+  zoom: .35;
   height: 85px;
   width: 78px;
   background-position: -90px 0px;
@@ -39,7 +40,7 @@ body {
 
 .blue-tank {
   @include tank-sprite-sheet();
-  zoom: .5;
+  zoom: .35;
   height: 85px;
   width: 78px;
   background-position: -90px -84px;
