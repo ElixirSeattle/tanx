@@ -350,31 +350,25 @@ class TanxApp {
     context.save();
 
     let tankRect = this.onScreenRect(tank.x, tank.y, tank.radius*2, tank.radius*2);
-    let barrelRect = this.onScreenRect(tank.x, tank.y, 1, 0.2);
-
     context.translate(tankRect.x, tankRect.y);
 
-    if(tank.is_me) {
-      // my tank color
-      context.fillStyle = "#0000FF";
-    } else {
-      // Add names above enemies
+    let tankImage = new Image();
+    tankImage.src = 'images/tank_sprite.png';
+    
+    let rotateTankImage90Degrees = 90 * Math.PI/180;      
+    context.rotate(-tank.heading + rotateTankImage90Degrees);
+    
+    let spriteSheetX = 90;
+    let spriteSheetY = tank.is_me ? 0 : 84;
+    context.drawImage(tankImage, spriteSheetX, spriteSheetY, 78, 85, -10, -10, 25, 25); 
+    
+    if(tank.is_me === false) {
       context.textAlign = "center";
-      context.fillText(tank.name, 0, -tankRect.height);
-
-      // enemy tank color
-      context.fillStyle = "#FF0000";
+      context.fillText(tank.name, 0, -15);
     }
-
-    context.rotate(-tank.heading);
-
-    // TODO: Replace this with some nice graphics
-    context.fillRect(-tankRect.width/2, -tankRect.height/2, tankRect.width, tankRect.height);
-    context.fillRect(0, -barrelRect.height/2, barrelRect.width, barrelRect.height)
-
+      
     context.restore();
   }
-
 
   renderMissile(context, missile) {
     context.save();
