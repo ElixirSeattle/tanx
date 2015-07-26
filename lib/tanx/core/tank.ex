@@ -2,6 +2,8 @@ defmodule Tanx.Core.Tank do
 
   @tank_radius 0.5
   @tank_collision_buffer 0.1
+  @explosion_radius 1.0
+  @explosion_time 0.6
 
 
   def collision_radius(), do: @tank_radius + @tank_collision_buffer
@@ -20,7 +22,8 @@ defmodule Tanx.Core.Tank do
               pos: {0.0, 0.0},
               heading: 0.0,
               velocity: 0.0,
-              angular_velocity: 0.0
+              angular_velocity: 0.0,
+              explosion: nil
   end
 
 
@@ -52,11 +55,55 @@ defmodule Tanx.Core.Tank do
   end
 
 
+  def handle_cast(:destroy, state) do
+    if state.explosion == nil do
+      state = %State{state | explosion: 0.0}
+    end
+    {:noreply, state}
+  end
+
+
   def handle_cast({:update, last_time, time, updater}, state) do
     dt = max((time - last_time) / 1000, 0.0)
+    if state.explosion == nil do
+      update_tank(updater, dt, state)
+    else
+      update_explosion(updater, dt, state)
+    end
+  end
 
-    new_heading = _new_heading(state, dt)
-    pos = _new_pos(state, new_heading, dt)
+
+  def handle_cast({:move_to, x, y}, state) do
+    if state.explosion == nil do
+      state = %State{state | pos: {x, y}}
+    end
+    {:noreply, state}
+  end
+
+
+  def handle_cast(:die, state) do
+    {:stop, :normal, state}
+  end
+
+
+  defp update_explosion(updater, dt, state) do
+    age = state.explosion + dt / @explosion_time
+    state = %State{state | explosion: age}
+
+    if age <= 1.0 do
+      update = %Tanx.Core.Updates.Explosion{pos: state.pos, radius: @explosion_radius, age: age}
+      GenServer.cast(updater, {:update_reply, self, update})
+      {:noreply, state}
+    else
+      GenServer.cast(updater, {:update_reply, self, nil})
+      {:stop, :normal, state}
+    end
+  end
+
+
+  defp update_tank(updater, dt, state) do
+    new_heading = new_heading(state, dt)
+    pos = new_pos(state, new_heading, dt)
 
     force = Tanx.Core.Obstacles.force_from_decomposed_walls(
       state.decomposed_walls, pos, @tank_radius + @tank_collision_buffer)
@@ -70,17 +117,7 @@ defmodule Tanx.Core.Tank do
   end
 
 
-  def handle_cast({:move_to, x, y}, state) do
-    {:noreply, %State{state | pos: {x, y}}}
-  end
-
-
-  def handle_cast(:die, state) do
-    {:stop, :normal, state}
-  end
-
-
-  defp _new_heading(state, dt) do
+  defp new_heading(state, dt) do
     new_heading = state.heading + state.angular_velocity * dt
     pi = :math.pi()
     cond do
@@ -90,7 +127,7 @@ defmodule Tanx.Core.Tank do
     end
   end
 
-  defp _new_pos(state, new_heading, dt) do
+  defp new_pos(state, new_heading, dt) do
     dist = state.velocity * dt
     {x, y} = state.pos
     new_x = x + dist * :math.cos(new_heading)

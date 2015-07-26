@@ -322,6 +322,11 @@ class TanxApp {
         this.renderMissile(context, missile);
       });
 
+      // Draw explosions
+      arena.explosions.forEach(explosion => {
+        this.renderExplosion(context, explosion);
+      });
+
       // Draw maze walls
       arena.structure.walls.forEach(wall => {
         this.renderWall(context, wall);
@@ -358,17 +363,17 @@ class TanxApp {
       context.textAlign = "center";
       context.fillText(tank.name, 0, -15);
     }
-      
+
     let tankImage = new Image();
     tankImage.src = 'images/tank_sprite.png';
-    
-    let rotateTankImage90Degrees = 90 * Math.PI/180;      
+
+    let rotateTankImage90Degrees = 90 * Math.PI/180;
     context.rotate(-tank.heading + rotateTankImage90Degrees);
-    
+
     let spriteSheetX = 90;
     let spriteSheetY = tank.is_me ? 0 : 84;
-    context.drawImage(tankImage, spriteSheetX, spriteSheetY, 78, 85, -10, -10, 25, 25); 
-    
+    context.drawImage(tankImage, spriteSheetX, spriteSheetY, 78, 85, -10, -10, 25, 25);
+
     context.restore();
   }
 
@@ -383,6 +388,30 @@ class TanxApp {
     // TODO: Replace this with some nice graphics
     context.fillStyle = "#00FF00";
     context.fillRect(-missileRect.width/2, -missileRect.height/2, missileRect.width, missileRect.height);
+
+    context.restore();
+  }
+
+
+  renderExplosion(context, explosion) {
+    context.save();
+
+    let point = this.onScreenPoint(explosion.x, explosion.y);
+    let radius = explosion.radius * this._scaleFactor;
+    if (explosion.age < 0.5) {
+      radius = radius * explosion.age * 2.0;
+    }
+    context.beginPath();
+    context.fillStyle = "#fa4";
+    context.arc(point.x, point.y, radius, 0, Math.PI*2, false);
+    context.fill();
+    if (explosion.age > 0.5) {
+      radius = explosion.radius * this._scaleFactor * (explosion.age - 0.5) * 2.0;
+      context.beginPath();
+      context.fillStyle = "#fff";
+      context.arc(point.x, point.y, radius, 0, Math.PI*2, false);
+      context.fill();
+    }
 
     context.restore();
   }
