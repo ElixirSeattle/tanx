@@ -352,6 +352,12 @@ class TanxApp {
     let tankRect = this.onScreenRect(tank.x, tank.y, tank.radius*2, tank.radius*2);
     context.translate(tankRect.x, tankRect.y);
 
+    // Add names above enemies
+    if(tank.is_me === false) {
+      context.textAlign = "center";
+      context.fillText(tank.name, 0, -15);
+    }
+      
     let tankImage = new Image();
     tankImage.src = 'images/tank_sprite.png';
     
@@ -362,11 +368,6 @@ class TanxApp {
     let spriteSheetY = tank.is_me ? 0 : 84;
     context.drawImage(tankImage, spriteSheetX, spriteSheetY, 78, 85, -10, -10, 25, 25); 
     
-    if(tank.is_me === false) {
-      context.textAlign = "center";
-      context.fillText(tank.name, 0, -15);
-    }
-      
     context.restore();
   }
 
