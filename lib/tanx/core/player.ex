@@ -164,6 +164,8 @@ defmodule Tanx.Core.Player do
       case _maybe_call_tank(state, :get_position) do
         {:not_found, state} ->
           {:reply, :no_tank, state}
+        {:ok, nil, state} ->
+          {:reply, :no_tank, state}
         {:ok, {x, y, heading}, state } ->
           missile = GenServer.call(state.arena_objects,
                                    {:create_missile, {x, y, heading}})
@@ -172,7 +174,6 @@ defmodule Tanx.Core.Player do
                                 last_fired: curr_time}
                               }
       end
-
     else
       {:reply, :at_limit, state}
     end

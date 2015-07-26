@@ -32,7 +32,7 @@ defmodule Tanx.BasicTanksTest do
       %Tanx.Core.View.Tank{is_me: true, name: "daniel"},
       %Tanx.Core.View.Tank{is_me: false, name: "greg", x: 2.0}
     ] |> Enum.into(HashSet.new)
-    assert got == want
+    assert Set.equal?(got, want)
   end
 
   test "disconnecting a player should remove the tank", %{game: game} do

@@ -38,9 +38,12 @@ defmodule Tanx.Core.Tank do
   end
 
 
-  def handle_call(:get_position, _from, state) do
+  def handle_call(:get_position, _from, state = %State{explosion: nil}) do
     {x, y} = state.pos
     {:reply, {x, y, state.heading}, state}
+  end
+  def handle_call(:get_position, _from, state) do
+    {:reply, nil, state}
   end
 
 
