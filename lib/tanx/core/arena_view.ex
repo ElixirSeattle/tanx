@@ -53,9 +53,15 @@ defmodule Tanx.Core.ArenaView do
   end
 
 
+  # This may be called to get the current structure view.
+  def handle_call(:get_structure, _from, state) do
+    {:reply, state.structure, state}
+  end
+
+
   # This may be called to get the current arena view. If it is called by a Player process,
   # that player's tanks will have the :is_me field set to true.
-  def handle_call(:get, {from, _}, state) do
+  def handle_call(:get_objects, {from, _}, state) do
     tanks = state.tanks
       |> Enum.map(fn tank_info ->
         %Tanx.Core.View.Tank{is_me: tank_info.player == from, name: tank_info.name,
@@ -68,10 +74,13 @@ defmodule Tanx.Core.ArenaView do
           x: missile_info.x, y: missile_info.y, heading: missile_info.heading}
       end)
 
-    {:reply, %Tanx.Core.View.Arena{structure: state.structure,
-                                   tanks: tanks,
-                                   missiles: missiles,
-                                   explosions: state.explosions}, state}
+    view = %Tanx.Core.View.Arena{
+      tanks: tanks,
+      missiles: missiles,
+      explosions: state.explosions
+    }
+
+    {:reply, view, state}
   end
 
 

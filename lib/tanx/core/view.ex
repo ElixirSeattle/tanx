@@ -29,8 +29,7 @@ defmodule Tanx.Core.View do
     @moduledoc """
     A view of the arena state.
     """
-    defstruct structure: %Structure{},
-              tanks: [],
+    defstruct tanks: [],
               missiles: [],
               explosions: []
   end

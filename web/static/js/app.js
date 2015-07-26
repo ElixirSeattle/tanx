@@ -233,18 +233,11 @@ class TanxApp {
     this._timestamps = null;
     this._receivedArena = null;
     this._receivedFrame = false;
+    this._structure = null;
+    this._scaleFactor = null;
 
     this.onChannelEvent("view_arena", arena => {
       if (this.hasPlayer()) {
-        if (!this._scaleFactor) {
-          let xScale = this.MAX_CANVAS_WIDTH / arena.structure.width;
-          let yScale = this.MAX_CANVAS_HEIGHT / arena.structure.height;
-          this._scaleFactor = xScale < yScale ? xScale : yScale;
-          $('#tanx-canvas').attr({
-            width: this._scaleFactor * arena.structure.width,
-            height: this._scaleFactor * arena.structure.height
-          });
-        }
         if (this._receivedFrame) {
           this.updateArena(arena);
         } else {
@@ -252,12 +245,24 @@ class TanxApp {
         }
       }
     });
+
+    this.onChannelEvent("view_structure", structure => {
+      this._structure = structure;
+      let xScale = this.MAX_CANVAS_WIDTH / structure.width;
+      let yScale = this.MAX_CANVAS_HEIGHT / structure.height;
+      this._scaleFactor = xScale < yScale ? xScale : yScale;
+      $('#tanx-canvas').attr({
+        width: this._scaleFactor * structure.width,
+        height: this._scaleFactor * structure.height
+      });
+    });
   }
 
 
   startArenaAnimation() {
-    this._scaleFactor = null;
+    this._structure = null;
     this._timestamps = [];
+    this.pushToChannel("view_structure");
     this.runAnimation();
   }
 
@@ -306,7 +311,7 @@ class TanxApp {
 
 
   renderArena(arena) {
-    if(this.canvas()) {
+    if(this.canvas() && this._structure) {
       var context = this.canvas().getContext("2d");
 
       // Clear the canvas
@@ -328,7 +333,7 @@ class TanxApp {
       });
 
       // Draw maze walls
-      arena.structure.walls.forEach(wall => {
+      this._structure.walls.forEach(wall => {
         this.renderWall(context, wall);
       });
     }

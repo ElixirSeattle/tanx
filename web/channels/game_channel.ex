@@ -17,6 +17,7 @@ defmodule Tanx.GameChannel do
     {:noreply, socket}
   end
 
+
   def handle_in("leave", _msg, socket) do
     player = socket.assigns[:player]
     if player do
@@ -25,6 +26,7 @@ defmodule Tanx.GameChannel do
     end
     {:noreply, socket}
   end
+
 
   def handle_in("view_players", _msg, socket) do
     player = socket.assigns[:player]
@@ -37,14 +39,26 @@ defmodule Tanx.GameChannel do
     {:noreply, socket}
   end
 
+
+  def handle_in("view_structure", _msg, socket) do
+    player = socket.assigns[:player]
+    if player do
+      view = player |> Tanx.Core.Player.view_arena_structure()
+      push(socket, "view_structure", view)
+    end
+    {:noreply, socket}
+  end
+
+
   def handle_in("view_arena", _msg, socket) do
     player = socket.assigns[:player]
     if player do
-      arena_view = player |> Tanx.Core.Player.view_arena()
+      arena_view = player |> Tanx.Core.Player.view_arena_objects()
       push(socket, "view_arena", arena_view)
     end
     {:noreply, socket}
   end
+
 
   def handle_in("rename", %{"name" => name}, socket) do
     player = socket.assigns[:player]
@@ -54,6 +68,7 @@ defmodule Tanx.GameChannel do
     {:noreply, socket}
   end
 
+
   def handle_in("launch_tank", _msg, socket) do
     player = socket.assigns[:player]
     if player do
@@ -61,6 +76,7 @@ defmodule Tanx.GameChannel do
     end
     {:noreply, socket}
   end
+
 
   def handle_in("remove_tank", _msg, socket) do
     player = socket.assigns[:player]
@@ -70,6 +86,7 @@ defmodule Tanx.GameChannel do
     {:noreply, socket}
   end
 
+
   def handle_in("control_tank", %{"button" => button, "down" => down}, socket) do
     player = socket.assigns[:player]
     if player do
@@ -78,6 +95,7 @@ defmodule Tanx.GameChannel do
     {:noreply, socket}
   end
 
+
   def handle_in("fire_missile", _msg, socket) do
     player = socket.assigns[:player]
     if player do
@@ -85,6 +103,7 @@ defmodule Tanx.GameChannel do
     end
     {:noreply, socket}
   end
+
 
   def handle_in(msg, payload, socket) do
     Logger.error("Unknown message received on game channel: #{inspect(msg)}: #{inspect(payload)}")
