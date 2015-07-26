@@ -15,25 +15,27 @@ defmodule Tanx.Core.ArenaView do
   use GenServer
 
   defmodule State do
-    @moduledoc """
-      This struct holds the current state of the arena
-      structure - This a Tanx.Core.Structure which describes the shape of the
-                  areana.
-      tanks - this is a collection of
-    """
-    defstruct structure: nil, tanks: [], missiles: [], explosions: []
+    defstruct structure: nil,  # Tanx.Core.View.Structure
+              tanks: [],       # list of TankInfo
+              missiles: [],    # list of MissileInfo
+              explosions: []   # list of Tanx.Core.View.Explosion
   end
 
   defmodule TankInfo do
-    defstruct player: nil, name: "", x: 0.0, y: 0.0, heading: 0.0, radius: 0.5
+    defstruct player: nil,
+              name: "",
+              x: 0.0,
+              y: 0.0,
+              heading: 0.0,
+              radius: 0.5
   end
 
   defmodule MissileInfo do
-    defstruct player: nil, x: 0.0, y: 0.0, heading: 0.0, radius: 0.1
-  end
-
-  defmodule ExplosionInfo do
-    defstruct x: 0.0, y: 0.0, radius: 1.0, age: 0.0
+    defstruct player: nil,
+              x: 0.0,
+              y: 0.0,
+              heading: 0.0,
+              radius: 0.1
   end
 
 

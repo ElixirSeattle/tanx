@@ -117,17 +117,25 @@ defmodule Tanx.Core.Player do
 
   #### GenServer callbacks
 
-  @forward_velocity 2.0
-  @angular_velocity 2.0
-
-
   use GenServer
 
 
   defmodule State do
-    defstruct player_manager: nil, arena_objects: nil, arena_view: nil, current_tank: nil,
-      fwdown: false, ltdown: false, rtdown: false, missiles: [], last_fired: 0
+    defstruct player_manager: nil,
+              arena_objects: nil,
+              arena_view: nil,
+              current_tank: nil,
+              fwdown: false,
+              ltdown: false,
+              rtdown: false,
+              missiles: [],
+              last_fired: 0
   end
+
+
+  @forward_velocity 2.0
+  @angular_velocity 2.0
+
 
   # This is called by the 'player manager' when creating a new player
   def init({player_manager, arena_objects, arena_view}) do

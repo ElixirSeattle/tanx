@@ -17,14 +17,19 @@ defmodule Tanx.Core.PlayerManager do
 
   # Represents the metadata of a single player
   defmodule PlayerInfo do
-    defstruct name: "", kills: 0, deaths: 0
+    defstruct name: "",
+              kills: 0,
+              deaths: 0
   end
 
 
   # The state for this process. Includes handles to other processes needed by players, and
   # a mapping of player process IDs to PlayerInfo structs.
   defmodule State do
-    defstruct arena_objects: nil, arena_view: nil, players: HashDict.new, broadcaster: nil
+    defstruct arena_objects: nil,
+              arena_view: nil,
+              players: HashDict.new,
+              broadcaster: nil
   end
 
 

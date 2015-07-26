@@ -34,8 +34,12 @@ defmodule Tanx.Core.ArenaUpdater do
   use GenServer
 
   defmodule State do
-    defstruct structure: nil, arena_view: nil, player_manager: nil, clock: nil,
-      expected: nil, received: nil
+    defstruct structure: nil,
+              arena_view: nil,
+              player_manager: nil,
+              clock: nil,
+              expected: nil,
+              received: nil
   end
 
 

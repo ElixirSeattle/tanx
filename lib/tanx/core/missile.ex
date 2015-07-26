@@ -1,7 +1,11 @@
 defmodule Tanx.Core.Missile do
 
   defmodule State do
-    defstruct player: nil, x: 0.0, y: 0.0, heading: 0.0, v: 10.0
+    defstruct player: nil,
+              x: 0.0,
+              y: 0.0,
+              heading: 0.0,
+              v: 10.0
   end
 
   ############
