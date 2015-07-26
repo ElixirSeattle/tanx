@@ -332,13 +332,14 @@ class TanxApp {
 
   renderWall(context, wall) {
     context.save();
-    context.strokeStyle = '#888';
+    context.strokeStyle = '#934b36';
     context.beginPath();
     let point = this.onScreenPoint(wall[0], wall[1]);
     context.moveTo(point.x, point.y);
     for (let i=2; i<wall.length; i += 2) {
       point = this.onScreenPoint(wall[i], wall[i+1]);
       context.lineTo(point.x, point.y);
+      context.lineWidth = 3;
     }
     context.closePath();
     context.stroke();
