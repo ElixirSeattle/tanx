@@ -14,34 +14,11 @@ body {
 
 #tanx-canvas {
   border: 1px solid #888;
-}
-
-#tanx-arena-json {
-  font-size: 10px;
-}
-
-@mixin tank-sprite-sheet() {
-  background-image: url('/images/tank_sprite.png');
-}
-
-#tanx-canvas {
   background-image: url('/images/canvas_background.png');
   background-size: 50px 50px;
   background-repeat: repeat;
 }
 
-.green-tank {
-  @include tank-sprite-sheet();
-  zoom: .35;
-  height: 85px;
-  width: 78px;
-  background-position: -90px 0px;
-}
-
-.blue-tank {
-  @include tank-sprite-sheet();
-  zoom: .35;
-  height: 85px;
-  width: 78px;
-  background-position: -90px -84px;
+#tanx-arena-json {
+  font-size: 10px;
 }
