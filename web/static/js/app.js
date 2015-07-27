@@ -7,8 +7,8 @@ class TanxApp {
   constructor() {
     // Configuration
     this.NUM_TIMESTAMPS = 10;
-    this.MAX_CANVAS_WIDTH = 400;
-    this.MAX_CANVAS_HEIGHT = 400;
+    this.MAX_CANVAS_WIDTH = 600;
+    this.MAX_CANVAS_HEIGHT = 600;
 
     this.setupChannel();
     this.setupPlayerList();
@@ -375,9 +375,11 @@ class TanxApp {
     let rotateTankImage90Degrees = 90 * Math.PI/180;
     context.rotate(-tank.heading + rotateTankImage90Degrees);
 
-    let spriteSheetX = 90;
-    let spriteSheetY = tank.is_me ? 0 : 84;
-    context.drawImage(tankImage, spriteSheetX, spriteSheetY, 78, 85, -10, -10, 25, 25);
+    let spriteSheetX = 92;
+    let spriteSheetY = tank.is_me ? 1 : 84;
+    let screenRadius = Math.ceil(this._scaleFactor * 0.5);
+    context.drawImage(tankImage, spriteSheetX, spriteSheetY, 67, 79,
+        -screenRadius, -screenRadius, screenRadius * 2, screenRadius * 2);
 
     context.restore();
   }
