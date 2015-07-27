@@ -144,8 +144,32 @@ defmodule Tanx.Core.ArenaView do
 
   # This is called from an updater to update the view with a new state.
   def handle_call({:update, tanks, missiles, explosions}, _from, state) do
+    tanks = tanks
+      |> Enum.map(fn tank ->
+        %Tanx.Core.ArenaView.TankInfo{tank |
+          x: tank.x |> truncate, y: tank.y |> truncate,
+          heading: tank.heading |> truncate}
+      end)
+
+    missiles = missiles
+      |> Enum.map(fn missile ->
+        %Tanx.Core.ArenaView.MissileInfo{missile |
+          x: missile.x |> truncate, y: missile.y |> truncate,
+          heading: missile.heading |> truncate}
+      end)
+
+    explosions = explosions
+      |> Enum.map(fn explosion ->
+        %Tanx.Core.View.Explosion{explosion |
+          x: explosion.x |> truncate, y: explosion.y |> truncate,
+          age: explosion.age |> truncate}
+      end)
+
     {:reply, :ok, %State{state | tanks: tanks, missiles: missiles, explosions: explosions}}
   end
+
+
+  defp truncate(value), do: round(value * 100) / 100
 
 
 end

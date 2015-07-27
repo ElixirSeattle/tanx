@@ -30,7 +30,8 @@ defmodule Tanx.MissileUpdateTest do
     game |> Tanx.Core.Game.manual_clock_tick(4000)
 
     # Missile should have changed position, but maintained the same angle.
-    _check_missile(player, -8.322936730942848, -18.185948536513635, -2.0)
+    # View rounds to hundredths.
+    _check_missile(player, -8.32, -18.19, -2.0)
   end
 
   # Utils
