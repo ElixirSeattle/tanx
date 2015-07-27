@@ -29,13 +29,42 @@ defmodule Tanx.Core.ArenaUpdater do
   """
 
 
-  # GenServer callbacks
+  #### API internal to Tanx.Core
+
+
+  @doc """
+    Starts an ArenaUpdater process. This should be called only from a Game process.
+  """
+  def start(arena_objects, arena_view, player_manager, clock, last_time, time) do
+    GenServer.start(__MODULE__,
+        {arena_objects, arena_view, player_manager, clock, last_time, time})
+  end
+
+
+  @doc """
+    Sends a reply to an update message received from this updater.
+    This should be called once from an arena object that receives an update request.
+  """
+  def send_update_reply(arena_updater, update) do
+    :ok = GenServer.cast(arena_updater, {:update_reply, self, update})
+  end
+
+
+  @doc """
+    Notifies the given updater that the given arena object died and should be forgotten.
+  """
+  def forget_object(arena_updater, object) do
+    :ok = GenServer.cast(arena_updater, {:object_died, object})
+  end
+
+
+  #### GenServer callbacks
+
 
   use GenServer
 
   defmodule State do
-    defstruct structure: nil,
-              arena_view: nil,
+    defstruct arena_view: nil,
               player_manager: nil,
               clock: nil,
               expected: nil,
@@ -43,17 +72,22 @@ defmodule Tanx.Core.ArenaUpdater do
   end
 
 
-  def init({structure, arena_objects, arena_view, player_manager, clock, last_time, time}) do
+  def init({arena_objects, arena_view, player_manager, clock, last_time, time}) do
     objects = arena_objects |> Tanx.Core.ArenaObjects.get_objects
     if Enum.empty?(objects) do
       :ok = arena_view |> Tanx.Core.ArenaView.clear_objects
-      GenServer.cast(clock, :clock_tock)
+      clock |> Tanx.Core.Clock.send_tock
       :ignore
     else
       objects |> Enum.each(&(GenServer.cast(&1, {:update, last_time, time, self})))
       expected = objects |> Enum.into(HashSet.new)
-      state = %State{structure: structure, arena_view: arena_view, player_manager: player_manager,
-        clock: clock, expected: expected, received: []}
+      state = %State{
+        arena_view: arena_view,
+        player_manager: player_manager,
+        clock: clock,
+        expected: expected,
+        received: []
+      }
       {:ok, state}
     end
   end
@@ -65,6 +99,7 @@ defmodule Tanx.Core.ArenaUpdater do
     state = check_responses(%State{state | received: received, expected: expected})
     final_reply(state)
   end
+
 
   def handle_cast({:object_died, object}, state) do
     expected = state.expected |> Set.delete(object)
@@ -114,7 +149,7 @@ defmodule Tanx.Core.ArenaUpdater do
     :ok = state.arena_view |> Tanx.Core.ArenaView.set_objects(
         tank_views, missile_views, explosion_views)
 
-    GenServer.cast(state.clock, :clock_tock)
+    state.clock |> Tanx.Core.Clock.send_tock
     %State{state | expected: nil, received: nil}
   end
 
@@ -153,7 +188,7 @@ defmodule Tanx.Core.ArenaUpdater do
 
   defp create_tank_views(state, responses) do
     responses |> Enum.flat_map(fn response ->
-      player_view = GenServer.call(state.player_manager, {:view_player, response.player})
+      player_view = state.player_manager |> Tanx.Core.PlayerManager.view_player(response.player)
       if player_view do
         {x, y} = response.pos
         tank = %Tanx.Core.ArenaView.TankInfo{player: response.player, name: player_view.name,

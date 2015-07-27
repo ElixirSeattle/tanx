@@ -11,7 +11,7 @@ defmodule Tanx.Core.ArenaObjects do
   """
 
 
-  #### Public API
+  #### API internal to Tanx.Core
 
 
   @doc """
@@ -92,8 +92,8 @@ defmodule Tanx.Core.ArenaObjects do
   # Create a new tank process. This must be called from the player that will own the tank.
   # This is called by the 'player' process.
   def handle_call({:create_tank, params}, {from, _}, state) do
-    {:ok, tank} = GenServer.start_link(Tanx.Core.Tank,
-      {state.structure.width, state.structure.height, state.decomposed_walls, from, params})
+    tank = Tanx.Core.Tank.start_link(
+        state.structure.width, state.structure.height, state.decomposed_walls, from, params)
     {:reply, tank, %State{state | objects: state.objects |> Dict.put(tank, from)}}
   end
 
@@ -129,7 +129,7 @@ defmodule Tanx.Core.ArenaObjects do
   # ensure that any running updater knows not to wait for updates from it.
   def handle_info({:EXIT, pid, _}, state) do
     if state.updater do
-      GenServer.cast(state.updater, {:object_died, pid})
+      state.updater |> Tanx.Core.ArenaUpdater.forget_object(pid)
     end
     {:noreply, %State{state | objects: state.objects |> Dict.delete(pid)}}
   end

@@ -234,12 +234,12 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call(:view_players, _from, state) do
-    view = GenServer.call(state.player_manager, :view_all)
+    view = state.player_manager |> Tanx.Core.PlayerManager.view_all_players
     {:reply, view, state}
   end
 
   def handle_call(:view_myself, _from, state) do
-    view = GenServer.call(state.player_manager, {:view_player, self})
+    view = state.player_manager |> Tanx.Core.PlayerManager.view_player(self)
     {:reply, view, state}
   end
 
@@ -254,12 +254,12 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call({:rename, name}, _from, state) do
-    reply = GenServer.call(state.player_manager, {:rename, name})
+    reply = state.player_manager |> Tanx.Core.PlayerManager.rename(name)
     {:reply, reply, state}
   end
 
   def handle_call(:leave, _from, state) do
-    :ok = GenServer.call(state.player_manager, :player_left)
+    :ok = state.player_manager |> Tanx.Core.PlayerManager.remove_player
     {:stop, :normal, :ok, %State{}}
   end
 

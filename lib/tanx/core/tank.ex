@@ -1,11 +1,32 @@
 defmodule Tanx.Core.Tank do
 
+  @moduledoc """
+  This process models a tank.
+  """
+
+
   @tank_radius 0.5
   @tank_collision_buffer 0.1
   @explosion_radius 1.0
   @explosion_time 0.6
 
 
+  #### API internal to Tanx.Core
+
+
+  @doc """
+    Starts a tank process. Called from ArenaObjects.
+  """
+  def start_link(arena_width, arena_height, decomposed_walls, player, params) do
+    {:ok, pid} = GenServer.start_link(__MODULE__,
+        {arena_width, arena_height, decomposed_walls, player, params})
+    pid
+  end
+
+
+  @doc """
+    Returns the tank radius used for collision detection
+  """
   def collision_radius(), do: @tank_radius + @tank_collision_buffer
 
 
@@ -95,10 +116,10 @@ defmodule Tanx.Core.Tank do
 
     if age <= 1.0 do
       update = %Tanx.Core.Updates.Explosion{pos: state.pos, radius: @explosion_radius, age: age}
-      GenServer.cast(updater, {:update_reply, self, update})
+      updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
       {:noreply, state}
     else
-      GenServer.cast(updater, {:update_reply, self, nil})
+      updater |> Tanx.Core.ArenaUpdater.send_update_reply(nil)
       {:stop, :normal, state}
     end
   end
@@ -111,11 +132,11 @@ defmodule Tanx.Core.Tank do
     force = Tanx.Core.Obstacles.force_from_decomposed_walls(
       state.decomposed_walls, pos, @tank_radius + @tank_collision_buffer)
 
-    state = %State{state | pos: pos, heading: new_heading}
     update = %Tanx.Core.Updates.MoveTank{tank: self, player: state.player,
       pos: pos, heading: new_heading, radius: @tank_radius, force: force}
+    updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
 
-    GenServer.cast(updater, {:update_reply, self, update})
+    state = %State{state | pos: pos, heading: new_heading}
     {:noreply, state}
   end
 

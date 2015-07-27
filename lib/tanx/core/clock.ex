@@ -32,7 +32,8 @@ defmodule Tanx.Core.Clock do
   Provide a nil interval to disable automatic ticking.
   """
   def start_link(recipient_pid, interval_millis) do
-    GenServer.start_link(__MODULE__, {recipient_pid, interval_millis})
+    {:ok, pid} = GenServer.start_link(__MODULE__, {recipient_pid, interval_millis})
+    pid
   end
 
 
@@ -66,6 +67,14 @@ defmodule Tanx.Core.Clock do
   end
 
 
+  @doc """
+    Sends a tock message back to this clock indicating that handling of the last tick is complete.
+  """
+  def send_tock(clock) do
+    GenServer.cast(clock, :clock_tock)
+  end
+
+
   #### GenServer callbacks
 
   use GenServer
@@ -87,6 +96,7 @@ defmodule Tanx.Core.Clock do
     {:reply, state.last, state}
   end
 
+
   def handle_call({:manual_tick, _time}, _from, state = %State{interval: interval}) when interval != nil do
     {:reply, {:error, :automatically_ticking}, state, _timeout(state)}
   end
@@ -107,6 +117,7 @@ defmodule Tanx.Core.Clock do
     state = %State{state | interval: new_interval}
     {:noreply, state, _timeout(state)}
   end
+
 
   def handle_cast(:clock_tock, state) do
     if is_pid(state.is_waiting) do

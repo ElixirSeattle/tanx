@@ -45,9 +45,11 @@ defmodule Tanx.Core.Missile do
     v = state.v
     nx = state.x + v * dt * :math.cos(a)
     ny = state.y + v * dt * :math.sin(a)
-    state = %State{state | x: nx, y: ny}
+
     update = %Tanx.Core.Updates.MoveMissile{player: state.player, x: nx, y: ny, heading: a}
-    GenServer.cast(updater, {:update_reply, self, update})
+    updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
+
+    state = %State{state | x: nx, y: ny}
     {:noreply, state}
   end
 

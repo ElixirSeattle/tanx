@@ -10,7 +10,7 @@ defmodule Tanx.Core.ArenaView do
   """
 
 
-  #### Public API
+  #### API internal to Tanx.Core
 
 
   @doc """

@@ -10,7 +10,7 @@ defmodule Tanx.Core.PlayerManager do
   """
 
 
-  #### Public API
+  #### API internal to Tanx.Core
 
 
   @doc """
@@ -20,6 +20,49 @@ defmodule Tanx.Core.PlayerManager do
     {:ok, pid} = GenServer.start_link(__MODULE__,
         {arena_objects, arena_view, change_handler, handler_args})
     pid
+  end
+
+
+  @doc """
+    Creates a player. Returns {:ok, player} if succeessful, or {:error, reason} if not.
+  """
+  def create_player(player_manager, player_name) do
+    GenServer.call(player_manager, {:create_player, player_name})
+  end
+
+
+  @doc """
+    Returns views of all connected players as a list of Tanx.Core.View.Player structs.
+    If the calling process is a player, the :is_me field of that player will be set to true.
+  """
+  def view_all_players(player_manager) do
+    GenServer.call(player_manager, :view_all)
+  end
+
+
+  @doc """
+    Returns a view of the specified player as a Tanx.Core.View.Player struct.
+    If the calling process is a player, the :is_me field of that player will be set to true.
+    Returns nil if the specified player was not found.
+  """
+  def view_player(player_manager, player) do
+    GenServer.call(player_manager, {:view_player, player})
+  end
+
+
+  @doc """
+    Sets the name of the calling player. Returns either :ok or :not_found.
+  """
+  def rename(player_manager, name) do
+    GenServer.call(player_manager, {:rename, name})
+  end
+
+
+  @doc """
+    Remove the calling player.
+  """
+  def remove_player(player_manager) do
+    GenServer.call(player_manager, :player_left)
   end
 
 

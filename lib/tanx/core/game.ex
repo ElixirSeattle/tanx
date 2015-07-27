@@ -75,12 +75,17 @@ defmodule Tanx.Core.Game do
   use GenServer
 
   defmodule PlayerInfo do
-    defstruct name: "", kills: 0, deaths: 0
+    defstruct name: "",
+              kills: 0,
+              deaths: 0
   end
 
   defmodule State do
-    defstruct structure: nil, player_manager: nil, arena_objects: nil, arena_view: nil,
-      clock: nil
+    defstruct structure: nil,
+              player_manager: nil,
+              arena_objects: nil,
+              arena_view: nil,
+              clock: nil
   end
 
 
@@ -93,24 +98,35 @@ defmodule Tanx.Core.Game do
     arena_view = Tanx.Core.ArenaView.start_link(structure)
     player_manager = Tanx.Core.PlayerManager.start_link(
         arena_objects, arena_view, change_handler, handler_args)
-    {:ok, clock} = GenServer.start_link(Tanx.Core.Clock, {self, clock_interval})
+    clock = Tanx.Core.Clock.start_link(self, clock_interval)
 
-    {:ok, %State{structure: structure, player_manager: player_manager,
-      arena_objects: arena_objects, arena_view: arena_view, clock: clock}}
+    state = %State{
+      structure: structure,
+      player_manager: player_manager,
+      arena_objects: arena_objects,
+      arena_view: arena_view,
+      clock: clock
+    }
+    {:ok, state}
   end
 
 
   def handle_call({:connect, name}, _from, state) do
-    {:reply, GenServer.call(state.player_manager, {:create_player, name}), state}
+    response = state.player_manager |> Tanx.Core.PlayerManager.create_player(name)
+    {:reply, response, state}
   end
 
+
   def handle_call(:view_players, _from, state) do
-    {:reply, GenServer.call(state.player_manager, :view_all), state}
+    views = state.player_manager |> Tanx.Core.PlayerManager.view_all_players
+    {:reply, views, state}
   end
+
 
   def handle_call(:terminate, _from, state) do
     {:stop, :normal, :ok, state}
   end
+
 
   def handle_call(:get_clock, _from, state) do
     {:reply, state.clock, state}
@@ -121,8 +137,8 @@ defmodule Tanx.Core.Game do
   # all the update computation, including getting information from arena object processes
   # such as tanks, and then updates the ArenaView state.
   def handle_cast({:clock_tick, _clock, last_time, time}, state) do
-    GenServer.start(Tanx.Core.ArenaUpdater,
-      {state.structure, state.arena_objects, state.arena_view, state.player_manager, state.clock, last_time, time})
+    Tanx.Core.ArenaUpdater.start(
+        state.arena_objects, state.arena_view, state.player_manager, state.clock, last_time, time)
     {:noreply, state}
   end
 
