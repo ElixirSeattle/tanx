@@ -9,6 +9,8 @@ defmodule Tanx.Core.ArenaView do
   or Tanx.Core.Player.
   """
 
+  @entry_point_radius 0.5
+
 
   #### API internal to Tanx.Core
 
@@ -92,10 +94,18 @@ defmodule Tanx.Core.ArenaView do
       |> Enum.map(fn wall ->
         wall |> Enum.flat_map(&Tuple.to_list/1)
       end)
+
+    entry_points = structure.entry_points
+      |> Enum.map(fn ep ->
+        %Tanx.Core.View.EntryPoint{x: ep.x, y: ep.y, name: ep.name}
+      end)
+
     structure_view = %Tanx.Core.View.Structure{
       height: structure.height,
       width: structure.width,
-      walls: walls
+      walls: walls,
+      entry_point_radius: @entry_point_radius,
+      entry_points: entry_points
     }
     {:ok, %State{structure: structure_view}}
   end

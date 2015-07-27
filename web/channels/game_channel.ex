@@ -69,10 +69,15 @@ defmodule Tanx.GameChannel do
   end
 
 
-  def handle_in("launch_tank", _msg, socket) do
+  def handle_in("launch_tank", msg, socket) do
     player = socket.assigns[:player]
     if player do
-      player |> Tanx.Core.Player.new_tank
+      params = if msg |> Dict.has_key?("entry_point") do
+        [entry_point: msg["entry_point"]]
+      else
+        []
+      end
+      player |> Tanx.Core.Player.new_tank(params)
     end
     {:noreply, socket}
   end

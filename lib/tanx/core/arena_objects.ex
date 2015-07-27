@@ -74,9 +74,11 @@ defmodule Tanx.Core.ArenaObjects do
       objects - this is a Dict with the keys being the PIDs of the objects and
                 the values being pid of the the Player process it belongs to.
     """
-    defstruct structure: nil,
+    defstruct arena_width: 20.0,
+              arena_height: 20.0,
               updater: nil,
               objects: HashDict.new,
+              entry_points: HashDict.new,
               decomposed_walls: []
   end
 
@@ -85,15 +87,35 @@ defmodule Tanx.Core.ArenaObjects do
     Process.flag(:trap_exit, true)
     decomposed_walls = structure.walls
       |> Enum.map(&Tanx.Core.Obstacles.decompose_wall/1)
-    {:ok, %State{structure: structure, decomposed_walls: decomposed_walls}}
+    entry_points = structure.entry_points
+      |> Enum.reduce(HashDict.new, fn (ep, dict) ->
+        dict |> Dict.put(ep.name, ep)
+      end)
+
+    state = %State{
+      arena_width: structure.width,
+      arena_height: structure.height,
+      decomposed_walls: decomposed_walls,
+      entry_points: entry_points
+    }
+    {:ok, state}
   end
 
 
   # Create a new tank process. This must be called from the player that will own the tank.
   # This is called by the 'player' process.
   def handle_call({:create_tank, params}, {from, _}, state) do
+    entry_point_name = params |> Keyword.get(:entry_point, nil)
+    entry_point = state.entry_points |> Dict.get(entry_point_name, nil)
+    if entry_point != nil do
+      params = params
+        |> Keyword.put(:x, entry_point.x)
+        |> Keyword.put(:y, entry_point.y)
+        |> Keyword.put(:heading, entry_point.heading)
+    end
+
     tank = Tanx.Core.Tank.start_link(
-        state.structure.width, state.structure.height, state.decomposed_walls, from, params)
+        state.arena_width, state.arena_height, state.decomposed_walls, from, params)
     {:reply, tank, %State{state | objects: state.objects |> Dict.put(tank, from)}}
   end
 

@@ -162,16 +162,17 @@ class TanxApp {
       this.arenaKeyEvent(event, false);
     });
 
-    $('#tanx-launch-tank-btn').on('click', () => {
-      this.launchTank();
-    });
-    $('#tanx-remove-tank-btn').on('click', () => {
-      this.removeTank();
+    $('#tanx-canvas').on('click', (event) => {
+      let offset = $('#tanx-canvas').offset();
+      this.handleArenaClick(event.pageX - offset.left, event.pageY - offset.top);
     });
   }
 
 
   arenaKeyEvent(event, isDown) {
+    if (!this.hasPlayer()) {
+      return;
+    }
     switch (event.which) {
       case 37: // left arrow
       case 74: // J
@@ -206,21 +207,26 @@ class TanxApp {
         }
         event.preventDefault();
         break;
+      case 68: // D
+        if (isDown) {
+          this.pushToChannel("remove_tank", {});
+        }
+        event.preventDefault();
+        break;
     }
   }
 
 
-  launchTank() {
-    if (this.hasPlayer()) {
-      this.pushToChannel("launch_tank", {});
-      $('#tanx-canvas').focus();
-    }
-  }
-
-
-  removeTank() {
-    if (this.hasPlayer()) {
-      this.pushToChannel("remove_tank", {});
+  handleArenaClick(x, y) {
+    if (this._structure && this.hasPlayer()) {
+      let dist = this._structure.entry_point_radius * this._scaleFactor;
+      let distSquared = dist * dist;
+      this._structure.entry_points.forEach(ep => {
+        let point = this.onScreenPoint(ep.x, ep.y);
+        if ((x - point.x) * (x - point.x) + (y - point.y) * (y - point.y) <= distSquared) {
+          this.pushToChannel("launch_tank", {entry_point: ep.name});
+        }
+      });
     }
   }
 
@@ -300,11 +306,6 @@ class TanxApp {
       $('#tanx-fps').text(fps);
     }
 
-    // Update tank launch/remove buttons
-    let hasTank = arena.tanks.some(tank => tank.is_me);
-    $('#tanx-launch-tank-btn').toggle(!hasTank);
-    $('#tanx-remove-tank-btn').toggle(hasTank);
-
     // Request next frame
     this.runAnimation();
   }
@@ -312,10 +313,22 @@ class TanxApp {
 
   renderArena(arena) {
     if(this.canvas() && this._structure) {
+      let hasTank = arena.tanks.some(tank => tank.is_me);
+
       var context = this.canvas().getContext("2d");
 
       // Clear the canvas
       context.clearRect(0, 0, this.canvas().width, this.canvas().height);
+
+      // Draw maze walls
+      this._structure.walls.forEach(wall => {
+        this.renderWall(context, wall);
+      });
+
+      // Draw entry points
+      this._structure.entry_points.forEach(ep => {
+        this.renderEntryPoint(context, ep, hasTank);
+      });
 
       // Draw tanks
       arena.tanks.forEach(tank => {
@@ -330,11 +343,6 @@ class TanxApp {
       // Draw explosions
       arena.explosions.forEach(explosion => {
         this.renderExplosion(context, explosion);
-      });
-
-      // Draw maze walls
-      this._structure.walls.forEach(wall => {
-        this.renderWall(context, wall);
       });
     }
   }
@@ -353,6 +361,30 @@ class TanxApp {
     }
     context.closePath();
     context.stroke();
+    context.restore();
+  }
+
+
+  renderEntryPoint(context, entryPoint, hasTank) {
+    context.save();
+
+    let point = this.onScreenPoint(entryPoint.x, entryPoint.y);
+    let radius = this._structure.entry_point_radius * this._scaleFactor;
+    if (hasTank) {
+      radius = radius * 0.5;
+    } else {
+      let time = Date.now() % 1000;
+      if (time < 500) {
+        radius = radius * time / 500;
+      } else {
+        radius = radius * (1000 - time) / 500;
+      }
+    }
+    context.beginPath();
+    context.strokeStyle = '#ff0';
+    context.arc(point.x, point.y, radius, 0, Math.PI*2, false);
+    context.stroke();
+
     context.restore();
   }
 

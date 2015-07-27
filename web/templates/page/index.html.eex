@@ -20,18 +20,21 @@
       <button class="btn btn-primary btn-sm" id="tanx-join-btn">Join Game</button>
       <button class="btn btn-default btn-sm" id="tanx-leave-btn">Leave Game</button>
     </div>
+    <div id="tanx-instructions">
+      <h4>Instructions</h4>
+      <p>Click on one of the pulsing yellow entry points to start your tank.</p>
+      <p>Move your tank with the arrow keys: forward, right, and left. Alternately, you can use the I, J, and L keys.</p>
+      <p>Space bar fires a missile. Shoot down the other players' tanks!</p>
+      <p>The D key aborts (self-destructs) your tank.</p>
+    </div>
 
   </div>
   <div class="col-xs-9">
 
     <div id="tanx-arena-container">
       <canvas tabindex="0" id="tanx-canvas"></canvas>
-      <div>
+      <div id="tanx-framerate">
         Frame rate: <span id="tanx-fps"></span>
-      </div>
-      <div>
-        <button class="btn btn-primary btn-sm" id="tanx-launch-tank-btn">Launch Tank</button>
-        <button class="btn btn-default btn-sm" id="tanx-remove-tank-btn">Remove Tank</button>
       </div>
       <pre id="tanx-arena-json"></pre>
     </div>

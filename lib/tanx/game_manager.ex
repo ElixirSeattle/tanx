@@ -32,8 +32,11 @@ defmodule Tanx.GameManager do
 
   # A sample maze with diagonal passages and an open area in the center.
   defp structure1 do
+    pi = :math.pi()
+
     %Tanx.Core.Structure{
-      width: 20.0, height: 20.0,
+      width: 20.0,height: 20.0,
+
       walls: [
         [{-8.5, 10}, {-8, 10}, {-8, 7}, {-8.5, 7}],
         [{8.5, -10}, {8, -10}, {8, -7}, {8.5, -7}],
@@ -68,6 +71,13 @@ defmodule Tanx.GameManager do
         [{-10, 0}, {-7, 0}],
 
         [{-10, -10}, {10, -10}, {10, 10}, {-10, 10}]
+      ],
+
+      entry_points: [
+        %Tanx.Core.Structure.EntryPoint{x: -9.25, y: 9.25, heading: -pi/2, name: "nw"},
+        %Tanx.Core.Structure.EntryPoint{x: 9.25, y: 9.25, heading: pi, name: "ne"},
+        %Tanx.Core.Structure.EntryPoint{x: 9.25, y: -9.25, heading: pi/2, name: "se"},
+        %Tanx.Core.Structure.EntryPoint{x: -9.25, y: -9.25, heading: 0.0, name: "sw"},
       ]
     }
   end

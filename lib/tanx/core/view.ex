@@ -21,7 +21,19 @@ defmodule Tanx.Core.View do
     """
     defstruct height: 20.0,
               width: 20.0,
-              walls: []
+              walls: [],
+              entry_point_radius: 0.5,
+              entry_points: []
+  end
+
+
+  defmodule EntryPoint do
+    @moduledoc """
+    A view of an entry point.
+    """
+    defstruct name: "",
+              x: 0.0,
+              y: 0.0
   end
 
 
