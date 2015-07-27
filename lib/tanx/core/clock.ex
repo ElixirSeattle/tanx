@@ -31,8 +31,9 @@ defmodule Tanx.Core.Clock do
 
   Provide a nil interval to disable automatic ticking.
   """
-  def start_link(recipient_pid, interval_millis) do
-    {:ok, pid} = GenServer.start_link(__MODULE__, {recipient_pid, interval_millis})
+  def start_link(recipient_pid, interval_millis, time_config) do
+    {:ok, pid} = GenServer.start_link(__MODULE__,
+        {recipient_pid, interval_millis, time_config})
     pid
   end
 
@@ -81,13 +82,22 @@ defmodule Tanx.Core.Clock do
 
 
   defmodule State do
-    defstruct recipient_pid: nil, interval: nil, last: 0, is_waiting: false
+    defstruct recipient_pid: nil,
+              time_config: nil,
+              interval: nil,
+              last: 0,
+              is_waiting: false
   end
 
 
-  def init({recipient_pid, interval}) do
-    initial_time = if interval == nil, do: 0, else: _cur_millis()
-    state = %State{recipient_pid: recipient_pid, interval: interval, last: initial_time}
+  def init({recipient_pid, interval, time_config}) do
+    initial_time = if interval == nil, do: 0, else: Tanx.Core.SystemTime.get(time_config)
+    state = %State{
+      recipient_pid: recipient_pid,
+      time_config: time_config,
+      interval: interval,
+      last: initial_time
+    }
     {:ok, state, _timeout(state)}
   end
 
@@ -129,7 +139,7 @@ defmodule Tanx.Core.Clock do
 
 
   def handle_info(:timeout, state) do
-    cur = _cur_millis()
+    cur = Tanx.Core.SystemTime.get(state.time_config)
     GenServer.cast(state.recipient_pid, {:clock_tick, self, state.last, cur})
     state = %State{state | is_waiting: true, last: cur}
     {:noreply, state}
@@ -144,14 +154,8 @@ defmodule Tanx.Core.Clock do
     if state.is_waiting || state.interval == nil do
       :infinity
     else
-      max(state.last + state.interval - _cur_millis(), 0)
+      max(state.last + state.interval - Tanx.Core.SystemTime.get(state.time_config), 0)
     end
-  end
-
-  defp _cur_millis() do
-    # TODO: Use new time API in Erlang 18
-    {gs, s, ms} = :erlang.now()
-    gs * 1000000000 + s * 1000 + div(ms, 1000)
   end
 
 end

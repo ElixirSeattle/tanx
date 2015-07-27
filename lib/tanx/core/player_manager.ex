@@ -16,9 +16,9 @@ defmodule Tanx.Core.PlayerManager do
   @doc """
     Starts a PlayerManager process. This should be called only from a Game process.
   """
-  def start_link(arena_objects, arena_view, change_handler, handler_args) do
+  def start_link(arena_objects, arena_view, time_config, change_handler, handler_args) do
     {:ok, pid} = GenServer.start_link(__MODULE__,
-        {arena_objects, arena_view, change_handler, handler_args})
+        {arena_objects, arena_view, time_config, change_handler, handler_args})
     pid
   end
 
@@ -84,12 +84,13 @@ defmodule Tanx.Core.PlayerManager do
   defmodule State do
     defstruct arena_objects: nil,
               arena_view: nil,
+              time_config: nil,
               players: HashDict.new,
               broadcaster: nil
   end
 
 
-  def init({arena_objects, arena_view, change_handler, handler_args}) do
+  def init({arena_objects, arena_view, time_config, change_handler, handler_args}) do
     Process.flag(:trap_exit, true)
     if change_handler do
       {:ok, broadcaster} = GenEvent.start_link()
@@ -97,7 +98,14 @@ defmodule Tanx.Core.PlayerManager do
     else
       broadcaster = nil
     end
-    {:ok, %State{arena_objects: arena_objects, arena_view: arena_view, broadcaster: broadcaster}}
+
+    state = %State{
+      arena_objects: arena_objects,
+      arena_view: arena_view,
+      time_config: time_config,
+      broadcaster: broadcaster
+    }
+    {:ok, state}
   end
 
 
@@ -105,8 +113,8 @@ defmodule Tanx.Core.PlayerManager do
   # - {:ok, player} if successful
   # - {:error, reason} if not
   def handle_call({:create_player, name}, _from, state) do
-    {:ok, player} = GenServer.start_link(Tanx.Core.Player,
-      {self, state.arena_objects, state.arena_view})
+    player = Tanx.Core.Player.start_link(
+        self, state.arena_objects, state.arena_view, state.time_config)
     player_info = %PlayerInfo{name: name}
     players = state.players |> Dict.put(player, player_info)
     state = %State{state | players: players}

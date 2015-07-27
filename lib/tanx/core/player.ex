@@ -123,6 +123,19 @@ defmodule Tanx.Core.Player do
   end
 
 
+  #### API internal to Tanx.Core
+
+
+  @doc """
+    Start a new player. This should be called only by PlayerManager.
+  """
+  def start_link(player_manager, arena_objects, arena_view, time_config) do
+    {:ok, player} = GenServer.start_link(__MODULE__,
+        {player_manager, arena_objects, arena_view, time_config})
+    player
+  end
+
+
   #### GenServer callbacks
 
   use GenServer
@@ -132,12 +145,13 @@ defmodule Tanx.Core.Player do
     defstruct player_manager: nil,
               arena_objects: nil,
               arena_view: nil,
+              time_config: nil,
               current_tank: nil,
               fwdown: false,
               ltdown: false,
               rtdown: false,
               missiles: [],
-              last_fired: 0
+              last_fired: -1000
   end
 
 
@@ -146,8 +160,14 @@ defmodule Tanx.Core.Player do
 
 
   # This is called by the 'player manager' when creating a new player
-  def init({player_manager, arena_objects, arena_view}) do
-    {:ok, %State{player_manager: player_manager, arena_objects: arena_objects, arena_view: arena_view}}
+  def init({player_manager, arena_objects, arena_view, time_config}) do
+    state = %State{
+      player_manager: player_manager,
+      arena_objects: arena_objects,
+      arena_view: arena_view,
+      time_config: time_config
+    }
+    {:ok, state}
   end
 
 
@@ -175,8 +195,8 @@ defmodule Tanx.Core.Player do
 
 
   def handle_call(:new_missile, _from, state) do
-    curr_time = _cur_millis
-    if (Dict.size(state.missiles) < 5) and ((curr_time - state.last_fired) > 500) do
+    curr_time = Tanx.Core.SystemTime.get(state.time_config)
+    if (Dict.size(state.missiles) < 5) and ((curr_time - state.last_fired) >= 500) do
 
       case _maybe_call_tank(state, :get_position) do
         {:not_found, state} ->
@@ -284,10 +304,4 @@ defmodule Tanx.Core.Player do
   defp _movement_state(state, "forward", value), do: %State{state | fwdown: value}
   # TODO: Fire button - do we need a fire button state?
   defp _movement_state(state, _button, _down), do: state
-
-  defp _cur_millis() do
-    # TODO: Use new time API in Erlang 18
-    {gs, s, ms} = :erlang.now()
-    gs * 1000000000 + s * 1000 + div(ms, 1000)
-  end
 end

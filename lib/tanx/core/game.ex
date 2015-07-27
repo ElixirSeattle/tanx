@@ -85,7 +85,8 @@ defmodule Tanx.Core.Game do
               player_manager: nil,
               arena_objects: nil,
               arena_view: nil,
-              clock: nil
+              clock: nil,
+              time_config: nil
   end
 
 
@@ -93,19 +94,21 @@ defmodule Tanx.Core.Game do
     structure = Keyword.get(opts, :structure, %Tanx.Core.Structure{})
     clock_interval = Keyword.get(opts, :clock_interval, 20)
     {change_handler, handler_args} = Keyword.get(opts, :player_change_handler, {nil, nil})
+    time_config = Keyword.get(opts, :time_config, nil)
 
     arena_objects = Tanx.Core.ArenaObjects.start_link(structure)
     arena_view = Tanx.Core.ArenaView.start_link(structure)
     player_manager = Tanx.Core.PlayerManager.start_link(
-        arena_objects, arena_view, change_handler, handler_args)
-    clock = Tanx.Core.Clock.start_link(self, clock_interval)
+        arena_objects, arena_view, time_config, change_handler, handler_args)
+    clock = Tanx.Core.Clock.start_link(self, clock_interval, time_config)
 
     state = %State{
       structure: structure,
       player_manager: player_manager,
       arena_objects: arena_objects,
       arena_view: arena_view,
-      clock: clock
+      clock: clock,
+      time_config: time_config
     }
     {:ok, state}
   end

@@ -2,8 +2,9 @@ defmodule Tanx.BasicTanksTest do
   use ExUnit.Case
 
   setup do
-    {:ok, game} = Tanx.Core.Game.start_link(clock_interval: nil)
-    {:ok, game: game}
+    time_config = Tanx.Core.SystemTime.new_config
+    {:ok, game} = Tanx.Core.Game.start_link(clock_interval: nil, time_config: time_config)
+    {:ok, game: game, time_config: time_config}
   end
 
   test "one player and a tank", %{game: game} do
@@ -87,11 +88,11 @@ defmodule Tanx.BasicTanksTest do
 
   end
 
-  test "one player fires 2 missiles", %{game: game} do
+  test "one player fires 2 missiles", %{game: game, time_config: time_config} do
     {:ok, player1} = game |> Tanx.Core.Game.connect(name: "Kyle")
     :ok = player1 |> Tanx.Core.Player.new_tank()
     :ok = player1 |> Tanx.Core.Player.new_missile()
-    :timer.sleep(500)
+    Tanx.Core.SystemTime.set(time_config, 500)
     :ok = player1 |> Tanx.Core.Player.new_missile()
     assert player1 |> Tanx.Core.Player.missile_count == 2
 
@@ -116,17 +117,17 @@ defmodule Tanx.BasicTanksTest do
     assert player1 |> Tanx.Core.Player.missile_count == 0
   end
 
-  test "one player fires a too many missiles", %{game: game} do
+  test "one player fires a too many missiles", %{game: game, time_config: time_config} do
     {:ok, player1} = game |> Tanx.Core.Game.connect(name: "Kyle")
     :ok = player1 |> Tanx.Core.Player.new_tank()
     :ok = player1 |> Tanx.Core.Player.new_missile()
-    :timer.sleep(500)
+    Tanx.Core.SystemTime.set(time_config, 500)
     :ok = player1 |> Tanx.Core.Player.new_missile()
-    :timer.sleep(500)
+    Tanx.Core.SystemTime.set(time_config, 1000)
     :ok = player1 |> Tanx.Core.Player.new_missile()
-    :timer.sleep(500)
+    Tanx.Core.SystemTime.set(time_config, 1500)
     :ok = player1 |> Tanx.Core.Player.new_missile()
-    :timer.sleep(500)
+    Tanx.Core.SystemTime.set(time_config, 2000)
     :ok = player1 |> Tanx.Core.Player.new_missile()
 
     assert :at_limit == player1 |> Tanx.Core.Player.new_missile()
