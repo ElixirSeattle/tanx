@@ -370,18 +370,14 @@ class TanxApp {
 
     let point = this.onScreenPoint(entryPoint.x, entryPoint.y);
     let radius = this._structure.entry_point_radius * this._scaleFactor;
-    if (hasTank) {
-      radius = radius * 0.5;
+    let time = Date.now() % 1000;
+    if (time < 500) {
+      radius = radius * time / 500;
     } else {
-      let time = Date.now() % 1000;
-      if (time < 500) {
-        radius = radius * time / 500;
-      } else {
-        radius = radius * (1000 - time) / 500;
-      }
+      radius = radius * (1000 - time) / 500;
     }
     context.beginPath();
-    context.strokeStyle = '#ff0';
+    context.strokeStyle = hasTank ? '#cc8' : '#ff0';
     context.arc(point.x, point.y, radius, 0, Math.PI*2, false);
     context.stroke();
 

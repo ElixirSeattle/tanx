@@ -36,7 +36,11 @@ defmodule Tanx.Core.Obstacles do
   """
   def force_from_decomposed_wall({elements, _segments}, p, radius) do
     force = elements
-      |> Enum.find_value(&(element_force(&1, p, radius)))
+      |> Enum.map(&(element_force(&1, p, radius)))
+      |> Enum.max_by(fn
+        nil -> 0.0
+        {x, y} -> x * x + y * y
+      end)
     if force == nil, do: {0.0, 0.0}, else: force
   end
 
