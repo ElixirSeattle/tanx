@@ -1,4 +1,5 @@
 defmodule Tanx.Core.Missile do
+<<<<<<< HEAD
 
   defmodule State do
     defstruct arena_width: 20.0,
@@ -10,6 +11,9 @@ defmodule Tanx.Core.Missile do
               heading: 0.0,
               v: 10.0,
               explosion: nil
+=======
+  use GenServer
+>>>>>>> fb8cdc5... add Use GenServer
 
   end
 
@@ -84,6 +88,7 @@ defmodule Tanx.Core.Missile do
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
     {:noreply, state}
   end
+
 
   defp update_explosion(updater, dt, state) do
     age = state.explosion + dt / @explosion_time
