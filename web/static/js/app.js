@@ -208,6 +208,7 @@ class TanxApp {
         event.preventDefault();
         break;
       case 68: // D
+      case 90: // Z
         if (isDown) {
           this.pushToChannel("remove_tank", {});
         }
