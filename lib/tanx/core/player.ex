@@ -175,8 +175,12 @@ defmodule Tanx.Core.Player do
   def handle_call({:new_tank, params}, _from, state) do
     case _maybe_call_tank(state, :ping) do
       {:not_found, state} ->
-        tank = state.arena_objects |> Tanx.Core.ArenaObjects.create_tank(params)
-        {:reply, :ok, %State{state | current_tank: tank}}
+        case state.arena_objects |> Tanx.Core.ArenaObjects.create_tank(params) do
+          {:ok, tank} ->
+            {:reply, :ok, %State{state | current_tank: tank}}
+          {:error, error} ->
+            {:reply, error, state}
+        end
       {:ok, _, state} ->
         {:reply, :already_present, state}
     end

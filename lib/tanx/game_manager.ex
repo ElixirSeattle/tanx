@@ -74,10 +74,26 @@ defmodule Tanx.GameManager do
       ],
 
       entry_points: [
-        %Tanx.Core.Structure.EntryPoint{x: -9.25, y: 9.25, heading: -pi/2, name: "nw"},
-        %Tanx.Core.Structure.EntryPoint{x: 9.25, y: 9.25, heading: pi, name: "ne"},
-        %Tanx.Core.Structure.EntryPoint{x: 9.25, y: -9.25, heading: pi/2, name: "se"},
-        %Tanx.Core.Structure.EntryPoint{x: -9.25, y: -9.25, heading: 0.0, name: "sw"},
+        %Tanx.Core.Structure.EntryPoint{
+          name: "nw",
+          x: -9.25, y: 9.25, heading: -pi/2,
+          buffer_left: 0.75, buffer_right: 1.25, buffer_up: 0.75, buffer_down: 9.25
+        },
+        %Tanx.Core.Structure.EntryPoint{
+          name: "ne",
+          x: 9.25, y: 9.25, heading: pi,
+          buffer_left: 9.75, buffer_right: 0.75, buffer_up: 0.75, buffer_down: 1.25
+        },
+        %Tanx.Core.Structure.EntryPoint{
+          name: "se",
+          x: 9.25, y: -9.25, heading: pi/2,
+          buffer_left: 1.25, buffer_right: 0.75, buffer_up: 9.25, buffer_down: 0.75
+        },
+        %Tanx.Core.Structure.EntryPoint{
+          name: "sw",
+          x: -9.25, y: -9.25, heading: 0.0,
+          buffer_left: 0.75, buffer_right: 9.75, buffer_up: 1.25, buffer_down: 0.75
+        },
       ]
     }
   end

@@ -24,7 +24,11 @@ defmodule Tanx.Core.Structure do
     defstruct name: "",
               x: 0.0,
               y: 0.0,
-              heading: 0.0
+              heading: 0.0,
+              buffer_left: 0.0,
+              buffer_right: 0.0,
+              buffer_up: 0.0,
+              buffer_down: 0.0
   end
 
 

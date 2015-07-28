@@ -29,15 +29,18 @@ defmodule Tanx.Core.ArenaUpdater do
   """
 
 
+  require Logger
+
+
   #### API internal to Tanx.Core
 
 
   @doc """
     Starts an ArenaUpdater process. This should be called only from a Game process.
   """
-  def start(arena_objects, arena_view, player_manager, clock, last_time, time) do
+  def start(entry_points, arena_objects, arena_view, player_manager, clock, last_time, time) do
     GenServer.start(__MODULE__,
-        {arena_objects, arena_view, player_manager, clock, last_time, time})
+        {entry_points, arena_objects, arena_view, player_manager, clock, last_time, time})
   end
 
 
@@ -60,11 +63,13 @@ defmodule Tanx.Core.ArenaUpdater do
 
   #### GenServer callbacks
 
-
   use GenServer
 
+
   defmodule State do
-    defstruct arena_view: nil,
+    defstruct entry_points: [],
+              arena_objects: nil,
+              arena_view: nil,
               player_manager: nil,
               clock: nil,
               expected: nil,
@@ -72,16 +77,20 @@ defmodule Tanx.Core.ArenaUpdater do
   end
 
 
-  def init({arena_objects, arena_view, player_manager, clock, last_time, time}) do
+  def init({entry_points, arena_objects, arena_view, player_manager, clock, last_time, time}) do
     objects = arena_objects |> Tanx.Core.ArenaObjects.get_objects
     if Enum.empty?(objects) do
       :ok = arena_view |> Tanx.Core.ArenaView.clear_objects
+      entry_point_availability = create_entry_point_availability([], entry_points)
+      arena_objects |> Tanx.Core.ArenaObjects.update_entry_point_availability(entry_point_availability)
       clock |> Tanx.Core.Clock.send_tock
       :ignore
     else
       objects |> Enum.each(&(GenServer.cast(&1, {:update, last_time, time, self})))
       expected = objects |> Enum.into(HashSet.new)
       state = %State{
+        entry_points: entry_points,
+        arena_objects: arena_objects,
         arena_view: arena_view,
         player_manager: player_manager,
         clock: clock,
@@ -142,17 +151,36 @@ defmodule Tanx.Core.ArenaUpdater do
     # TODO: Tank-missile collisions
 
     send_revised_tanks(tank_responses)
+
+    entry_point_availability = create_entry_point_availability(tank_responses, state.entry_points)
     tank_views = create_tank_views(state, tank_responses)
     missile_views = create_missile_views(missile_responses)
     explosion_views = create_explosion_views(explosion_responses)
 
+    state.arena_objects |> Tanx.Core.ArenaObjects.update_entry_point_availability(entry_point_availability)
+
     :ok = state.arena_view |> Tanx.Core.ArenaView.set_objects(
-        tank_views, missile_views, explosion_views)
+        tank_views, missile_views, explosion_views, entry_point_availability)
 
     state.clock |> Tanx.Core.Clock.send_tock
     %State{state | expected: nil, received: nil}
   end
 
+
+  defp create_entry_point_availability(tank_responses, entry_points) do
+    entry_points
+      |> Enum.reduce(%{}, fn (ep, dict) ->
+        is_available = tank_responses
+          |> Enum.all?(fn tank ->
+            {tank_x, tank_y} = tank.pos
+            tank_x < ep.x - ep.buffer_left or
+              tank_x > ep.x + ep.buffer_right or
+              tank_y < ep.y - ep.buffer_down or
+              tank_y > ep.y + ep.buffer_up
+          end)
+        dict |> Dict.put(ep.name, is_available)
+      end)
+  end
 
   defp resolve_tank_forces(tank_responses) do
     radius = Tanx.Core.Tank.collision_radius() * 2

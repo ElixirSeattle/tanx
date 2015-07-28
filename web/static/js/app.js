@@ -327,7 +327,7 @@ class TanxApp {
 
       // Draw entry points
       this._structure.entry_points.forEach(ep => {
-        this.renderEntryPoint(context, ep, hasTank);
+        this.renderEntryPoint(context, ep, arena.entry_points_available[ep.name]);
       });
 
       // Draw tanks
@@ -365,7 +365,7 @@ class TanxApp {
   }
 
 
-  renderEntryPoint(context, entryPoint, hasTank) {
+  renderEntryPoint(context, entryPoint, isAvailable) {
     context.save();
 
     let point = this.onScreenPoint(entryPoint.x, entryPoint.y);
@@ -377,7 +377,7 @@ class TanxApp {
       radius = radius * (1000 - time) / 500;
     }
     context.beginPath();
-    context.strokeStyle = hasTank ? '#cc8' : '#ff0';
+    context.strokeStyle = isAvailable ? '#ff0' : '#bb8';
     context.arc(point.x, point.y, radius, 0, Math.PI*2, false);
     context.stroke();
 
@@ -394,7 +394,7 @@ class TanxApp {
     // Add names above enemies
     if(tank.is_me === false) {
       context.textAlign = "center";
-      context.fillText(tank.name, 0, -15);
+      context.fillText(tank.name, 0, -this._scaleFactor * 0.7);
     }
 
     let tankImage = new Image();

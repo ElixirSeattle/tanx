@@ -54,6 +54,14 @@ defmodule Tanx.Core.ArenaObjects do
 
 
   @doc """
+    Update the entry point availability state. This may be called only by an ArenaUpdater.
+  """
+  def update_entry_point_availability(arena_objects, availability) do
+    GenServer.cast(arena_objects, {:update_entry_point_availability, availability})
+  end
+
+
+  @doc """
     Kill all objects owned by the given player
   """
   def kill_player_objects(arena_objects, player) do
@@ -82,6 +90,19 @@ defmodule Tanx.Core.ArenaObjects do
               decomposed_walls: []
   end
 
+  # Entry point
+  defmodule EntryPointInfo do
+    # Availability values:
+    # - occupied: the view determined that a tank is in the vicinity
+    # - clear: the view determined that the entry point is clear, and no one has used it yet
+    # - used: someone has used this entry point but the updater doesn't know yet
+    # - updating: the updater has been notified of a new tank
+    defstruct x: 0.0,
+              y: 0.0,
+              heading: 0.0,
+              avail: :clear
+  end
+
 
   def init({structure}) do
     Process.flag(:trap_exit, true)
@@ -89,7 +110,7 @@ defmodule Tanx.Core.ArenaObjects do
       |> Enum.map(&Tanx.Core.Obstacles.decompose_wall/1)
     entry_points = structure.entry_points
       |> Enum.reduce(HashDict.new, fn (ep, dict) ->
-        dict |> Dict.put(ep.name, ep)
+        dict |> Dict.put(ep.name, %EntryPointInfo{x: ep.x, y: ep.y, heading: ep.heading})
       end)
 
     state = %State{
@@ -105,18 +126,15 @@ defmodule Tanx.Core.ArenaObjects do
   # Create a new tank process. This must be called from the player that will own the tank.
   # This is called by the 'player' process.
   def handle_call({:create_tank, params}, {from, _}, state) do
-    entry_point_name = params |> Keyword.get(:entry_point, nil)
-    entry_point = state.entry_points |> Dict.get(entry_point_name, nil)
-    if entry_point != nil do
-      params = params
-        |> Keyword.put(:x, entry_point.x)
-        |> Keyword.put(:y, entry_point.y)
-        |> Keyword.put(:heading, entry_point.heading)
+    case interpret_entry_point(params, state) do
+      {nil, state} ->
+        {:reply, {:error, :entry_point_occupied}, state}
+      {params, state} ->
+        tank = Tanx.Core.Tank.start_link(
+            state.arena_width, state.arena_height, state.decomposed_walls, from, params)
+        state = %State{state | objects: state.objects |> Dict.put(tank, from)}
+        {:reply, {:ok, tank}, state}
     end
-
-    tank = Tanx.Core.Tank.start_link(
-        state.arena_width, state.arena_height, state.decomposed_walls, from, params)
-    {:reply, tank, %State{state | objects: state.objects |> Dict.put(tank, from)}}
   end
 
 
@@ -130,7 +148,13 @@ defmodule Tanx.Core.ArenaObjects do
   # Get a snapshot of the current list of objects. This is called from an updater as the
   # first step in its update process.
   def handle_call(:get_objects, {from, _}, state) do
-    {:reply, state.objects |> Dict.keys(), %State{state | updater: from}}
+    entry_points = state.entry_points
+      |> Enum.map(fn
+        {name, ep = %EntryPointInfo{avail: :used}} -> {name, %EntryPointInfo{ep | avail: :updating}}
+        entry -> entry
+      end)
+      |> Enum.into(HashDict.new)
+    {:reply, state.objects |> Dict.keys(), %State{state | updater: from, entry_points: entry_points}}
   end
 
 
@@ -147,6 +171,29 @@ defmodule Tanx.Core.ArenaObjects do
   end
 
 
+  def handle_cast({:update_entry_point_availability, availability}, state) do
+    entry_points = availability
+      |> Enum.reduce(state.entry_points, fn {name, available}, eps ->
+        ep = eps[name]
+        if ep == nil do
+          eps
+        else
+          if available do
+            if ep.avail != :used do
+              eps |> Dict.put(name, %EntryPointInfo{ep | avail: :clear})
+            else
+              eps
+            end
+          else
+            eps |> Dict.put(name, %EntryPointInfo{ep | avail: :occupied})
+          end
+        end
+      end)
+    state = %State{state | entry_points: entry_points}
+    {:noreply, state}
+  end
+
+
   # Trap EXIT to handle the death of object processes. If an object dies, remove it and
   # ensure that any running updater knows not to wait for updates from it.
   def handle_info({:EXIT, pid, _}, state) do
@@ -156,5 +203,27 @@ defmodule Tanx.Core.ArenaObjects do
     {:noreply, %State{state | objects: state.objects |> Dict.delete(pid)}}
   end
   def handle_info(request, state), do: super(request, state)
+
+
+  defp interpret_entry_point(params, state) do
+    entry_point_name = params |> Keyword.get(:entry_point, nil)
+    entry_point = state.entry_points |> Dict.get(entry_point_name, nil)
+    if entry_point == nil do
+      {params, state}
+    else
+      if entry_point.avail == :clear do
+        params = params
+          |> Keyword.put(:x, entry_point.x)
+          |> Keyword.put(:y, entry_point.y)
+          |> Keyword.put(:heading, entry_point.heading)
+        entry_point = %EntryPointInfo{entry_point | avail: :used}
+        entry_points = state.entry_points |> Dict.put(entry_point_name, entry_point)
+        state = %State{state | entry_points: entry_points}
+        {params, state}
+      else
+        {nil, state}
+      end
+    end
+  end
 
 end

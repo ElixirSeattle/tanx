@@ -141,7 +141,8 @@ defmodule Tanx.Core.Game do
   # such as tanks, and then updates the ArenaView state.
   def handle_cast({:clock_tick, _clock, last_time, time}, state) do
     Tanx.Core.ArenaUpdater.start(
-        state.arena_objects, state.arena_view, state.player_manager, state.clock, last_time, time)
+        state.structure.entry_points, state.arena_objects, state.arena_view,
+        state.player_manager, state.clock, last_time, time)
     {:noreply, state}
   end
 

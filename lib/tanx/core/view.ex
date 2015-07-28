@@ -43,7 +43,8 @@ defmodule Tanx.Core.View do
     """
     defstruct tanks: [],
               missiles: [],
-              explosions: []
+              explosions: [],
+              entry_points_available: %{}
   end
 
 
