@@ -44,6 +44,10 @@ defmodule Tanx.Core.ArenaObjects do
     GenServer.call(arena_objects, {:create_missile, x, y, heading})
   end
 
+
+  @doc """
+    Remove the missile process.
+  """
   def explode_missile(arena_objects, missile) do
     GenServer.cast(arena_objects, {:explode_missile, missile})
   end
@@ -152,12 +156,6 @@ defmodule Tanx.Core.ArenaObjects do
     {:reply, missile, %State{state | objects: state.objects |> Dict.put(missile, player)}}
   end
 
-  def handle_cast({:explode_missile, missile}, state) do
-    state = %State{state | m: entry_points}
-    {:noreply, state}
-  end
-
-
   # Get a snapshot of the current list of objects. This is called from an updater as the
   # first step in its update process.
   def handle_call(:get_objects, {from, _}, state) do
@@ -167,6 +165,7 @@ defmodule Tanx.Core.ArenaObjects do
         entry -> entry
       end)
       |> Enum.into(HashDict.new)
+
     {:reply, state.objects |> Dict.keys(), %State{state | updater: from, entry_points: entry_points}}
   end
 
@@ -183,7 +182,11 @@ defmodule Tanx.Core.ArenaObjects do
     {:reply, :ok, %State{state | objects: objects}}
   end
 
-
+  def handle_cast({:explode_missile, missile}, state) do
+    state = %State{state | objects: Dict.delete(state.objects, missile)}
+    {:noreply, state}
+  end
+  
   def handle_cast({:update_entry_point_availability, availability}, state) do
     entry_points = availability
       |> Enum.reduce(state.entry_points, fn {name, available}, eps ->

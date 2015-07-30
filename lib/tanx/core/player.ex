@@ -158,7 +158,7 @@ defmodule Tanx.Core.Player do
   @forward_velocity 2.0
   @angular_velocity 2.0
   @missile_count 5
-  @missile_fire_rate 500
+  @missile_fire_rate 200
 
   # This is called by the 'player manager' when creating a new player
   def init({player_manager, arena_objects, arena_view, time_config}) do

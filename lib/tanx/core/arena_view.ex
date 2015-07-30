@@ -135,6 +135,7 @@ defmodule Tanx.Core.ArenaView do
           x: missile_info.x, y: missile_info.y, heading: missile_info.heading}
       end)
 
+
     entry_points_available = state.entry_points_available
     if tanks |> Enum.any?(&(&1.is_me)) do
       entry_points_available = %{}
@@ -153,6 +154,7 @@ defmodule Tanx.Core.ArenaView do
 
   # This is called from an updater to update the view with a new state.
   def handle_call({:update, tanks, missiles, explosions, entry_points_available}, _from, state) do
+    
     tanks = tanks
       |> Enum.map(fn tank ->
         %Tanx.Core.ArenaView.TankInfo{tank |
@@ -166,7 +168,7 @@ defmodule Tanx.Core.ArenaView do
           x: missile.x |> truncate, y: missile.y |> truncate,
           heading: missile.heading |> truncate}
       end)
-
+   
     explosions = explosions
       |> Enum.map(fn explosion ->
         %Tanx.Core.View.Explosion{explosion |

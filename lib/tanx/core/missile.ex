@@ -1,5 +1,5 @@
 defmodule Tanx.Core.Missile do
-<<<<<<< HEAD
+
 
   defmodule State do
     defstruct arena_width: 20.0,
@@ -11,9 +11,8 @@ defmodule Tanx.Core.Missile do
               heading: 0.0,
               v: 10.0,
               explosion: nil
-=======
-  use GenServer
->>>>>>> fb8cdc5... add Use GenServer
+
+
 
   end
 
@@ -77,13 +76,14 @@ defmodule Tanx.Core.Missile do
     v = state.v
     nx = state.x + v * dt * :math.cos(a)
     ny = state.y + v * dt * :math.sin(a)
-    if _hit_obstacle?(nx, ny, state) != nil or 
-       _hit_arena_edge?(nx, ny, state) do 
-      IO.puts "Exploding misile"
+    if _hit_obstacle?(nx, ny, state) != nil or
+      _hit_arena_edge?(nx, ny, state) do
       state = %State{state | explosion: 0.0}
+      update = %Tanx.Core.Updates.Explosion{pos: {state.x, state.y}, radius: @explosion_radius, age: 0.0}
+    else
+      update = %Tanx.Core.Updates.MoveMissile{player: state.player, x: nx, y: ny, heading: a}
     end
       
-    update = %Tanx.Core.Updates.MoveMissile{player: state.player, x: nx, y: ny, heading: a}
     state = %State{state | x: nx, y: ny}
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
     {:noreply, state}
@@ -109,11 +109,16 @@ defmodule Tanx.Core.Missile do
     state.decomposed_walls
       |> Enum.find_value(fn(wall) -> Tanx.Core.Obstacles.collision_with_decomposed_wall(wall,
                                                        {state.x, state.y}, 
-                                                       {x_pos, y_pos}) end
+                                                       {x_pos, y_pos}) 
+                         end
       )
   end
 
   defp _hit_arena_edge?(x_pos, y_pos, state) do
-    y_pos > state.arena_height or x_pos > state.arena_width 
+
+      y_pos < (0 - state.arena_height/2) or
+      y_pos > (state.arena_height/2) or
+      x_pos < (0 - (state.arena_width/2)) or
+      x_pos > (state.arena_width/2)
   end
 end

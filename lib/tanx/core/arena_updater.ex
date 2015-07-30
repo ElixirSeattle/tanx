@@ -103,7 +103,7 @@ defmodule Tanx.Core.ArenaUpdater do
 
 
   def handle_cast({:update_reply, object, update}, state) do
-    received = [{object,update} | state.received]
+    received = [update | state.received]
     expected = state.expected |> Set.delete(object)
     state = check_responses(%State{state | received: received, expected: expected})
     final_reply(state)
@@ -136,6 +136,7 @@ defmodule Tanx.Core.ArenaUpdater do
 
 
   defp process_responses(state) do
+
     categorized_responses = state.received
       |> Enum.group_by(fn
         %Tanx.Core.Updates.MoveTank{} -> :tank
@@ -143,10 +144,11 @@ defmodule Tanx.Core.ArenaUpdater do
         %Tanx.Core.Updates.Explosion{} -> :explosion
         _ -> :unknown
       end)
+
     tank_responses = Dict.get(categorized_responses, :tank, [])
     missile_responses = Dict.get(categorized_responses, :missile, [])
     explosion_responses = Dict.get(categorized_responses, :explosion, [])
-
+   
     tank_responses = resolve_tank_forces(tank_responses)
     # TODO: Tank-missile collisions
 
