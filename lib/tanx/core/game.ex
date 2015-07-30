@@ -95,7 +95,6 @@ defmodule Tanx.Core.Game do
     clock_interval = Keyword.get(opts, :clock_interval, 20)
     {change_handler, handler_args} = Keyword.get(opts, :player_change_handler, {nil, nil})
     time_config = Keyword.get(opts, :time_config, nil)
-
     arena_objects = Tanx.Core.ArenaObjects.start_link(structure)
     arena_view = Tanx.Core.ArenaView.start_link(structure)
     player_manager = Tanx.Core.PlayerManager.start_link(

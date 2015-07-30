@@ -2,7 +2,13 @@ defmodule Tanx.MissileUpdateTest do
   use ExUnit.Case
 
   setup do
-    {:ok, game} = Tanx.Core.Game.start_link(clock_interval: nil)
+    structure = %Tanx.Core.Structure{
+      height: 20.0, width: 20.0,
+      walls: [
+        [{-5, -1}, {-5, 1}]
+      ]
+    }
+    {:ok, game} = Tanx.Core.Game.start_link(clock_interval: nil, structure: structure)
     game |> Tanx.Core.Game.manual_clock_tick(1000)
     {:ok, player} = game |> Tanx.Core.Game.connect(name: "Ben")
     :ok = player |> Tanx.Core.Player.new_tank()
@@ -13,6 +19,7 @@ defmodule Tanx.MissileUpdateTest do
     :ok = player |> Tanx.Core.Player.new_missile()
 
     game |> Tanx.Core.Game.manual_clock_tick(2000)
+
     _check_missile(player, 10.0, 0.0, 0.0)
   end
 
@@ -20,7 +27,7 @@ defmodule Tanx.MissileUpdateTest do
     :ok = player |> Tanx.Core.Player.control_tank(:right, true)
 
     game |> Tanx.Core.Game.manual_clock_tick(2000)
-    :ok = player |> Tanx.Core.Player.new_missile()
+    assert :ok = player |> Tanx.Core.Player.new_missile()
 
     game |> Tanx.Core.Game.manual_clock_tick(2000)
 
@@ -38,6 +45,8 @@ defmodule Tanx.MissileUpdateTest do
 
   defp _check_missile(player, x, y, a) do
     view = player |> Tanx.Core.Player.view_arena_objects()
+    IO.inspect view
+    assert view != []
     got = view.missiles |> hd()
     want = %Tanx.Core.View.Missile{is_mine: true, x: x, y: y, heading: a}
     assert got == want

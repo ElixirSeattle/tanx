@@ -157,7 +157,8 @@ defmodule Tanx.Core.Player do
 
   @forward_velocity 2.0
   @angular_velocity 2.0
-
+  @missile_count 5
+  @missile_fire_rate 500
 
   # This is called by the 'player manager' when creating a new player
   def init({player_manager, arena_objects, arena_view, time_config}) do
@@ -200,7 +201,8 @@ defmodule Tanx.Core.Player do
 
   def handle_call(:new_missile, _from, state) do
     curr_time = Tanx.Core.SystemTime.get(state.time_config)
-    if (Dict.size(state.missiles) < 5) and ((curr_time - state.last_fired) >= 500) do
+    if (Dict.size(state.missiles) < @missile_count) and 
+      ((curr_time - state.last_fired) >= @missile_fire_rate) do
 
       case _maybe_call_tank(state, :get_position) do
         {:not_found, state} ->
@@ -223,8 +225,8 @@ defmodule Tanx.Core.Player do
   def handle_call({:explode_missile, missile}, _from, state) do
     tank = state.current_tank
     if tank do
-      GenServer.cast(missile, :die)
-      {:reply, :ok, %State{state | missiles: List.remove(state.missiles, missile)}}
+      :ok = state.arena_objects |> Tanx.Core.ArenaObjects.explode_missile(missile)
+      {:reply, :ok, %State{state | missiles: List.delete(state.missiles, missile)}}
     else
       {:reply, :no_missile, state}
     end

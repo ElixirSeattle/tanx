@@ -44,6 +44,9 @@ defmodule Tanx.Core.ArenaObjects do
     GenServer.call(arena_objects, {:create_missile, x, y, heading})
   end
 
+  def explode_missile(arena_objects, missile) do
+    GenServer.cast(arena_objects, {:explode_missile, missile})
+  end
 
   @doc """
     Get a list of all live arena objects. This may be called only by an ArenaUpdater.
@@ -105,7 +108,6 @@ defmodule Tanx.Core.ArenaObjects do
 
 
   def init({structure}) do
-    Process.flag(:trap_exit, true)
     decomposed_walls = structure.walls
       |> Enum.map(&Tanx.Core.Obstacles.decompose_wall/1)
     entry_points = structure.entry_points
@@ -140,8 +142,19 @@ defmodule Tanx.Core.ArenaObjects do
 
   # Create a new missile process. This must be called from the player that fired the missile.
   def handle_call({:create_missile, x, y, heading}, {player, _}, state) do
-    {:ok, missile}  = Tanx.Core.Missile.start_link(player, {x, y, heading})
+    {:ok, missile}  = Tanx.Core.Missile.start_link(player,
+                                                   state.arena_width,
+                                                   state.arena_height,
+                                                   state.decomposed_walls, 
+                                                   x, 
+                                                   y, 
+                                                   heading)
     {:reply, missile, %State{state | objects: state.objects |> Dict.put(missile, player)}}
+  end
+
+  def handle_cast({:explode_missile, missile}, state) do
+    state = %State{state | m: entry_points}
+    {:noreply, state}
   end
 
 
