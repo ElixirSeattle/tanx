@@ -178,7 +178,7 @@ defmodule Tanx.Core.Player do
       {:not_found, state} ->
         case state.arena_objects |> Tanx.Core.ArenaObjects.create_tank(params) do
           {:ok, tank} ->
-            {:reply, :ok, %State{state | current_tank: tank}}
+            {:reply, :ok, %State{state | current_tank: tank, missiles: []}}
           {:error, error} ->
             {:reply, error, state}
         end
