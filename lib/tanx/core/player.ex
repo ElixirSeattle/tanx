@@ -192,7 +192,7 @@ defmodule Tanx.Core.Player do
     tank = state.current_tank
     if tank do
       GenServer.cast(tank, :destroy)
-      {:reply, :ok, %State{state | current_tank: nil}}
+      {:reply, :ok, %State{state | current_tank: nil,  missiles: []}}
     else
       {:reply, :no_tank, state}
     end
