@@ -16,8 +16,8 @@ defmodule Tanx.Core.Missile do
 
   end
 
-  @explosion_radius 1.0
-  @explosion_time 0.6
+  @explosion_radius 0.5
+  @explosion_time 0.4
 
   ############
   #Missile API
@@ -71,19 +71,23 @@ defmodule Tanx.Core.Missile do
   ##############################
   # Helper Functions
 
-  def update_missile(updater, dt, state) do
+  defp update_missile(updater, dt, state) do
     a = state.heading
     v = state.v
     nx = state.x + v * dt * :math.cos(a)
     ny = state.y + v * dt * :math.sin(a)
-    if _hit_obstacle?(nx, ny, state) != nil or
-      _hit_arena_edge?(nx, ny, state) do
+    impact = _hit_obstacle?(nx, ny, state)
+    if impact == nil and _hit_arena_edge?(nx, ny, state) do
+      impact = {nx, ny}
+    end
+    if impact != nil do
+      {nx, ny} = impact
       state = %State{state | explosion: 0.0}
-      update = %Tanx.Core.Updates.Explosion{pos: {state.x, state.y}, radius: @explosion_radius, age: 0.0}
+      update = %Tanx.Core.Updates.Explosion{pos: impact, radius: @explosion_radius, age: 0.0}
     else
       update = %Tanx.Core.Updates.MoveMissile{missile: self, player: state.player, x: nx, y: ny, heading: a}
     end
-      
+
     state = %State{state | x: nx, y: ny}
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
     {:noreply, state}
