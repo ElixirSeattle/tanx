@@ -30,7 +30,8 @@ defmodule Tanx.Core.Updates do
     @moduledoc """
     An update command that moves the missile along its path.
     """
-    defstruct player: nil,
+    defstruct missile: nil,
+              player: nil,
               x: 0.0,
               y: 0.0,
               heading: 0.0

@@ -61,7 +61,7 @@ defmodule Tanx.Core.Missile do
   end
 
 
-  def handle_cast(:explode, _from, state) do
+  def handle_cast(:explode, state) do
     if state.explosion == nil do
       state = %State{state | explosion: 0.0}
     end
@@ -81,7 +81,7 @@ defmodule Tanx.Core.Missile do
       state = %State{state | explosion: 0.0}
       update = %Tanx.Core.Updates.Explosion{pos: {state.x, state.y}, radius: @explosion_radius, age: 0.0}
     else
-      update = %Tanx.Core.Updates.MoveMissile{player: state.player, x: nx, y: ny, heading: a}
+      update = %Tanx.Core.Updates.MoveMissile{missile: self, player: state.player, x: nx, y: ny, heading: a}
     end
       
     state = %State{state | x: nx, y: ny}
@@ -107,18 +107,16 @@ defmodule Tanx.Core.Missile do
 
   defp _hit_obstacle?(x_pos, y_pos, state) do
     state.decomposed_walls
-      |> Enum.find_value(fn(wall) -> Tanx.Core.Obstacles.collision_with_decomposed_wall(wall,
+      |> Enum.find_value(fn(wall) -> 
+                           Tanx.Core.Obstacles.collision_with_decomposed_wall(wall,
                                                        {state.x, state.y}, 
-                                                       {x_pos, y_pos}) 
-                         end
-      )
+                                                       {x_pos, y_pos}) end)
   end
 
   defp _hit_arena_edge?(x_pos, y_pos, state) do
-
-      y_pos < (0 - state.arena_height/2) or
-      y_pos > (state.arena_height/2) or
-      x_pos < (0 - (state.arena_width/2)) or
-      x_pos > (state.arena_width/2)
+    y_pos < (0 - state.arena_height/2) or
+    y_pos > (state.arena_height/2) or
+    x_pos < (0 - (state.arena_width/2)) or
+    x_pos > (state.arena_width/2)
   end
 end

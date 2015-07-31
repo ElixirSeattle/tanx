@@ -112,6 +112,7 @@ defmodule Tanx.Core.ArenaObjects do
 
 
   def init({structure}) do
+    Process.flag(:trap_exit, true)
     decomposed_walls = structure.walls
       |> Enum.map(&Tanx.Core.Obstacles.decompose_wall/1)
     entry_points = structure.entry_points

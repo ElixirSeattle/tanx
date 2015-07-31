@@ -120,7 +120,6 @@ defmodule Tanx.Core.ArenaUpdater do
   defp final_reply(state = %State{expected: nil}) do
     {:stop, :normal, state}
   end
-  
   defp final_reply(state) do
     {:noreply, state}
   end
@@ -136,7 +135,6 @@ defmodule Tanx.Core.ArenaUpdater do
 
 
   defp process_responses(state) do
-
     categorized_responses = state.received
       |> Enum.group_by(fn
         %Tanx.Core.Updates.MoveTank{} -> :tank
@@ -144,13 +142,15 @@ defmodule Tanx.Core.ArenaUpdater do
         %Tanx.Core.Updates.Explosion{} -> :explosion
         _ -> :unknown
       end)
-
     tank_responses = Dict.get(categorized_responses, :tank, [])
     missile_responses = Dict.get(categorized_responses, :missile, [])
     explosion_responses = Dict.get(categorized_responses, :explosion, [])
-   
+    
     tank_responses = resolve_tank_forces(tank_responses)
+   
     # TODO: Tank-missile collisions
+
+    detect_tank_missile_collision(tank_responses, missile_responses)
 
     send_revised_tanks(tank_responses)
 
@@ -168,6 +168,35 @@ defmodule Tanx.Core.ArenaUpdater do
     %State{state | expected: nil, received: nil}
   end
 
+  defp detect_tank_missile_collision(tank_responses, missile_responses) do
+    for missile <- missile_responses,
+        collide_with_tank?(missile, tank_responses) do
+      Tanx.Core.Missile.explode(missile.missile)
+    end
+  end
+
+
+  defp collide_with_tank?(missile, tanks) do
+    tank_to_destroy = 
+      tanks |> Enum.find(fn(%Tanx.Core.Updates.MoveTank{pos: {tank_x, tank_y}} = tank) ->
+                          if missile.player != tank.player, do: 
+                            same_position?({missile.x, missile.y}, {tank_x, tank_y}, tank.radius) 
+                        end)
+      
+    if tank_to_destroy != nil do
+      Tanx.Core.Player.remove_tank(tank_to_destroy.player) 
+      true
+    else
+      false
+    end
+  end
+
+  defp same_position?({x1, y1}, {x2, y2}, radius \\ 0) do
+      x1 <= x2 + radius and 
+      x1 >= x2 - radius and
+      y1 <= y2 + radius and
+      y1 >= y2 - radius 
+  end
 
   defp create_entry_point_availability(tank_responses, entry_points) do
     entry_points
@@ -206,7 +235,6 @@ defmodule Tanx.Core.ArenaUpdater do
     end)
   end
 
-
   defp send_revised_tanks(responses) do
     responses |> Enum.each(fn
       tank ->
@@ -214,7 +242,6 @@ defmodule Tanx.Core.ArenaUpdater do
         GenServer.cast(tank.tank, {:move_to, newx, newy})
     end)
   end
-
 
   defp create_tank_views(state, responses) do
     responses |> Enum.flat_map(fn response ->
@@ -237,15 +264,12 @@ defmodule Tanx.Core.ArenaUpdater do
     end)
   end
 
-
-
   defp create_explosion_views(responses) do
     responses |> Enum.map(fn response ->
       {x, y} = response.pos
       %Tanx.Core.View.Explosion{x: x, y: y, radius: response.radius, age: response.age}
     end)
   end
-
 
   defp vadd({x0, y0}, {x1, y1}), do: {x0 + x1, y0 + y1}
 
