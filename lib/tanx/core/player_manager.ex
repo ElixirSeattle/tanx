@@ -128,27 +128,20 @@ defmodule Tanx.Core.PlayerManager do
   def handle_call(:view_all, {from, _}, state) do
     player_views = state.players
       |> Enum.map(fn
-        ({player, %PlayerInfo{name: name, kills: kills, deaths: deaths}}) ->
-          if name == nil or name == "" do
-            name = "Anonymous Coward"
-          end
-          %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths, is_me: from == player}
-      end)
+        {player, player_info} ->
+          build_player_view(player_info, from == player)
+        end)
       |> _sort_views()
     {:reply, player_views, state}
   end
 
 
-  # Returns the Tanx.Core.View.Player representing the calling Player, or nil if the
-  # calling process is not a Player that is part of this game.
+  # Returns the Tanx.Core.View.Player representing the given Player, or nil if the
+  # given player is not part of this game.
   def handle_call({:view_player, player}, {from, _}, state) do
     reply = case state.players[player] do
       nil -> nil
-      %PlayerInfo{name: name, kills: kills, deaths: deaths} ->
-        if name == nil or name == "" do
-          name = "Anonymous Coward"
-        end
-        %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths, is_me: from == player}
+      player_info -> build_player_view(player_info, from == player)
     end
     {:reply, reply, state}
   end
@@ -224,12 +217,20 @@ defmodule Tanx.Core.PlayerManager do
   defp _broadcast_change(state) do
     player_views = state.players
       |> Enum.map(fn
-        ({_, %PlayerInfo{name: name, kills: kills, deaths: deaths}}) ->
-          %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths}
-      end)
+        {_, player_info} ->
+          build_player_view(player_info, false)
+        end)
       |> _sort_views()
     GenEvent.notify(state.broadcaster, {:player_views, player_views})
     state
+  end
+
+
+  defp build_player_view(%PlayerInfo{name: name, kills: kills, deaths: deaths}, is_me) do
+    if name == nil or name == "" do
+      name = "Anonymous Coward"
+    end
+    %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths, is_me: is_me}
   end
 
 
