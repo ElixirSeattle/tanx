@@ -40,8 +40,8 @@ defmodule Tanx.Core.Player do
   Returns a view of the current arena state, as a Tanx.Core.View.Arena struct.
   The current player's tank (if any) will have its :is_me field set to true.
   """
-  def view_arena_objects(player) do
-    GenServer.call(player, :view_arena_objects)
+  def view_arena_objects(player, params \\ []) do
+    GenServer.call(player, {:view_arena_objects, params})
   end
 
 
@@ -269,8 +269,8 @@ defmodule Tanx.Core.Player do
     {:reply, view, state}
   end
 
-  def handle_call(:view_arena_objects, _from, state) do
-    view = state.arena_view |> Tanx.Core.ArenaView.get_objects()
+  def handle_call({:view_arena_objects, params}, _from, state) do
+    view = state.arena_view |> Tanx.Core.ArenaView.get_objects(params)
     {:reply, view, state}
   end
 

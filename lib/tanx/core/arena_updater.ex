@@ -145,10 +145,8 @@ defmodule Tanx.Core.ArenaUpdater do
     tank_responses = Dict.get(categorized_responses, :tank, [])
     missile_responses = Dict.get(categorized_responses, :missile, [])
     explosion_responses = Dict.get(categorized_responses, :explosion, [])
-    
+
     tank_responses = resolve_tank_forces(tank_responses)
-   
-    # TODO: Tank-missile collisions
 
     detect_tank_missile_collision(tank_responses, missile_responses)
 
@@ -177,25 +175,25 @@ defmodule Tanx.Core.ArenaUpdater do
 
 
   defp collide_with_tank?(missile, tanks) do
-    tank_to_destroy = 
+    tank_to_destroy =
       tanks |> Enum.find(fn(%Tanx.Core.Updates.MoveTank{pos: {tank_x, tank_y}} = tank) ->
-                          if missile.player != tank.player, do: 
-                            same_position?({missile.x, missile.y}, {tank_x, tank_y}, tank.radius) 
+                          if missile.player != tank.player, do:
+                            same_position?({missile.x, missile.y}, {tank_x, tank_y}, tank.radius)
                         end)
-      
+
     if tank_to_destroy != nil do
-      Tanx.Core.Player.remove_tank(tank_to_destroy.player) 
+      Tanx.Core.Player.remove_tank(tank_to_destroy.player)
       true
     else
       false
     end
   end
 
-  defp same_position?({x1, y1}, {x2, y2}, radius \\ 0) do
-      x1 <= x2 + radius and 
+  defp same_position?({x1, y1}, {x2, y2}, radius) do
+      x1 <= x2 + radius and
       x1 >= x2 - radius and
       y1 <= y2 + radius and
-      y1 >= y2 - radius 
+      y1 >= y2 - radius
   end
 
   defp create_entry_point_availability(tank_responses, entry_points) do

@@ -41,8 +41,8 @@ defmodule Tanx.Core.ArenaView do
   the :is_me field set to true, and that player's missiles will have the
   :is_mine field set to true.
   """
-  def get_objects(arena_view) do
-    GenServer.call(arena_view, :get_objects)
+  def get_objects(arena_view, params \\ []) do
+    GenServer.call(arena_view, {:get_objects, !!params[:raw_maps]})
   end
 
 
@@ -50,7 +50,7 @@ defmodule Tanx.Core.ArenaView do
     Update the object list.
   """
   def set_objects(arena_view, tanks, missiles, explosions, entry_points) do
-    GenServer.call(arena_view, {:update, tanks, missiles, explosions, entry_points})
+    GenServer.call(arena_view, {:set_objects, tanks, missiles, explosions, entry_points})
   end
 
 
@@ -67,10 +67,11 @@ defmodule Tanx.Core.ArenaView do
   use GenServer
 
   defmodule State do
-    defstruct structure: nil,    # Tanx.Core.View.Structure
-              tanks: [],         # list of TankInfo
-              missiles: [],      # list of MissileInfo
-              explosions: [],    # list of Tanx.Core.View.Explosion
+    defstruct structure: nil,        # Tanx.Core.View.Structure
+              all_entry_points: %{},  # Default entry_points_available
+              tanks: [],             # list of TankInfo
+              missiles: [],          # list of MissileInfo
+              explosions: [],        # list of Tanx.Core.View.Explosion
               entry_points_available: %{}  # map of entry point name to availability
   end
 
@@ -110,7 +111,18 @@ defmodule Tanx.Core.ArenaView do
       entry_point_radius: @entry_point_radius,
       entry_points: entry_points
     }
-    {:ok, %State{structure: structure_view}}
+
+    all_entry_points = structure.entry_points
+      |> Enum.reduce(%{}, fn (ep, dict) ->
+        dict |> Dict.put(ep.name, true)
+      end)
+
+    state = %State{
+      structure: structure_view,
+      all_entry_points: all_entry_points
+    }
+
+    {:ok, state}
   end
 
 
@@ -122,53 +134,49 @@ defmodule Tanx.Core.ArenaView do
 
   # This may be called to get the current arena view. If it is called by a Player process,
   # that player's tanks will have the :is_me field set to true.
-  def handle_call(:get_objects, {from, _}, state) do
-    tanks = state.tanks
-      |> Enum.map(fn tank_info ->
-        %Tanx.Core.View.Tank{is_me: tank_info.player == from, name: tank_info.name,
-          x: tank_info.x, y: tank_info.y, heading: tank_info.heading, radius: tank_info.radius}
-      end)
+  def handle_call({:get_objects, raw_maps}, {from, _}, state) do
+    tanks = state.tanks |> Enum.map(tank_view_builder(raw_maps, from))
 
-    missiles = state.missiles
-      |> Enum.map(fn missile_info ->
-        %Tanx.Core.View.Missile{is_mine: missile_info.player == from,
-          x: missile_info.x, y: missile_info.y, heading: missile_info.heading}
-      end)
+    missiles = state.missiles |> Enum.map(missile_view_builder(raw_maps, from))
 
+    explosions = state.explosions
+    if raw_maps, do: explosions = explosions |> Enum.map(&Map.from_struct/1)
 
-    entry_points_available = state.entry_points_available
     if tanks |> Enum.any?(&(&1.is_me)) do
       entry_points_available = %{}
+    else
+      entry_points_available = state.entry_points_available
     end
 
     view = %Tanx.Core.View.Arena{
       tanks: tanks,
       missiles: missiles,
-      explosions: state.explosions,
+      explosions: explosions,
       entry_points_available: entry_points_available
     }
+    if raw_maps, do: view = Map.from_struct(view)
 
     {:reply, view, state}
   end
 
 
   # This is called from an updater to update the view with a new state.
-  def handle_call({:update, tanks, missiles, explosions, entry_points_available}, _from, state) do
-    
+  def handle_call({:set_objects, tanks, missiles, explosions, entry_points_available}, _from, state) do
+
     tanks = tanks
       |> Enum.map(fn tank ->
-        %Tanx.Core.ArenaView.TankInfo{tank |
+        %TankInfo{tank |
           x: tank.x |> truncate, y: tank.y |> truncate,
           heading: tank.heading |> truncate}
       end)
 
     missiles = missiles
       |> Enum.map(fn missile ->
-        %Tanx.Core.ArenaView.MissileInfo{missile |
+        %MissileInfo{missile |
           x: missile.x |> truncate, y: missile.y |> truncate,
           heading: missile.heading |> truncate}
       end)
-   
+
     explosions = explosions
       |> Enum.map(fn explosion ->
         %Tanx.Core.View.Explosion{explosion |
@@ -177,10 +185,7 @@ defmodule Tanx.Core.ArenaView do
       end)
 
     if entry_points_available == nil do
-      entry_points_available = state.structure.entry_points
-        |> Enum.reduce(%{}, fn (ep, dict) ->
-          dict |> Dict.put(ep.name, true)
-        end)
+      entry_points_available = state.all_entry_points
     end
 
     state = %State{state |
@@ -194,6 +199,56 @@ defmodule Tanx.Core.ArenaView do
 
 
   defp truncate(value), do: round(value * 100) / 100
+
+
+  defp tank_view_builder(false, player) do
+    fn tank_info ->
+      %Tanx.Core.View.Tank{
+        is_me: tank_info.player == player,
+        name: tank_info.name,
+        x: tank_info.x,
+        y: tank_info.y,
+        heading: tank_info.heading,
+        radius: tank_info.radius
+      }
+    end
+  end
+
+  defp tank_view_builder(true, player) do
+    fn tank_info ->
+      %{
+        is_me: tank_info.player == player,
+        name: tank_info.name,
+        x: tank_info.x,
+        y: tank_info.y,
+        heading: tank_info.heading,
+        radius: tank_info.radius
+      }
+    end
+  end
+
+
+  defp missile_view_builder(false, player) do
+    fn missile_info ->
+      %Tanx.Core.View.Missile{
+        is_mine: missile_info.player == player,
+        x: missile_info.x,
+        y: missile_info.y,
+        heading: missile_info.heading
+      }
+    end
+  end
+
+  defp missile_view_builder(true, player) do
+    fn missile_info ->
+      %{
+        is_mine: missile_info.player == player,
+        x: missile_info.x,
+        y: missile_info.y,
+        heading: missile_info.heading
+      }
+    end
+  end
 
 
 end
