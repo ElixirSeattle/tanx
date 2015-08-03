@@ -110,6 +110,11 @@ defmodule Tanx.GameChannel do
   end
 
 
+  def handle_in("heartbeat", _msg, socket) do
+    {:noreply, socket}
+  end
+
+
   def handle_in(msg, payload, socket) do
     Logger.error("Unknown message received on game channel: #{inspect(msg)}: #{inspect(payload)}")
     {:noreply, socket}

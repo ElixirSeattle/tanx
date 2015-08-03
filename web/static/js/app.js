@@ -11,6 +11,7 @@ class TanxApp {
     this.MAX_CANVAS_HEIGHT = 600;
     this.BACKGROUND_MUSIC = new Audio("sounds/tanx-music-loop.m4a");
     this.BACKGROUND_MUSIC.volume = .4;
+    this.HEARTBEAT_MILLIS = 60000;
 
     this.setupChannel();
     this.setupPlayerList();
@@ -25,6 +26,8 @@ class TanxApp {
 
 
   setupChannel() {
+    this._heartbeatTimeout = null;
+
     let socket = new Socket("/ws");
     socket.connect()
     this._channel = socket.chan("game", {});
@@ -32,12 +35,28 @@ class TanxApp {
     this._channel.join().receive("ok", chan => {
       this.setupPlayerList();
     });
+
+    this.scheduleHeartbeat();
   }
 
 
   pushToChannel(event, payload) {
     if (!payload) payload = {};
     this._channel.push(event, payload);
+
+    if (this._heartbeatTimeout) {
+      clearTimeout(this._heartbeatTimeout);
+      this._heartbeatTimeout = null;
+    }
+    this.scheduleHeartbeat();
+  }
+
+
+  scheduleHeartbeat() {
+    this._heartbeatTimeout = setTimeout(() => {
+      this._heartbeatTimeout = null;
+      this.pushToChannel('heartbeat', null);
+    }, this.HEARTBEAT_MILLIS);
   }
 
 
