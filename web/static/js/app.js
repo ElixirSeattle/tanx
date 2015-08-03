@@ -449,6 +449,11 @@ class TanxApp {
       context.fill();
     }
 
+    if (explosion.age < .07) {
+      var explosionSound = new Audio("sounds/bang1.wav");
+      explosionSound.play();
+    }
+
     context.restore();
   }
 
