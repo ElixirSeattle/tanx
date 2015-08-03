@@ -9,6 +9,8 @@ class TanxApp {
     this.NUM_TIMESTAMPS = 10;
     this.MAX_CANVAS_WIDTH = 600;
     this.MAX_CANVAS_HEIGHT = 600;
+    this.BACKGROUND_MUSIC = new Audio("sounds/tanx-music-loop.m4a");
+    this.BACKGROUND_MUSIC.volume = .4;
 
     this.setupChannel();
     this.setupPlayerList();
@@ -126,6 +128,8 @@ class TanxApp {
     $('#tanx-rename-btn').hide();
     $('#tanx-leave-btn').hide();
     $('#tanx-arena-container').hide();
+    this.BACKGROUND_MUSIC.pause();
+    this.BACKGROUND_MUSIC.currentTime = 0;
 
     if (this._hasPlayer) {
       this._hasPlayer = false;
@@ -345,6 +349,9 @@ class TanxApp {
       arena.explosions.forEach(explosion => {
         this.renderExplosion(context, explosion);
       });
+
+      // Start background music
+      this.BACKGROUND_MUSIC.play();
     }
   }
 
