@@ -450,7 +450,7 @@ class TanxApp {
     }
 
     if (explosion.age < .07) {
-      var explosionSound = new Audio("sounds/bang1.wav");
+      var explosionSound = new Audio("sounds/Explosion3.wav");
       explosionSound.play();
     }
 
