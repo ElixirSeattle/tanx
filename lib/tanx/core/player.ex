@@ -97,6 +97,20 @@ defmodule Tanx.Core.Player do
     GenServer.call(player, :remove_tank)
   end
 
+  @doc """
+    Increment the kill count of the calling player.
+  """
+  def inc_kills(player) do
+    GenServer.call(player, :inc_kills)
+  end
+
+  @doc """
+    Increment the death count of the calling player.
+  """
+  def inc_deaths(player) do
+    GenServer.call(player, :inc_deaths)
+  end
+
 
   @doc """
   Sends a control message to the tank in the form of a button press or release.
@@ -287,6 +301,16 @@ defmodule Tanx.Core.Player do
   def handle_call(:leave, _from, state) do
     :ok = state.player_manager |> Tanx.Core.PlayerManager.remove_player
     {:stop, :normal, :ok, %State{}}
+  end
+
+  def handle_call(:inc_kills, _from, state) do
+    reply = state.player_manager |> Tanx.Core.PlayerManager.inc_kills(self)
+    {:reply, reply, state}
+  end
+
+  def handle_call(:inc_deaths, _from, state) do
+    reply = state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self)
+    {:reply, reply, state}
   end
 
   #### Internal utils

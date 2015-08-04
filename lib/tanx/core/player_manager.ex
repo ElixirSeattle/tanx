@@ -49,6 +49,19 @@ defmodule Tanx.Core.PlayerManager do
     GenServer.call(player_manager, {:view_player, player})
   end
 
+  @doc """
+    Increment the kill count of the calling player.
+  """
+  def inc_kills(player_manager, player) do
+    GenServer.call(player_manager, {:inc_kills, player})
+  end
+
+  @doc """
+    Increment the death count of the calling player.
+  """
+  def inc_deaths(player_manager, player) do
+    GenServer.call(player_manager, {:inc_deaths, player})
+  end
 
   @doc """
     Sets the name of the calling player. Returns either :ok or :not_found.
@@ -165,7 +178,7 @@ defmodule Tanx.Core.PlayerManager do
     {reply, state} = case state.players[player] do
       nil -> {:not_found, state}
       player_info ->
-        player_info = player_info |> Dict.update!(:kills, &(&1 + 1))
+        player_info = %PlayerInfo{player_info | kills: player_info.kills + 1}
         {:ok, %State{state | players: state.players |> Dict.put(player, player_info)}}
     end
     _broadcast_change(state)
@@ -178,7 +191,7 @@ defmodule Tanx.Core.PlayerManager do
     {reply, state} = case state.players[player] do
       nil -> {:not_found, state}
       player_info ->
-        player_info = player_info |> Dict.update!(:deaths, &(&1 + 1))
+        player_info = %PlayerInfo{player_info | deaths: player_info.deaths + 1}
         {:ok, %State{state | players: state.players |> Dict.put(player, player_info)}}
     end
     _broadcast_change(state)
