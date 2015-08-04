@@ -40,9 +40,8 @@
     </div>
 
   </div>
-  <div class='cols-xs-2' style='text-align: right;'>
+  <div id='tanx-chat' class='cols-xs-2' style='text-align: right;'>
     <div id="messages"></div>
-    @<input id="username" type="text">
-    :<input id="message-input" type="text">
+    <input id="message-input" type="text">
   </div>
 </div>
