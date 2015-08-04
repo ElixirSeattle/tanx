@@ -205,6 +205,7 @@ defmodule Tanx.Core.Player do
   def handle_call(:remove_tank, _from, state) do
     tank = state.current_tank
     if tank do
+      state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self)
       GenServer.cast(tank, :destroy)
       {:reply, :ok, %State{state | current_tank: nil,  missiles: []}}
     else

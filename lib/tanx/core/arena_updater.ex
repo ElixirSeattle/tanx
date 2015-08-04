@@ -183,7 +183,6 @@ defmodule Tanx.Core.ArenaUpdater do
 
     if tank_to_destroy != nil do
       Tanx.Core.Player.remove_tank(tank_to_destroy.player)
-      Tanx.Core.Player.inc_deaths(tank_to_destroy.player)
       Tanx.Core.Player.inc_kills(missile.player)
       true
     else
