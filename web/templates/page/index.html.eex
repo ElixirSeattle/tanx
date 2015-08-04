@@ -14,7 +14,7 @@
     </table>
 
     <div>
-      <input type="text" id="tanx-name-field" class="form-control" placeholder="Name">
+      <input type="text" id="tanx-name-field" class="form-control" maxlength="16" placeholder="Name">
     </div>
     <div>
       <button class="btn btn-primary btn-sm" id="tanx-join-btn">Join Game</button>
