@@ -448,7 +448,7 @@ class TanxApp {
     context.rotate(-missile.heading);
 
     // TODO: Replace this with some nice graphics
-    context.fillStyle = "#00FF00";
+    context.fillStyle = "#000";
     context.fillRect(-missileRect.width/2, -missileRect.height/2, missileRect.width, missileRect.height);
 
     context.restore();
