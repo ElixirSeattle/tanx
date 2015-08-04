@@ -19,4 +19,9 @@ defmodule Tanx.Router do
     get "/", PageController, :index
   end
 
+  socket "/ws", Tanx do
+    channel "game", GameChannel
+    channel "chat", ChatChannel
+  end
+
 end

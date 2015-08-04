@@ -15,6 +15,7 @@ class TanxApp {
     this.HEARTBEAT_MILLIS = 60000;
 
     this.setupChannel();
+    this.setupChatChannel();
     this.setupPlayerList();
     this.setupPlayerControl();
     this.setupArenaControls();
@@ -40,6 +41,31 @@ class TanxApp {
     this.scheduleHeartbeat();
   }
 
+  // TODO: Break Chat JS out into its own class
+  setupChatChannel() {
+    var $messages = $("#messages");
+    var $messageInput = $("#message-input");
+    var $usernameInput = $("#username");
+
+    let socket = new Socket("/ws");
+    socket.connect()
+    let chat_channel = socket.chan("chat", {});
+    chat_channel.join().receive("ok", function(chan) {
+      chat_channel.on("new:message", function(msg){
+        $messages.append("<br/>[" + msg.username + "] " + msg.content)
+      });
+
+      $messageInput.off("keypress").on("keypress", function(e){
+        if(e.keyCode == 13){
+          chat_channel.push("new:message", {
+            content: $messageInput.val(),
+            username: $usernameInput.val()
+          });
+          $messageInput.val("");
+        }
+      });
+    });
+  }
 
   pushToChannel(event, payload) {
     if (!payload) payload = {};
