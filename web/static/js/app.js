@@ -51,6 +51,11 @@ class TanxApp {
     socket.connect()
     let chat_channel = socket.chan("chat", {});
     chat_channel.join().receive("ok", function(chan) {
+
+      chat_channel.on("user:entered", function(message){
+        $messages.append("<br/>[" + message.username + "] entered")
+      });
+
       chat_channel.on("new:message", function(msg){
         $messages.append("<br/>[" + msg.username + "] " + msg.content)
       });
