@@ -148,7 +148,8 @@ class TanxApp {
     $('#tanx-leave-btn').hide();
     $('#tanx-arena-container').hide();
     this.BACKGROUND_MUSIC.pause();
-    this.BACKGROUND_MUSIC.currentTime = 0;
+    //This breaks on Firefox and Safari. Need to find a way to reset background music that has better browser support.
+    //this.BACKGROUND_MUSIC.currentTime = 0;
 
     if (this._hasPlayer) {
       this._hasPlayer = false;
