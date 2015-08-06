@@ -121,6 +121,9 @@ defmodule Tanx.GameChannel do
   end
 
 
+  intercept ["view_players"]
+
+
   def handle_out("view_players", original_view, socket) do
     player = socket.assigns[:player]
     if player do

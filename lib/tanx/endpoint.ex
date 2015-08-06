@@ -9,9 +9,12 @@ defmodule Tanx.Endpoint do
     at: "/", from: :tanx, gzip: false,
     only: ~w(css images sounds js favicon.ico robots.txt)
 
+  socket "/ws", Tanx.GameSocket
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
+    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
   end
@@ -32,5 +35,5 @@ defmodule Tanx.Endpoint do
     key: "_tanx_key",
     signing_salt: "BpcL1H99"
 
-  plug :router, Tanx.Router
+  plug Tanx.Router
 end

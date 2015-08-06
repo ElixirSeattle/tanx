@@ -29,11 +29,11 @@ defmodule Tanx.Mixfile do
   #
   # Type `mix help deps` for examples and options
   defp deps do
-    [{:phoenix, "~> 0.14"},
-     {:phoenix_ecto, "~> 0.5"},
+    [{:phoenix, "~> 0.16"},
+     {:phoenix_ecto, "~> 0.9"},
      {:postgrex, ">= 0.0.0"},
-     {:phoenix_html, "~> 1.1"},
-     {:phoenix_live_reload, "~> 0.4", only: :dev},
+     {:phoenix_html, "~> 2.0"},
+     {:phoenix_live_reload, "~> 0.6", only: :dev},
      {:cowboy, "~> 1.0"}]
   end
 end
