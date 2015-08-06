@@ -5,6 +5,7 @@ defmodule Tanx.GameChannel do
 
 
   def join("game", _auth_msg, socket) do
+    Process.flag(:trap_exit, true)
     {:ok, socket}
   end
 
@@ -142,6 +143,7 @@ defmodule Tanx.GameChannel do
 
 
   def terminate(reason, socket) do
+    Logger.info("Connection terminated due to #{inspect(reason)}")
     player = socket.assigns[:player]
     if player do
       player |> Tanx.Core.Player.leave
