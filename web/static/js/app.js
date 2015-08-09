@@ -72,9 +72,9 @@ class TanxApp {
     });
   }
 
-  pushToChannel(event, payload) {
+  pushToChannel(channel, event, payload) {
     if (!payload) payload = {};
-    this._channel.push(event, payload);
+    channel.push(event, payload);
 
     if (this._heartbeatTimeout) {
       clearTimeout(this._heartbeatTimeout);
@@ -87,13 +87,12 @@ class TanxApp {
   scheduleHeartbeat() {
     this._heartbeatTimeout = setTimeout(() => {
       this._heartbeatTimeout = null;
-      this.pushToChannel('heartbeat', null);
+      this.pushToChannel(this._channel, 'heartbeat', null);
     }, this.HEARTBEAT_MILLIS);
   }
 
-
-  onChannelEvent(event, callback) {
-    this._channel.on(event, callback);
+  onChannelEvent(channel, event, callback) {
+    channel.on(event, callback);
   }
 
 
@@ -104,9 +103,9 @@ class TanxApp {
   setupPlayerList() {
     // Make sure we get an initial view. Subsequent changes will be broadcasted
     // from the server.
-    this.pushToChannel("view_players");
+    this.pushToChannel(this._channel, "view_players");
 
-    this.onChannelEvent("view_players", players => {
+    this.onChannelEvent(this._channel, "view_players", players => {
       this.renderPlayersTable(players.players);
     });
   }
@@ -169,7 +168,7 @@ class TanxApp {
 
     if (!this._hasPlayer) {
       this._hasPlayer = true;
-      this.pushToChannel("join", {name: $('#tanx-name-field').val()});
+      this.pushToChannel(this._channel, "join", {name: $('#tanx-name-field').val()});
       this.startArenaAnimation();
     }
   }
@@ -188,14 +187,14 @@ class TanxApp {
 
     if (this._hasPlayer) {
       this._hasPlayer = false;
-      this.pushToChannel("leave");
+      this.pushToChannel(this._channel, "leave");
     }
   }
 
 
   renamePlayer() {
     if (this.hasPlayer()) {
-      this.pushToChannel("rename", {name: $('#tanx-name-field').val()});
+      this.pushToChannel(this._channel, "rename", {name: $('#tanx-name-field').val()});
     }
   }
 
@@ -237,14 +236,14 @@ class TanxApp {
       case 74: // J
         if (this._leftKey != isDown) {
           this._leftKey = isDown;
-          this.pushToChannel("control_tank", {button: "left", down: isDown})
+          this.pushToChannel(this._channel, "control_tank", {button: "left", down: isDown})
         }
         event.preventDefault();
         break;
       case 32: // space
         if (this._spaceKey != isDown) {
           this._spaceKey = isDown;
-          this.pushToChannel("fire_missile", {button: "space", down: isDown})
+          this.pushToChannel(this._channel, "fire_missile", {button: "space", down: isDown})
         }
         event.preventDefault();
         break;
@@ -252,7 +251,7 @@ class TanxApp {
       case 76: // L
         if (this._rightKey != isDown) {
           this._rightKey = isDown;
-          this.pushToChannel("control_tank", {button: "right", down: isDown})
+          this.pushToChannel(this._channel, "control_tank", {button: "right", down: isDown})
         }
         event.preventDefault();
         break;
@@ -262,14 +261,14 @@ class TanxApp {
       case 75: // K
         if (this._upKey != isDown) {
           this._upKey = isDown;
-          this.pushToChannel("control_tank", {button: "forward", down: isDown})
+          this.pushToChannel(this._channel, "control_tank", {button: "forward", down: isDown})
         }
         event.preventDefault();
         break;
       case 68: // D
       case 90: // Z
         if (isDown) {
-          this.pushToChannel("remove_tank", {});
+          this.pushToChannel(this._channel, "remove_tank", {});
         }
         event.preventDefault();
         break;
@@ -284,7 +283,7 @@ class TanxApp {
       this._structure.entry_points.forEach(ep => {
         let point = this.onScreenPoint(ep.x, ep.y);
         if ((x - point.x) * (x - point.x) + (y - point.y) * (y - point.y) <= distSquared) {
-          this.pushToChannel("launch_tank", {entry_point: ep.name});
+          this.pushToChannel(this._channel, "launch_tank", {entry_point: ep.name});
         }
       });
     }
@@ -302,7 +301,7 @@ class TanxApp {
     this._structure = null;
     this._scaleFactor = null;
 
-    this.onChannelEvent("view_arena", arena => {
+    this.onChannelEvent(this._channel, "view_arena", arena => {
       if (this.hasPlayer()) {
         if (this._receivedFrame) {
           this.updateArena(arena);
@@ -312,7 +311,7 @@ class TanxApp {
       }
     });
 
-    this.onChannelEvent("view_structure", structure => {
+    this.onChannelEvent(this._channel, "view_structure", structure => {
       this._structure = structure;
       let xScale = this.MAX_CANVAS_WIDTH / structure.width;
       let yScale = this.MAX_CANVAS_HEIGHT / structure.height;
@@ -328,7 +327,7 @@ class TanxApp {
   startArenaAnimation() {
     this._structure = null;
     this._timestamps = [];
-    this.pushToChannel("view_structure");
+    this.pushToChannel(this._channel, "view_structure");
     this.runAnimation();
   }
 
@@ -337,7 +336,7 @@ class TanxApp {
     this._receivedArena = null;
     this._receivedFrame = false;
 
-    this.pushToChannel("view_arena");
+    this.pushToChannel(this._channel, "view_arena");
 
     window.requestAnimationFrame(ignore => {
       if (this.hasPlayer()) {
