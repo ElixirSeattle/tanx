@@ -49,20 +49,20 @@ class TanxApp {
 
     let socket = new Socket("/ws");
     socket.connect()
-    let chat_channel = socket.channel("chat", {});
-    chat_channel.join().receive("ok", function(chan) {
+    this._chat_channel = socket.channel("chat", {});
+    this._chat_channel.join().receive("ok", function(chan) {
 
-      chat_channel.on("user:entered", function(message){
+      this._chat_channel.on("user:entered", function(message){
         $messages.append("<br/>[" + message.username + "] entered")
       });
 
-      chat_channel.on("new:message", function(msg){
+      this._chat_channel.on("new:message", function(msg){
         $messages.append("<br/>[" + msg.username + "] " + msg.content)
       });
 
       $messageInput.off("keypress").on("keypress", function(e){
         if(e.keyCode == 13){
-          chat_channel.push("new:message", {
+          this._chat_channel.push("new:message", {
             content: $messageInput.val(),
             username: $usernameInput.val()
           });
