@@ -14,8 +14,7 @@ class TanxApp {
     this.BACKGROUND_MUSIC.volume = .4;
     this.HEARTBEAT_MILLIS = 60000;
 
-    this.setupChannel();
-    this.setupChatChannel();
+    this.setupChannels();
     this.setupPlayerList();
     this.setupPlayerControl();
     this.setupArenaControls();
@@ -27,7 +26,7 @@ class TanxApp {
   // CHANNEL CONTROL
 
 
-  setupChannel() {
+  setupChannels() {
     this._heartbeatTimeout = null;
 
     let socket = new Socket("/ws");
@@ -38,38 +37,30 @@ class TanxApp {
       this.setupPlayerList();
     });
 
-    this.scheduleHeartbeat();
-  }
-
-  // TODO: Break Chat JS out into its own class
-  setupChatChannel() {
-    var $messages = $("#messages");
-    var $messageInput = $("#message-input");
-    var $usernameInput = $("#tanx-name-field");
-
-    let socket = new Socket("/ws");
-    socket.connect()
     this._chat_channel = socket.channel("chat", {});
-    this._chat_channel.join().receive("ok", function(chan) {
+    this._chat_channel.join().receive("ok", () => {
+      let channel = this._chat_channel;
 
-      this._chat_channel.on("user:entered", function(message){
-        $messages.append("<br/>[" + message.username + "] entered")
+      channel.on("user:entered", function(message){
+        $("#messages").append("<br/>[" + message.username + "] entered")
       });
 
-      this._chat_channel.on("new:message", function(msg){
-        $messages.append("<br/>[" + msg.username + "] " + msg.content)
+      channel.on("new:message", function(msg){
+        $("#messages").append("<br/>[" + msg.username + "] " + msg.content)
       });
 
-      $messageInput.off("keypress").on("keypress", function(e){
+      $("#message-input").off("keypress").on("keypress", function(e){
         if(e.keyCode == 13){
-          this._chat_channel.push("new:message", {
-            content: $messageInput.val(),
-            username: $usernameInput.val()
+          channel.push("new:message", {
+            content: $("#message-input").val(),
+            username: $("#tanx-name-field").val()
           });
-          $messageInput.val("");
+          $("#message-input").val("");
         }
       });
     });
+
+    this.scheduleHeartbeat();
   }
 
   pushToChannel(channel, event, payload) {
