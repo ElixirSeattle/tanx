@@ -55,6 +55,10 @@ class TanxApp {
         $("#messages").append("<br/>[" + message.username + "] entered")
       });
 
+      channel.on("user:left", function(message){
+        $("#messages").append("<br/>[" + message.username + "] left")
+      });
+
       channel.on("new:message", function(msg){
         $("#messages").append("<br/>[" + msg.username + "] " + msg.content)
       });
@@ -168,6 +172,7 @@ class TanxApp {
     if (!this._hasPlayer) {
       this._hasPlayer = true;
       this.pushToChannel(this._game_channel, "join", {name: $('#tanx-name-field').val()});
+      this.pushToChannel(this._chat_channel, "join", {name: $('#tanx-name-field').val()});
       this.startArenaAnimation();
     }
   }
@@ -187,6 +192,7 @@ class TanxApp {
     if (this._hasPlayer) {
       this._hasPlayer = false;
       this.pushToChannel(this._game_channel, "leave");
+      this.pushToChannel(this._chat_channel, "leave", {name: $('#tanx-name-field').val()});
     }
   }
 
