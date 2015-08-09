@@ -25,9 +25,13 @@ defmodule Tanx.ChatChannel do
     { :noreply, socket }
   end
 
-  def handle_in("new:message", message, socket) do
-    broadcast socket, "new:message", %{content: message["content"], username: message["username"]}
+  def handle_in("new:message", %{"content" => content, "username" => ""}, socket) do
+    broadcast socket, "new:message", %{ content: content, username: "Anonymous Coward" }
+    {:noreply, socket}
+  end
 
+  def handle_in("new:message", %{"content" => content, "username" => username}, socket) do
+    broadcast socket, "new:message", %{ content: content, username: username }
     {:noreply, socket}
   end
 end
