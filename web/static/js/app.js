@@ -49,7 +49,7 @@ class TanxApp {
 
     let socket = new Socket("/ws");
     socket.connect()
-    let chat_channel = socket.chan("chat", {});
+    let chat_channel = socket.channel("chat", {});
     chat_channel.join().receive("ok", function(chan) {
 
       chat_channel.on("user:entered", function(message){

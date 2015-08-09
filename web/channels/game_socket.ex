@@ -3,6 +3,7 @@ defmodule Tanx.GameSocket do
 
   ## Channels
   channel "game", Tanx.GameChannel
+  channel "chat", Tanx.ChatChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
