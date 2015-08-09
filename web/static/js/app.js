@@ -31,12 +31,22 @@ class TanxApp {
 
     let socket = new Socket("/ws");
     socket.connect()
+
+    this.setupGameChannel(socket);
+    this.setupChatChannel(socket);
+
+    this.scheduleHeartbeat();
+  }
+
+  setupGameChannel(socket) {
     this._game_channel = socket.channel("game", {});
 
     this._game_channel.join().receive("ok", chan => {
       this.setupPlayerList();
     });
+  }
 
+  setupChatChannel(socket) {
     this._chat_channel = socket.channel("chat", {});
     this._chat_channel.join().receive("ok", () => {
       let channel = this._chat_channel;
@@ -59,8 +69,6 @@ class TanxApp {
         }
       });
     });
-
-    this.scheduleHeartbeat();
   }
 
   pushToChannel(channel, event, payload) {
