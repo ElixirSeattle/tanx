@@ -29,7 +29,7 @@
     </div>
 
   </div>
-  <div class="col-xs-8">
+  <div class="col-xs-6">
 
     <div id="tanx-arena-container">
       <canvas tabindex="0" id="tanx-canvas"></canvas>
@@ -40,7 +40,7 @@
     </div>
 
   </div>
-  <div id='tanx-chat' class='cols-xs-2' style='text-align: right;'>
+  <div id='tanx-chat' class='col-xs-4'>
     <div id="messages"></div>
     <input id="message-input" type="text">
   </div>

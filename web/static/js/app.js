@@ -52,15 +52,15 @@ class TanxApp {
       let channel = this._chat_channel;
 
       channel.on("user:entered", function(message){
-        $("#messages").append("<br/>[" + message.username + "] entered")
+        $("#messages").append("<p class='message'><span class='user-entered'>"+message.username+" entered</span></p>")
       });
 
       channel.on("user:left", function(message){
-        $("#messages").append("<br/>[" + message.username + "] left")
+        $("#messages").append("<p class='message'><span class='user-left'>"+message.username +" left</span></p>")
       });
 
       channel.on("new:message", function(msg){
-        $("#messages").append("<br/>[" + msg.username + "] " + msg.content)
+        $("#messages").append("<p class='message'><span class='username'>"+msg.username+"</span><span class='content'>"+msg.content+"</span></p>")
       });
 
       $("#message-input").off("keypress").on("keypress", function(e){

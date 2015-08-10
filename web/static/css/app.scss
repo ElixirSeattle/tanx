@@ -27,3 +27,51 @@ body {
 #tanx-instructions {
   margin-top: 20px;
 }
+
+#tanx-chat {
+  text-align: left;
+  padding-left: 30px;
+  height: 602px;
+  position: relative;
+}
+
+#message-input {
+  width: 100%;
+  bottom: 0;
+  position: absolute;
+}
+
+#messages {
+  height: 565px;
+  width: 100%;
+  position: absolute;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.username {
+  color: #666666;
+  padding-right: 10px;
+  width: 125px;
+  display: block;
+  float: left;
+  text-align: right;
+}
+
+.content {
+  width: 275px;
+  display: block;
+  float: left;
+  word-wrap: break-word;
+}
+
+.user-entered, .user-left {
+  width: 100%;
+  left: 125px;
+  position: relative;
+  margin: 0;
+  padding-top: 15px;
+  color: #666666;
+  font-size: 12px;
+  font-style: italic;
+}
