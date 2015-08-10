@@ -84,10 +84,10 @@ defmodule Tanx.GameChannel do
   end
 
 
-  def handle_in("remove_tank", _msg, socket) do
+  def handle_in("self_destruct_tank", _msg, socket) do
     player = socket.assigns[:player]
     if player do
-      player |> Tanx.Core.Player.remove_tank
+      player |> Tanx.Core.Player.self_destruct_tank
     end
     {:noreply, socket}
   end

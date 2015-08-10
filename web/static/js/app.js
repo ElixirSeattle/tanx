@@ -274,7 +274,7 @@ class TanxApp {
       case 68: // D
       case 90: // Z
         if (isDown) {
-          this.pushToChannel(this._game_channel, "remove_tank", {});
+          this.pushToChannel(this._game_channel, "self_destruct_tank", {});
         }
         event.preventDefault();
         break;

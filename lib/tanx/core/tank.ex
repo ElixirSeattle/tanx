@@ -4,11 +4,16 @@ defmodule Tanx.Core.Tank do
   This process models a tank.
   """
 
+  require Logger
+
 
   @tank_radius 0.5
   @tank_collision_buffer 0.1
-  @explosion_radius 1.0
-  @explosion_time 0.6
+  @chain_reaction_buffer 0.2
+  @normal_explosion_radius 1.0
+  @normal_explosion_time 0.6
+  @self_destruct_explosion_radius 2.0
+  @self_destruct_explosion_time 1.0
 
 
   #### API internal to Tanx.Core
@@ -30,6 +35,36 @@ defmodule Tanx.Core.Tank do
   def collision_radius(), do: @tank_radius + @tank_collision_buffer
 
 
+  @doc """
+    Returns the tank radius used for chain reaction detection
+  """
+  def chain_radius(), do: @tank_radius - @chain_reaction_buffer
+
+
+  @doc """
+    Destroys the tank
+  """
+  def destroy(tank, destroyer) do
+    GenServer.cast(tank, {:destroy, destroyer})
+  end
+
+
+  @doc """
+    Self-destructs the tank
+  """
+  def self_destruct(tank) do
+    GenServer.cast(tank, :self_destruct)
+  end
+
+
+  @doc """
+    Adjusts the tank's position
+  """
+  def move_to(tank, x, y) do
+    GenServer.cast(tank, {:move_to, x, y})
+  end
+
+
   # GenServer callbacks
 
 
@@ -44,7 +79,10 @@ defmodule Tanx.Core.Tank do
               heading: 0.0,
               velocity: 0.0,
               angular_velocity: 0.0,
-              explosion: nil
+              explosion_progress: nil,
+              explosion_originator: nil,
+              explosion_time: nil,
+              explosion_radius: nil
   end
 
 
@@ -59,7 +97,7 @@ defmodule Tanx.Core.Tank do
   end
 
 
-  def handle_call(:get_position, _from, state = %State{explosion: nil}) do
+  def handle_call(:get_position, _from, state = %State{explosion_progress: nil}) do
     {x, y} = state.pos
     {:reply, {x, y, state.heading}, state}
   end
@@ -79,17 +117,21 @@ defmodule Tanx.Core.Tank do
   end
 
 
-  def handle_cast(:destroy, state) do
-    if state.explosion == nil do
-      state = %State{state | explosion: 0.0}
-    end
+  def handle_cast({:destroy, destroyer}, state) do
+    state = do_destroy(state, destroyer)
+    {:noreply, state}
+  end
+
+
+  def handle_cast(:self_destruct, state) do
+    state = do_destroy(state, nil)
     {:noreply, state}
   end
 
 
   def handle_cast({:update, last_time, time, updater}, state) do
     dt = max((time - last_time) / 1000, 0.0)
-    if state.explosion == nil do
+    if state.explosion_progress == nil do
       update_tank(updater, dt, state)
     else
       update_explosion(updater, dt, state)
@@ -97,10 +139,12 @@ defmodule Tanx.Core.Tank do
   end
 
 
-  def handle_cast({:move_to, x, y}, state) do
-    if state.explosion == nil do
-      state = %State{state | pos: {x, y}}
-    end
+  def handle_cast({:move_to, x, y}, state = %State{explosion_progress: nil}) do
+    state = %State{state | pos: {x, y}}
+    {:noreply, state}
+  end
+
+  def handle_cast({:move_to, _x, _y}, state) do
     {:noreply, state}
   end
 
@@ -110,12 +154,47 @@ defmodule Tanx.Core.Tank do
   end
 
 
+  defp do_destroy(state, destroyer) do
+    if state.explosion_progress == nil do
+      if destroyer == nil do
+        explosion_time = @self_destruct_explosion_time
+        explosion_radius = @self_destruct_explosion_radius
+        originator = state.player
+      else
+        explosion_time = @normal_explosion_time
+        explosion_radius = @normal_explosion_radius
+        originator = destroyer
+      end
+      %State{state |
+        explosion_progress: 0.0,
+        explosion_originator: originator,
+        explosion_time: explosion_time,
+        explosion_radius: explosion_radius
+      }
+    else
+      state
+    end
+  end
+
+
   defp update_explosion(updater, dt, state) do
-    age = state.explosion + dt / @explosion_time
-    state = %State{state | explosion: age}
+    old_age = state.explosion_progress
+    age = old_age + dt / state.explosion_time
+    state = %State{state | explosion_progress: age}
 
     if age <= 1.0 do
-      update = %Tanx.Core.Updates.Explosion{pos: state.pos, radius: @explosion_radius, age: age}
+      chain_radius = if old_age < 0.5 and age >= 0.5 do
+        state.explosion_radius
+      else
+        nil
+      end
+      update = %Tanx.Core.Updates.Explosion{
+        pos: state.pos,
+        radius: state.explosion_radius,
+        chain_radius: chain_radius,
+        age: age,
+        originator: state.explosion_originator
+      }
       updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
       {:noreply, state}
     else

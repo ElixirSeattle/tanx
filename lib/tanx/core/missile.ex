@@ -1,5 +1,7 @@
 defmodule Tanx.Core.Missile do
 
+  require Logger
+
 
   defmodule State do
     defstruct arena_width: 20.0,
@@ -42,12 +44,12 @@ defmodule Tanx.Core.Missile do
   use GenServer
 
   def init({player, arena_width, arena_height, decomposed_walls, x, y, a}) do
-    {:ok, %Tanx.Core.Missile.State{arena_width: arena_width, 
-                                  arena_height: arena_height, 
-                                  decomposed_walls: decomposed_walls, 
-                                  player: player, 
-                                  x: x, 
-                                  y: y, 
+    {:ok, %Tanx.Core.Missile.State{arena_width: arena_width,
+                                  arena_height: arena_height,
+                                  decomposed_walls: decomposed_walls,
+                                  player: player,
+                                  x: x,
+                                  y: y,
                                   heading: a}}
   end
 
@@ -95,11 +97,23 @@ defmodule Tanx.Core.Missile do
 
 
   defp update_explosion(updater, dt, state) do
-    age = state.explosion + dt / @explosion_time
+    old_age = state.explosion
+    age = old_age + dt / @explosion_time
     state = %State{state | explosion: age}
 
     if age <= 1.0 do
-      update = %Tanx.Core.Updates.Explosion{pos: {state.x, state.y}, radius: @explosion_radius, age: age}
+      chain_radius = if old_age < 0.5 and age >= 0.5 do
+        @explosion_radius
+      else
+        nil
+      end
+      update = %Tanx.Core.Updates.Explosion{
+        pos: {state.x, state.y},
+        radius: @explosion_radius,
+        age: age,
+        chain_radius: chain_radius,
+        originator: state.player
+      }
       updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
       {:noreply, state}
     else

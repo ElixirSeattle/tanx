@@ -91,11 +91,12 @@ defmodule Tanx.Core.Player do
 
 
   @doc """
-  Removes the tank for the player, and returns either :ok or :no_tank.
+  Self-destructs the tank for the player, and returns either :ok or :no_tank.
   """
-  def remove_tank(player) do
-    GenServer.call(player, :remove_tank)
+  def self_destruct_tank(player) do
+    GenServer.call(player, :self_destruct_tank)
   end
+
 
   @doc """
     Increment the kill count of the calling player.
@@ -103,6 +104,7 @@ defmodule Tanx.Core.Player do
   def inc_kills(player) do
     GenServer.call(player, :inc_kills)
   end
+
 
   @doc """
     Increment the death count of the calling player.
@@ -202,11 +204,11 @@ defmodule Tanx.Core.Player do
   end
 
 
-  def handle_call(:remove_tank, _from, state) do
+  def handle_call(:self_destruct_tank, _from, state) do
     tank = state.current_tank
     if tank do
       state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self)
-      GenServer.cast(tank, :destroy)
+      tank |> Tanx.Core.Tank.self_destruct
       {:reply, :ok, %State{state | current_tank: nil,  missiles: []}}
     else
       {:reply, :no_tank, state}
@@ -216,7 +218,7 @@ defmodule Tanx.Core.Player do
 
   def handle_call(:new_missile, _from, state) do
     curr_time = Tanx.Core.SystemTime.get(state.time_config)
-    if (Dict.size(state.missiles) < @missile_count) and 
+    if (Dict.size(state.missiles) < @missile_count) and
       ((curr_time - state.last_fired) >= @missile_fire_rate) do
 
       case _maybe_call_tank(state, :get_position) do
@@ -323,7 +325,7 @@ defmodule Tanx.Core.Player do
     try do
       {:ok, GenServer.call(tank, call), state}
     catch :exit, {:noproc, _} ->
-      {:not_found, %State{state | current_tank: nil}}
+      {:not_found, %State{state | current_tank: nil, missiles: []}}
     end
   end
 
