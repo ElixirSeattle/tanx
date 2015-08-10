@@ -185,6 +185,8 @@ defmodule Tanx.Core.ArenaUpdater do
         {next_tanks, next_missile} = cur_tanks |> Enum.map_reduce(cur_missile, fn
           (tank, missile = %DestroyMissile{}) ->
             {tank, missile}
+          (tank = %DestroyTank{} , missile) ->
+            {tank, missile}
           (tank, missile) ->
             if missile.player != tank.player and
                 same_position?({missile.x, missile.y}, tank.pos, tank.radius) do
