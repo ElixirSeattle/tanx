@@ -60,7 +60,8 @@ class TanxApp {
       });
 
       channel.on("new:message", function(msg){
-        $("#messages").append("<p class='message'><span class='username'>"+msg.username+"</span><span class='content'>"+msg.content+"</span></p>")
+        $("#messages").append("<p class='message'><span class='username'>"+msg.username+"</span><span class='content'>"+msg.content+"</span></p>");
+        $('#messages').scrollTop($('#messages')[0].scrollHeight);
       });
 
       $("#message-input").off("keypress").on("keypress", function(e){
