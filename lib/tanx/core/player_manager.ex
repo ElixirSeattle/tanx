@@ -144,7 +144,7 @@ defmodule Tanx.Core.PlayerManager do
         {player, player_info} ->
           build_player_view(player_info, from == player)
         end)
-      |> _sort_views()
+      |> sort_views()
     {:reply, player_views, state}
   end
 
@@ -202,14 +202,14 @@ defmodule Tanx.Core.PlayerManager do
   # Remove the calling player. Returns :ok (regardless of whether the caller was a player
   # that was removed or not).
   def handle_call(:player_left, {from, _}, state) do
-    state = _remove_player(from, state)
+    state = internal_remove_player(from, state)
     {:reply, :ok, state}
   end
 
 
   # Trap EXIT to handle the death of Player processes. If a Player dies, remove it.
   def handle_info({:EXIT, pid, _}, state) do
-    {:noreply, _remove_player(pid, state)}
+    {:noreply, internal_remove_player(pid, state)}
   end
   def handle_info(request, state), do: super(request, state)
 
@@ -218,7 +218,7 @@ defmodule Tanx.Core.PlayerManager do
 
 
   # Remove the given player from the current list.
-  defp _remove_player(player, state) do
+  defp internal_remove_player(player, state) do
     :ok = state.arena_objects |> Tanx.Core.ArenaObjects.kill_player_objects(player)
     state = %State{state | players: state.players |> Dict.delete(player)}
     _broadcast_change(state)
@@ -233,7 +233,7 @@ defmodule Tanx.Core.PlayerManager do
         {_, player_info} ->
           build_player_view(player_info, false)
         end)
-      |> _sort_views()
+      |> sort_views()
     GenEvent.notify(state.broadcaster, {:player_views, player_views})
     state
   end
@@ -247,9 +247,10 @@ defmodule Tanx.Core.PlayerManager do
   end
 
 
-  defp _sort_views(views) do
+  defp sort_views(views) do
     views |> Enum.sort_by(fn
-      %Tanx.Core.View.Player{name: name, is_me: is_me} -> {!is_me, name}
+      %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths} ->
+        {deaths - 2 * kills, name}
     end)
   end
 
