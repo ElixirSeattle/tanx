@@ -273,7 +273,9 @@ defmodule Tanx.Core.ArenaUpdater do
       %DestroyTank{tank: tank, dead_player: dead_player, culprit_player: culprit_player} ->
         tank |> Tanx.Core.Tank.destroy(culprit_player)
         player_manager |> Tanx.Core.PlayerManager.inc_deaths(dead_player)
-        player_manager |> Tanx.Core.PlayerManager.inc_kills(culprit_player)
+        if culprit_player != dead_player do
+          player_manager |> Tanx.Core.PlayerManager.inc_kills(culprit_player)
+        end
       end)
 
     missile_responses |> Enum.each(fn
