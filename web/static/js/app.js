@@ -50,17 +50,18 @@ class TanxApp {
     this._chat_channel = socket.channel("chat", {});
     this._chat_channel.join().receive("ok", () => {
       let channel = this._chat_channel;
+      let that = this;
 
       channel.on("user:entered", function(message){
-        $("#messages").append("<p class='row message'><span class='user-entered'>"+message.username+" entered</span></p>")
+        $("#messages").append("<p class='row message'><span class='user-entered'>"+that.sanitize(message.username)+" entered</span></p>")
       });
 
       channel.on("user:left", function(message){
-        $("#messages").append("<p class='row message'><span class='user-left'>"+message.username +" left</span></p>")
+        $("#messages").append("<p class='row message'><span class='user-left'>"+that.sanitize(message.username) +" left</span></p>")
       });
 
       channel.on("new:message", function(msg){
-        $("#messages").append("<p class='row message'><span class='username'>"+msg.username+"</span><span class='content'>"+msg.content+"</span></p>");
+        $("#messages").append("<p class='row message'><span class='username'>"+that.sanitize(msg.username)+"</span><span class='content'>"+that.sanitize(msg.content)+"</span></p>");
         $('#messages').scrollTop($('#messages')[0].scrollHeight);
       });
 
@@ -75,6 +76,8 @@ class TanxApp {
       });
     });
   }
+
+  sanitize(html){ return $("<span/>").text(html).html() }
 
   pushToChannel(channel, event, payload) {
     if (!payload) payload = {};
@@ -98,7 +101,6 @@ class TanxApp {
   onChannelEvent(channel, event, callback) {
     channel.on(event, callback);
   }
-
 
   //////////////////////////////////////////////////////////////////////////////
   // PLAYER LIST VIEW
