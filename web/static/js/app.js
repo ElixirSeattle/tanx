@@ -460,12 +460,28 @@ class TanxApp {
 
     let tankRect = this.onScreenRect(tank.x, tank.y, tank.radius*2, tank.radius*2);
     context.translate(tankRect.x, tankRect.y);
+    let screenRadius = Math.ceil(this._scaleFactor * 0.5);
 
     // Add names above enemies
-    if(tank.is_me === false) {
+    if (!tank.is_me) {
       context.textAlign = "center";
+      context.font = '12px sans-serif';
       context.fillText(tank.name, 0, -this._scaleFactor * 0.7);
     }
+
+    // Add armor indicator below all tanks
+    let ratio = tank.armor / tank.max_armor;
+    let red = 255;
+    let green = 255;
+    if (ratio < 0.5) {
+      green = Math.floor(510 * ratio);
+    } else {
+      red = Math.floor(510 - 510 * ratio);
+    }
+    context.fillStyle = 'rgb(' + red + ',' + green + ',0)';
+    context.fillRect(-screenRadius, screenRadius * 1.2, 2 * screenRadius * ratio, 4);
+    context.strokeStyle = '#fff';
+    context.strokeRect(-screenRadius, screenRadius * 1.2, 2 * screenRadius, 4);
 
     let tankImage = new Image();
     tankImage.src = 'images/tank_sprite.png';
@@ -475,7 +491,6 @@ class TanxApp {
 
     let spriteSheetX = 92;
     let spriteSheetY = tank.is_me ? 1 : 84;
-    let screenRadius = Math.ceil(this._scaleFactor * 0.5);
     context.drawImage(tankImage, spriteSheetX, spriteSheetY, 67, 79,
         -screenRadius, -screenRadius, screenRadius * 2, screenRadius * 2);
 
