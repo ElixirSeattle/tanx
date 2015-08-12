@@ -13,13 +13,11 @@ defmodule Tanx.Core.Missile do
               heading: 0.0,
               v: 10.0,
               explosion: nil
-
-
-
   end
 
   @explosion_radius 0.5
   @explosion_time 0.4
+  @explosion_intensity 0.25
 
   ############
   #Missile API
@@ -87,7 +85,11 @@ defmodule Tanx.Core.Missile do
       state = %State{state | explosion: 0.0}
       update = %Tanx.Core.Updates.Explosion{pos: impact, radius: @explosion_radius, age: 0.0}
     else
-      update = %Tanx.Core.Updates.MoveMissile{missile: self, player: state.player, x: nx, y: ny, heading: a}
+      update = %Tanx.Core.Updates.MoveMissile{
+        missile: self,
+        player: state.player,
+        pos: {nx, ny},
+        heading: a}
     end
 
     state = %State{state | x: nx, y: ny}
@@ -110,6 +112,7 @@ defmodule Tanx.Core.Missile do
       update = %Tanx.Core.Updates.Explosion{
         pos: {state.x, state.y},
         radius: @explosion_radius,
+        intensity: @explosion_intensity,
         age: age,
         chain_radius: chain_radius,
         originator: state.player
@@ -125,9 +128,9 @@ defmodule Tanx.Core.Missile do
 
   defp _hit_obstacle?(x_pos, y_pos, state) do
     state.decomposed_walls
-      |> Enum.find_value(fn(wall) -> 
+      |> Enum.find_value(fn(wall) ->
                            Tanx.Core.Obstacles.collision_with_decomposed_wall(wall,
-                                                       {state.x, state.y}, 
+                                                       {state.x, state.y},
                                                        {x_pos, y_pos}) end)
   end
 

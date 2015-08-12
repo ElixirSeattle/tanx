@@ -9,11 +9,12 @@ defmodule Tanx.Core.Tank do
 
   @tank_radius 0.5
   @tank_collision_buffer 0.1
-  @chain_reaction_buffer 0.2
   @normal_explosion_radius 1.0
   @normal_explosion_time 0.6
-  @self_destruct_explosion_radius 2.0
+  @normal_explosion_intensity 1.0
+  @self_destruct_explosion_radius 2.5
   @self_destruct_explosion_time 1.0
+  @self_destruct_explosion_intensity 4.0
 
 
   #### API internal to Tanx.Core
@@ -38,7 +39,7 @@ defmodule Tanx.Core.Tank do
   @doc """
     Returns the tank radius used for chain reaction detection
   """
-  def chain_radius(), do: @tank_radius - @chain_reaction_buffer
+  def chain_radius(), do: @tank_radius
 
 
   @doc """
@@ -60,8 +61,8 @@ defmodule Tanx.Core.Tank do
   @doc """
     Adjusts the tank's position
   """
-  def move_to(tank, x, y) do
-    GenServer.cast(tank, {:move_to, x, y})
+  def adjust(tank, x, y, armor) do
+    GenServer.cast(tank, {:adjust, x, y, armor})
   end
 
 
@@ -79,10 +80,13 @@ defmodule Tanx.Core.Tank do
               heading: 0.0,
               velocity: 0.0,
               angular_velocity: 0.0,
+              armor: 0.0,
+              max_armor: 1.0,
               explosion_progress: nil,
               explosion_originator: nil,
               explosion_time: nil,
-              explosion_radius: nil
+              explosion_radius: nil,
+              explosion_intensity: nil
   end
 
 
@@ -90,9 +94,18 @@ defmodule Tanx.Core.Tank do
     x = Keyword.get(params, :x, 0)
     y = Keyword.get(params, :y, 0)
     heading = Keyword.get(params, :heading, 0)
-    state = %State{arena_width: arena_width, arena_height: arena_height,
+    armor = Keyword.get(params, :armor, 1.0)
+    max_armor = Keyword.get(params, :max_armor, 1.0)
+    state = %State{
+      arena_width: arena_width,
+      arena_height: arena_height,
       decomposed_walls: decomposed_walls,
-      player: player, pos: {x, y}, heading: heading}
+      player: player,
+      pos: {x, y},
+      heading: heading,
+      armor: armor,
+      max_armor: max_armor
+    }
     {:ok, state}
   end
 
@@ -139,12 +152,12 @@ defmodule Tanx.Core.Tank do
   end
 
 
-  def handle_cast({:move_to, x, y}, state = %State{explosion_progress: nil}) do
-    state = %State{state | pos: {x, y}}
+  def handle_cast({:adjust, x, y, armor}, state = %State{explosion_progress: nil}) do
+    state = %State{state | pos: {x, y}, armor: armor}
     {:noreply, state}
   end
 
-  def handle_cast({:move_to, _x, _y}, state) do
+  def handle_cast({:adjust, _x, _y, _armor}, state) do
     {:noreply, state}
   end
 
@@ -159,17 +172,20 @@ defmodule Tanx.Core.Tank do
       if destroyer == nil do
         explosion_time = @self_destruct_explosion_time
         explosion_radius = @self_destruct_explosion_radius
+        explosion_intensity = @self_destruct_explosion_intensity
         originator = state.player
       else
         explosion_time = @normal_explosion_time
         explosion_radius = @normal_explosion_radius
+        explosion_intensity = @normal_explosion_intensity
         originator = destroyer
       end
       %State{state |
         explosion_progress: 0.0,
         explosion_originator: originator,
         explosion_time: explosion_time,
-        explosion_radius: explosion_radius
+        explosion_radius: explosion_radius,
+        explosion_intensity: explosion_intensity
       }
     else
       state
@@ -191,6 +207,7 @@ defmodule Tanx.Core.Tank do
       update = %Tanx.Core.Updates.Explosion{
         pos: state.pos,
         radius: state.explosion_radius,
+        intensity: state.explosion_intensity,
         chain_radius: chain_radius,
         age: age,
         originator: state.explosion_originator
@@ -211,8 +228,16 @@ defmodule Tanx.Core.Tank do
     force = Tanx.Core.Obstacles.force_from_decomposed_walls(
       state.decomposed_walls, pos, @tank_radius + @tank_collision_buffer)
 
-    update = %Tanx.Core.Updates.MoveTank{tank: self, player: state.player,
-      pos: pos, heading: new_heading, radius: @tank_radius, force: force}
+    update = %Tanx.Core.Updates.MoveTank{
+      tank: self,
+      player: state.player,
+      pos: pos,
+      heading: new_heading,
+      radius: @tank_radius,
+      armor: state.armor,
+      max_armor: state.max_armor,
+      force: force
+    }
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
 
     state = %State{state | pos: pos, heading: new_heading}

@@ -73,10 +73,9 @@ defmodule Tanx.GameChannel do
   def handle_in("launch_tank", msg, socket) do
     player = socket.assigns[:player]
     if player do
-      params = if msg |> Dict.has_key?("entry_point") do
-        [entry_point: msg["entry_point"]]
-      else
-        []
+      params = [armor: 2.0, max_armor: 2.0]
+      if msg |> Dict.has_key?("entry_point") do
+        params = params |> Keyword.put(:entry_point, msg["entry_point"])
       end
       player |> Tanx.Core.Player.new_tank(params)
     end

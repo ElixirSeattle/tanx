@@ -12,6 +12,8 @@ defmodule Tanx.Core.Updates do
               pos: {0.0, 0.0},
               heading: 0.0,
               radius: 0.5,
+              armor: 0.0,
+              max_armor: 1.0,
               force: {0.0, 0.0}
   end
 
@@ -22,6 +24,7 @@ defmodule Tanx.Core.Updates do
     """
     defstruct pos: {0.0, 0.0},
               radius: 1.0,
+              intensity: 1.0,
               chain_radius: nil,
               age: 0.0,
               originator: nil
@@ -34,8 +37,8 @@ defmodule Tanx.Core.Updates do
     """
     defstruct missile: nil,
               player: nil,
-              x: 0.0,
-              y: 0.0,
+              strength: 1.0,
+              pos: {0.0, 0.0},
               heading: 0.0
   end
 

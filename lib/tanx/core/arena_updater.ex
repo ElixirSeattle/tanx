@@ -180,6 +180,7 @@ defmodule Tanx.Core.ArenaUpdater do
 
 
   defp resolve_tank_missile_collisions(missile_responses, tank_responses) do
+    tank_radius = Tanx.Core.Tank.collision_radius
     missile_responses |> Enum.map_reduce(tank_responses, fn
       (cur_missile, cur_tanks) ->
         {next_tanks, next_missile} = cur_tanks |> Enum.map_reduce(cur_missile, fn
@@ -188,18 +189,42 @@ defmodule Tanx.Core.ArenaUpdater do
           (tank = %DestroyTank{} , missile) ->
             {tank, missile}
           (tank, missile) ->
-            if missile.player != tank.player and
-                same_position?({missile.x, missile.y}, tank.pos, tank.radius) do
-              {
-                %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: missile.player},
-                %DestroyMissile{missile: missile.missile}
-              }
+            if missile.player != tank.player do
+              hit = missile_hit(missile.pos, missile.heading, tank.pos, tank_radius, missile.strength)
+            else
+              hit = 0.0
+            end
+            if hit > 0.0 do
+              armor = tank.armor - hit
+              if armor <= 0.0 do
+                tank = %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: missile.player}
+              else
+                tank = %Tanx.Core.Updates.MoveTank{tank | armor: armor}
+              end
+              {tank, %DestroyMissile{missile: missile.missile}}
             else
               {tank, missile}
             end
           end)
         {next_missile, next_tanks}
       end)
+  end
+
+
+  defp missile_hit({mx, my}, mh, {tx, ty}, radius, strength) do
+    bx = tx - mx
+    by = ty - my
+    if bx * bx + by * by <= radius * radius do
+      vx = :math.cos(mh)
+      vy = :math.sin(mh)
+      dot = vx * bx + vy * by
+      cx = mx + dot * vx
+      cy = my + dot * vy
+      dist = :math.sqrt((tx - cx) * (tx - cx) + (ty - cy) * (ty - cy))
+      (1.0 - dist / radius) * strength
+    else
+      0.0
+    end
   end
 
 
@@ -212,8 +237,14 @@ defmodule Tanx.Core.ArenaUpdater do
         chain_radius = explosion.chain_radius + tank_radius
         cur_tanks |> Enum.map(fn
           tank = %Tanx.Core.Updates.MoveTank{} ->
-            if same_position?(explosion.pos, tank.pos, chain_radius) do
-              %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: explosion.originator}
+            hit = explosion_hit(explosion.pos, tank.pos, chain_radius, explosion.intensity)
+            if hit > 0.0 do
+              armor = tank.armor - hit
+              if armor <= 0.0 do
+                %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: explosion.originator}
+              else
+                %Tanx.Core.Updates.MoveTank{tank | armor: armor}
+              end
             else
               tank
             end
@@ -223,8 +254,9 @@ defmodule Tanx.Core.ArenaUpdater do
   end
 
 
-  defp same_position?({x1, y1}, {x2, y2}, radius) do
-    (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) <= radius * radius
+  defp explosion_hit({x1, y1}, {x2, y2}, radius, intensity) do
+    dist = :math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+    (1.0 - dist / radius) * intensity
   end
 
 
@@ -270,8 +302,8 @@ defmodule Tanx.Core.ArenaUpdater do
 
   defp send_revisions(player_manager, tank_responses, missile_responses) do
     tank_responses |> Enum.each(fn
-      %Tanx.Core.Updates.MoveTank{tank: tank, pos: {newx, newy}} ->
-        tank |> Tanx.Core.Tank.move_to(newx, newy)
+      %Tanx.Core.Updates.MoveTank{tank: tank, pos: {newx, newy}, armor: armor} ->
+        tank |> Tanx.Core.Tank.adjust(newx, newy, armor)
       %DestroyTank{tank: tank, dead_player: dead_player, culprit_player: culprit_player} ->
         tank |> Tanx.Core.Tank.destroy(culprit_player)
         player_manager |> Tanx.Core.PlayerManager.inc_deaths(dead_player)
@@ -294,8 +326,16 @@ defmodule Tanx.Core.ArenaUpdater do
         player_view = state.player_manager |> Tanx.Core.PlayerManager.view_player(response.player)
         if player_view do
           {x, y} = response.pos
-          tank = %Tanx.Core.ArenaView.TankInfo{player: response.player, name: player_view.name,
-            x: x, y: y, heading: response.heading, radius: response.radius}
+          tank = %Tanx.Core.ArenaView.TankInfo{
+            player: response.player,
+            name: player_view.name,
+            x: x,
+            y: y,
+            heading: response.heading,
+            radius: response.radius,
+            armor: response.armor,
+            max_armor: response.max_armor
+          }
           [tank]
         else
           []
@@ -308,10 +348,11 @@ defmodule Tanx.Core.ArenaUpdater do
   defp create_missile_views(responses) do
     responses |> Enum.flat_map(fn
       response = %Tanx.Core.Updates.MoveMissile{} ->
+        {x, y} = response.pos
         missile = %Tanx.Core.ArenaView.MissileInfo{
           player: response.player,
-          x: response.x,
-          y: response.y,
+          x: x,
+          y: y,
           heading: response.heading
         }
         [missile]

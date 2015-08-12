@@ -17,7 +17,7 @@ defmodule Tanx.BasicTanksTest do
     :ok = game |> Tanx.Core.Game.manual_clock_tick(1000)
     view = player1 |> Tanx.Core.Player.view_arena_objects()
     assert view == %Tanx.Core.View.Arena{tanks: [
-      %Tanx.Core.View.Tank{is_me: true, name: "daniel"}
+      %Tanx.Core.View.Tank{is_me: true, name: "daniel", armor: 1.0}
     ]}
   end
 
@@ -30,8 +30,8 @@ defmodule Tanx.BasicTanksTest do
     view = player1 |> Tanx.Core.Player.view_arena_objects()
     got = view.tanks |> Enum.into(HashSet.new)
     want = [
-      %Tanx.Core.View.Tank{is_me: true, name: "daniel"},
-      %Tanx.Core.View.Tank{is_me: false, name: "greg", x: 2.0}
+      %Tanx.Core.View.Tank{is_me: true, name: "daniel", armor: 1.0},
+      %Tanx.Core.View.Tank{is_me: false, name: "greg", x: 2.0, armor: 1.0}
     ] |> Enum.into(HashSet.new)
     assert Set.equal?(got, want)
   end
@@ -61,7 +61,7 @@ defmodule Tanx.BasicTanksTest do
         %Tanx.Core.View.Missile{is_mine: true, x: 10.0}
       ],
       tanks: [
-        %Tanx.Core.View.Tank{is_me: true, name: "Kyle"}
+        %Tanx.Core.View.Tank{is_me: true, name: "Kyle", armor: 1.0}
       ]
     }
 
@@ -82,7 +82,7 @@ defmodule Tanx.BasicTanksTest do
         %Tanx.Core.View.Missile{is_mine: true, x: 10.0},
       ],
       tanks: [
-        %Tanx.Core.View.Tank{is_me: true, name: "Kyle"}
+        %Tanx.Core.View.Tank{is_me: true, name: "Kyle", armor: 1.0}
       ]
     }
 
@@ -105,7 +105,7 @@ defmodule Tanx.BasicTanksTest do
         %Tanx.Core.View.Missile{is_mine: true, x: 10.0}
       ],
       tanks: [
-        %Tanx.Core.View.Tank{is_me: true, name: "Kyle"}
+        %Tanx.Core.View.Tank{is_me: true, name: "Kyle", armor: 1.0}
       ]
     }
 
@@ -145,7 +145,7 @@ defmodule Tanx.BasicTanksTest do
         %Tanx.Core.View.Missile{is_mine: true, x: 10.0}
       ],
       tanks: [
-        %Tanx.Core.View.Tank{is_me: true, name: "Kyle"}
+        %Tanx.Core.View.Tank{is_me: true, name: "Kyle", armor: 1.0}
       ]
     }
   end
