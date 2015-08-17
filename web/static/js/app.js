@@ -189,8 +189,9 @@ class TanxApp {
     $('#tanx-chat').hide()
 
     this.BACKGROUND_MUSIC.pause();
-    //This breaks on Firefox and Safari. Need to find a way to reset background music that has better browser support.
-    //this.BACKGROUND_MUSIC.currentTime = 0;
+    if (this.BACKGROUND_MUSIC.currentTime) {
+      this.BACKGROUND_MUSIC.currentTime = "0";
+    }
 
     if (this._hasPlayer) {
       this._hasPlayer = false;
