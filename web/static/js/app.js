@@ -13,6 +13,8 @@ class TanxApp {
     this.BACKGROUND_MUSIC = new Audio("sounds/tanx-music-loop.m4a");
     this.BACKGROUND_MUSIC.volume = .4;
     this.HEARTBEAT_MILLIS = 60000;
+    this.tankSprite = new Image();
+    this.tankSprite.src = 'images/tank_sprite.png';
 
     this.setupChannels();
     this.setupPlayerList();
@@ -484,18 +486,16 @@ class TanxApp {
     context.strokeStyle = '#fff';
     context.strokeRect(-screenRadius, screenRadius * 1.2, 2 * screenRadius, 4);
 
-    let tankImage = new Image();
-    tankImage.src = 'images/tank_sprite.png';
 
     let rotateTankImage90Degrees = 90 * Math.PI/180;
     context.rotate(-tank.heading + rotateTankImage90Degrees);
 
     let spriteSheetX = 92;
     let spriteSheetY = tank.is_me ? 1 : 84;
-    context.drawImage(tankImage, spriteSheetX, spriteSheetY, 67, 79,
-        -screenRadius, -screenRadius, screenRadius * 2, screenRadius * 2);
+      context.drawImage(this.tankSprite, spriteSheetX, spriteSheetY, 67, 79,
+          -screenRadius, -screenRadius, screenRadius * 2, screenRadius * 2);
 
-    context.restore();
+      context.restore();
   }
 
   renderMissile(context, missile) {
