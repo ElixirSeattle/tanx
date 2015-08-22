@@ -492,8 +492,8 @@ class TanxApp {
 
     let spriteSheetX = 92;
     let spriteSheetY = tank.is_me ? 1 : 84;
-      context.drawImage(this.tankSprite, spriteSheetX, spriteSheetY, 67, 79,
-          -screenRadius, -screenRadius, screenRadius * 2, screenRadius * 2);
+    context.drawImage(this.tankSprite, spriteSheetX, spriteSheetY, 67, 79,
+      -screenRadius, -screenRadius, screenRadius * 2, screenRadius * 2);
 
       context.restore();
   }
@@ -506,9 +506,12 @@ class TanxApp {
 
     context.rotate(-missile.heading);
 
-    // TODO: Replace this with some nice graphics
-    context.fillStyle = "#000";
-    context.fillRect(-missileRect.width/2, -missileRect.height/2, missileRect.width, missileRect.height);
+    let spriteSheetX = 455;
+    let spriteSheetY = 168;
+    let onScreenWidth = 40;
+    let onScreenHeight = 40;
+    context.drawImage(this.tankSprite, spriteSheetX, spriteSheetY, 67, 79,
+      -onScreenWidth/2, -onScreenHeight/2, onScreenWidth, onScreenHeight);
 
     context.restore();
   }
