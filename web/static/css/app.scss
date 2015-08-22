@@ -2,53 +2,13 @@ body {
   background: #fff;
   margin-top: 40px;
 }
-
 .container {
   width: 1200px;
   margin: auto;
 }
-
 .tanx-header {
   margin-bottom: 20px;
 }
-
-#tanx-canvas {
-  border: 1px solid #888;
-  background-image: url('/images/canvas_background.png');
-  background-size: 50px 50px;
-  background-repeat: repeat;
-}
-
-#tanx-arena-json {
-  margin-top: 10px;
-  font-size: 10px;
-}
-
-#tanx-instructions {
-  margin-top: 20px;
-}
-
-#tanx-chat {
-  text-align: left;
-  padding-left: 30px;
-  height: 602px;
-  position: relative;
-}
-
-#message-input {
-  width: 100%;
-  bottom: 0;
-  position: absolute;
-}
-
-#messages {
-  height: 565px;
-  width: 100%;
-  position: absolute;
-  overflow-y: scroll;
-  overflow-x: hidden;
-}
-
 .username {
   color: #666666;
   padding-right: 10px;
@@ -57,14 +17,12 @@ body {
   float: left;
   text-align: right;
 }
-
 .content {
   width: 275px;
   display: block;
   float: left;
   word-wrap: break-word;
 }
-
 .user-entered, .user-left {
   width: 100%;
   left: 125px;
@@ -75,7 +33,43 @@ body {
   font-size: 12px;
   font-style: italic;
 }
-
+.top10 {
+  margin-top: 10px;
+}
+.bottom10 {
+  margin-bottom: 10px;
+}
+#tanx-canvas {
+  border: 1px solid #888;
+  background-image: url('/images/canvas_background.png');
+  background-size: 50px 50px;
+  background-repeat: repeat;
+}
+#tanx-arena-json {
+  margin-top: 10px;
+  font-size: 10px;
+}
+#tanx-instructions {
+  margin-top: 20px;
+}
+#tanx-chat {
+  text-align: left;
+  padding-left: 30px;
+  height: 602px;
+  position: relative;
+}
+#message-input {
+  width: 100%;
+  bottom: 0;
+  position: absolute;
+}
+#messages {
+  height: 565px;
+  width: 100%;
+  position: absolute;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
 #background-music-slider {
   float: right;
   margin-top: 5px;

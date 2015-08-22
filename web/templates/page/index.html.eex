@@ -17,8 +17,8 @@
       <input type="text" id="tanx-name-field" class="form-control" maxlength="16" placeholder="Name">
     </div>
     <div>
-      <button class="btn btn-primary btn-sm" id="tanx-join-btn">Join Game</button>
-      <button class="btn btn-default btn-sm" id="tanx-leave-btn">Leave Game</button>
+      <button class="btn btn-primary btn-sm col-xs-12 top10 bottom10" id="tanx-join-btn">Join Game</button>
+      <button class="btn btn-default btn-sm col-xs-12 top10 bottom10" id="tanx-leave-btn">Leave Game</button>
     </div>
     <div id="tanx-instructions">
       <h4>Instructions</h4>
