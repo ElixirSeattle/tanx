@@ -32,11 +32,24 @@
   <div class="col-xs-6">
 
     <div id="tanx-arena-container">
-      <canvas tabindex="0" id="tanx-canvas"></canvas>
-      <div id="tanx-framerate">
-        Frame rate: <span id="tanx-fps"></span>
+      <div class="row">
+        <canvas tabindex="0" id="tanx-canvas"></canvas>
       </div>
-      <pre id="tanx-arena-json"></pre>
+
+      <div class="row">
+        <label style="float: left;">Background music:</label>
+        <div class="col-xs-9" style="float: right;" id="background-music-slider"></div>
+        <audio id="background-music" loop>
+          <source src="sounds/tanx-music-loop.m4a" type="audio/mp4" />
+        </audio>
+      </div>
+
+      <div class="row">
+        <div id="tanx-framerate">
+          Frame rate: <span id="tanx-fps"></span>
+        </div>
+        <pre id="tanx-arena-json"></pre>
+      </div>
     </div>
 
   </div>

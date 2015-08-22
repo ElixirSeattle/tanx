@@ -10,8 +10,6 @@ class TanxApp {
     this.NUM_TIMESTAMPS = 10;
     this.MAX_CANVAS_WIDTH = 600;
     this.MAX_CANVAS_HEIGHT = 600;
-    this.BACKGROUND_MUSIC = new Audio("sounds/tanx-music-loop.m4a");
-    this.BACKGROUND_MUSIC.volume = .4;
     this.HEARTBEAT_MILLIS = 60000;
     this.tankSprite = new Image();
     this.tankSprite.src = 'images/tank_sprite.png';
@@ -21,6 +19,7 @@ class TanxApp {
     this.setupPlayerControl();
     this.setupArenaControls();
     this.setupArenaAnimation();
+    this.setupBackgroundMusicSlider();
   }
 
 
@@ -190,9 +189,10 @@ class TanxApp {
     $('#tanx-arena-container').hide();
     $('#tanx-chat').hide()
 
-    this.BACKGROUND_MUSIC.pause();
-    if (this.BACKGROUND_MUSIC.currentTime) {
-      this.BACKGROUND_MUSIC.currentTime = "0";
+    let backgroundMusic = $('#background-music')[0];
+    backgroundMusic.pause();
+    if (backgroundMusic.currentTime) {
+      backgroundMusic.currentTime = "0";
     }
 
     if (this._hasPlayer) {
@@ -416,7 +416,7 @@ class TanxApp {
       });
 
       // Start background music
-      this.BACKGROUND_MUSIC.play();
+      $('#background-music')[0].play();
     }
   }
 
@@ -568,9 +568,22 @@ class TanxApp {
     return {x: screenPoint.x, y: screenPoint.y, width: screenWidth, height: screenHeight};
   }
 
+  setupBackgroundMusicSlider() {
+    $('#background-music-slider').slider({
+      orientation: "horizontal",
+      value: 40,
+      step: 1,
+      range: 'min',
+      min: 0,
+      max: 100,
+      change: function() {
+        var value = $('#background-music-slider').slider('value');
+        $('#background-music').prop("volume", value/100);
+      }
+    });
+  }
 
 }
-
 
 let App = new TanxApp();
 window.Tanx = App;

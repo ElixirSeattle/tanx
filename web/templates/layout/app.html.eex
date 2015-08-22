@@ -28,6 +28,7 @@
 
     </div> <!-- /container -->
     <script src="<%= static_path(@conn, "/js/jquery-2.1.4.min.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/jquery-ui-1.11.4.min.js") %>"></script>
     <script src="<%= static_path(@conn, "/js/bootstrap.min.js") %>"></script>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
 
