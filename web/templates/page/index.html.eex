@@ -37,8 +37,8 @@
       </div>
 
       <div class="row">
-        <label style="float: left;">Background music:</label>
-        <div class="col-xs-9" style="float: right;" id="background-music-slider"></div>
+        <label>Background music:</label>
+        <div class="col-xs-9" id="background-music-slider"></div>
         <audio id="background-music" loop>
           <source src="sounds/tanx-music-loop.m4a" type="audio/mp4" />
         </audio>

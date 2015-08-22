@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap.min.css") %>">
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-theme.min.css") %>">
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/jquery-ui-1.11.4.min.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/jquery-ui.theme-smoothness.min.css") %>">
   </head>
 
   <body>

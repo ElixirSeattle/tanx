@@ -571,12 +571,11 @@ class TanxApp {
   setupBackgroundMusicSlider() {
     $('#background-music-slider').slider({
       orientation: "horizontal",
-      value: 40,
+      value: 50,
       step: 1,
-      range: 'min',
       min: 0,
       max: 100,
-      change: function() {
+      slide: function() {
         var value = $('#background-music-slider').slider('value');
         $('#background-music').prop("volume", value/100);
       }
