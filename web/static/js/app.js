@@ -74,6 +74,12 @@ class TanxApp {
           });
           $("#message-input").val("");
         }
+      })
+      .on('keydown', (event) => {
+        event.stopPropagation();
+      })
+      .on('keyup', (event) => {
+        event.stopPropagation();
       });
     });
   }
@@ -160,6 +166,10 @@ class TanxApp {
             this.joinPlayer();
           }
         }
+        event.stopPropagation();
+      })
+      .on('keydown', (event) => {
+        event.stopPropagation();
       });
 
     this.leavePlayer();
@@ -224,10 +234,10 @@ class TanxApp {
     this._leftKey = false;
     this._rightKey = false;
 
-    $('#tanx-canvas').on('keydown', (event) => {
+    $('body').on('keydown', (event) => {
       this.arenaKeyEvent(event, true);
     });
-    $('#tanx-canvas').on('keyup', (event) => {
+    $('body').on('keyup', (event) => {
       this.arenaKeyEvent(event, false);
     });
 

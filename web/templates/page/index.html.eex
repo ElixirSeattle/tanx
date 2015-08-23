@@ -33,7 +33,7 @@
 
     <div id="tanx-arena-container">
       <div class="row">
-        <canvas tabindex="0" id="tanx-canvas"></canvas>
+        <canvas id="tanx-canvas"></canvas>
       </div>
 
       <div class="row">
