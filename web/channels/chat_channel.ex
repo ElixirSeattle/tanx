@@ -1,7 +1,7 @@
 defmodule Tanx.ChatChannel do
   use Phoenix.Channel
 
-  def join(room, message, socket) do
+  def join(_room, _message, socket) do
     { :ok, socket }
   end
 

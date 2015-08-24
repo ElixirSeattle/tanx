@@ -10,7 +10,7 @@ config :tanx, Tanx.Endpoint,
   url: [host: "localhost"],
   root: Path.dirname(__DIR__),
   secret_key_base: "n+PePs+8u01mPsUbGY5W9CZAG+E1ylukC6fJOBiQ0fNe50EMXrGZphTwcN/WfOdp",
-  render_errors: [default_format: "html"],
+  render_errors: [accepts: ["html"]],
   pubsub: [name: Tanx.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
