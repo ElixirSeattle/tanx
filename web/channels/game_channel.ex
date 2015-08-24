@@ -54,7 +54,7 @@ defmodule Tanx.GameChannel do
   def handle_in("view_arena", _msg, socket) do
     player = socket.assigns[:player]
     if player do
-      arena_view = player |> Tanx.Core.Player.view_arena_objects(raw_maps: true)
+      arena_view = player |> Tanx.Core.Player.view_arena_objects()
       push(socket, "view_arena", arena_view)
     end
     {:noreply, socket}

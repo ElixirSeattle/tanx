@@ -42,7 +42,7 @@ defmodule Tanx.Core.ArenaView do
   :is_mine field set to true.
   """
   def get_objects(arena_view, params \\ []) do
-    GenServer.call(arena_view, {:get_objects, !!params[:raw_maps]})
+    GenServer.call(arena_view, :get_objects)
   end
 
 
@@ -136,13 +136,11 @@ defmodule Tanx.Core.ArenaView do
 
   # This may be called to get the current arena view. If it is called by a Player process,
   # that player's tanks will have the :is_me field set to true.
-  def handle_call({:get_objects, raw_maps}, {from, _}, state) do
-    tanks = state.tanks |> Enum.map(tank_view_builder(raw_maps, from))
+  def handle_call(:get_objects, {from, _}, state) do
+    tanks = state.tanks |> Enum.map(tank_view_builder(from))
 
-    missiles = state.missiles |> Enum.map(missile_view_builder(raw_maps, from))
-
+    missiles = state.missiles |> Enum.map(missile_view_builder(from))
     explosions = state.explosions
-    if raw_maps, do: explosions = explosions |> Enum.map(&Map.from_struct/1)
 
     if tanks |> Enum.any?(&(&1.is_me)) do
       entry_points_available = %{}
@@ -156,7 +154,6 @@ defmodule Tanx.Core.ArenaView do
       explosions: explosions,
       entry_points_available: entry_points_available
     }
-    if raw_maps, do: view = Map.from_struct(view)
 
     {:reply, view, state}
   end
@@ -203,7 +200,7 @@ defmodule Tanx.Core.ArenaView do
   defp truncate(value), do: round(value * 100) / 100
 
 
-  defp tank_view_builder(false, player) do
+  defp tank_view_builder(player) do
     fn tank_info ->
       %Tanx.Core.View.Tank{
         is_me: tank_info.player == player,
@@ -218,36 +215,10 @@ defmodule Tanx.Core.ArenaView do
     end
   end
 
-  defp tank_view_builder(true, player) do
-    fn tank_info ->
-      %{
-        is_me: tank_info.player == player,
-        name: tank_info.name,
-        x: tank_info.x,
-        y: tank_info.y,
-        heading: tank_info.heading,
-        radius: tank_info.radius,
-        armor: tank_info.armor,
-        max_armor: tank_info.max_armor
-      }
-    end
-  end
 
-
-  defp missile_view_builder(false, player) do
+  defp missile_view_builder(player) do
     fn missile_info ->
       %Tanx.Core.View.Missile{
-        is_mine: missile_info.player == player,
-        x: missile_info.x,
-        y: missile_info.y,
-        heading: missile_info.heading
-      }
-    end
-  end
-
-  defp missile_view_builder(true, player) do
-    fn missile_info ->
-      %{
         is_mine: missile_info.player == player,
         x: missile_info.x,
         y: missile_info.y,

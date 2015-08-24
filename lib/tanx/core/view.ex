@@ -5,6 +5,7 @@ defmodule Tanx.Core.View do
 
 
   defmodule Player do
+    @derive [Poison.Encoder]
     @moduledoc """
     A view of a player.
     """
@@ -16,6 +17,7 @@ defmodule Tanx.Core.View do
 
 
   defmodule Structure do
+    @derive [Poison.Encoder]
     @moduledoc """
     A view of the arena structure.
     """
@@ -28,6 +30,7 @@ defmodule Tanx.Core.View do
 
 
   defmodule EntryPoint do
+    @derive [Poison.Encoder]
     @moduledoc """
     A view of an entry point.
     """
@@ -38,6 +41,7 @@ defmodule Tanx.Core.View do
 
 
   defmodule Arena do
+    @derive [Poison.Encoder]
     @moduledoc """
     A view of the arena state.
     """
@@ -49,6 +53,7 @@ defmodule Tanx.Core.View do
 
 
   defmodule Tank do
+    @derive [Poison.Encoder]
     @moduledoc """
     A view of a tank.
     """
@@ -64,6 +69,7 @@ defmodule Tanx.Core.View do
 
 
   defmodule Missile do
+    @derive [Poison.Encoder]
     @moduledoc """
     A view of a missile.
     """
@@ -75,6 +81,7 @@ defmodule Tanx.Core.View do
 
 
   defmodule Explosion do
+    @derive [Poison.Encoder]
     @moduledoc """
     A view of an explosion.
     """
