@@ -173,7 +173,6 @@ defmodule Tanx.Core.Player do
 
   @forward_velocity 2.0
   @angular_velocity 2.0
-  @missile_count 5
   @missile_fire_rate 200
 
   # This is called by the 'player manager' when creating a new player
@@ -218,8 +217,7 @@ defmodule Tanx.Core.Player do
 
   def handle_call(:new_missile, _from, state) do
     curr_time = Tanx.Core.SystemTime.get(state.time_config)
-    if (Dict.size(state.missiles) < @missile_count) and
-      ((curr_time - state.last_fired) >= @missile_fire_rate) do
+    if (curr_time - state.last_fired) >= @missile_fire_rate do
 
       case _maybe_call_tank(state, :get_position) do
         {:not_found, state} ->
