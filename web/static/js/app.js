@@ -521,7 +521,7 @@ class TanxApp {
     let onScreenWidth = 40;
     let onScreenHeight = 40;
     context.drawImage(this.tankSprite, spriteSheetX, spriteSheetY, 67, 79,
-      -onScreenWidth/2, -onScreenHeight/2, onScreenWidth, onScreenHeight);
+      0, -onScreenHeight/2, onScreenWidth, onScreenHeight);
 
     context.restore();
   }
