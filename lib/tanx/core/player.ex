@@ -227,7 +227,10 @@ defmodule Tanx.Core.Player do
         {:ok, nil, state} ->
           {:reply, :no_tank, state}
         {:ok, {x, y, heading}, state } ->
-          missile = state.arena_objects |> Tanx.Core.ArenaObjects.create_missile(x, y, heading)
+          new_x = x + Tanx.Core.Tank.tank_radius * :math.cos(heading)
+          new_y = y + Tanx.Core.Tank.tank_radius * :math.sin(heading)
+
+          missile = state.arena_objects |> Tanx.Core.ArenaObjects.create_missile(new_x, new_y, heading)
           {:reply,:ok, %State{state |
                                 missiles: [missile | state.missiles],
                                 last_fired: curr_time}

@@ -29,6 +29,10 @@ defmodule Tanx.Core.Tank do
     pid
   end
 
+  @doc """
+    Returns the tank radius
+  """
+  def tank_radius(), do: @tank_radius
 
   @doc """
     Returns the tank radius used for collision detection
