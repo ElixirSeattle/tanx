@@ -48,6 +48,7 @@ defmodule Tanx.Core.View do
     defstruct tanks: [],
               missiles: [],
               explosions: [],
+              powerups: [],
               entry_points_available: %{}
   end
 
@@ -91,5 +92,42 @@ defmodule Tanx.Core.View do
               age: 0.0
   end
 
+  defmodule PowerUp do
+    @moduledoc """
+    A view of a power_up.
+    """
+    defstruct x: 0.0,
+              y: 0.0,
+              radius: 0.5,
+              type: nil
+  end
+
+
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

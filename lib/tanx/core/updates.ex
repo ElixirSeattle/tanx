@@ -42,4 +42,12 @@ defmodule Tanx.Core.Updates do
               heading: 0.0
   end
 
+  defmodule PowerUp do
+    @moduledoc """
+    An update command that gathers the details of the power up along its path.
+    """
+    defstruct powerup: nil,
+              pos: {0.0, 0.0},
+              type: nil
+  end
 end
