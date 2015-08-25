@@ -71,54 +71,57 @@ defmodule Tanx.Core.Obstacles do
 
   @doc """
   Given a single decomposed wall, and two points representing two locations of a
-  point object, returns either the point of impact on the wall, or nil for no impact.
+  point object, returns either a tuple of {point of impact on the wall, normal to
+  the wall}, or nil for no impact.
   """
   def collision_with_decomposed_wall(decomposed_wall, from, to) do
     decomposed_wall
-      |> wall_collision_as_ratio(from, to)
+      |> wall_collision_as_ratio_and_normal(from, to)
       |> ratio_to_point(from, to)
   end
 
 
   @doc """
   Given a list of decomposed walls, and two points representing two locations of a
-  point object, returns either the first point of impact on a wall, or nil for no impact.
+  point object, returns either a tuple of {the first point of impact on a wall, the
+  normal to the wall}, or nil for no impact.
   """
   def collision_with_decomposed_walls(decomposed_walls, from, to) do
     decomposed_walls
-      |> Enum.map(&(wall_collision_as_ratio(&1, from, to)))
+      |> Enum.map(&(wall_collision_as_ratio_and_normal(&1, from, to)))
       |> min_ratio_or_nil
       |> ratio_to_point(from, to)
   end
 
 
   defp ratio_to_point(nil, _from, _to), do: nil
-  defp ratio_to_point(ratio, from, to) do
-    vdiff(to, from) |> vscale(ratio) |> vadd(from)
+  defp ratio_to_point({ratio, normal}, from, to) do
+    {vdiff(to, from) |> vscale(ratio) |> vadd(from), normal}
   end
 
 
   defp min_ratio_or_nil(values) do
     values |> Enum.min_by(fn
       nil -> 2.0
-      val -> val
+      {ratio, _normal} -> ratio
     end)
   end
 
 
-  defp wall_collision_as_ratio({_elements, segments}, from, to) do
+  defp wall_collision_as_ratio_and_normal({_elements, segments}, from, to) do
     segments
-      |> Enum.map(&(segment_intersection_as_ratio(&1, from, to)))
+      |> Enum.map(&(segment_intersection_as_ratio_and_normal(&1, from, to)))
       |> min_ratio_or_nil
   end
 
 
-  defp segment_intersection_as_ratio({p0, p1}, from, to) do
+  defp segment_intersection_as_ratio_and_normal({p0, p1}, from, to) do
     from_mag = cross_magnitude(p0, from, p1)
     to_mag = cross_magnitude(p0, to, p1)
     if from_mag < 0 and to_mag >= 0 and
         cross_magnitude(from, p0, to) >= 0 and cross_magnitude(from, p1, to) <= 0 do
-      from_mag / (from_mag - to_mag)
+      normal = vdiff(p1, p0) |> turn_left |> normalize
+      {from_mag / (from_mag - to_mag), normal}
     else
       nil
     end
