@@ -41,7 +41,7 @@ defmodule Tanx.Core.ArenaView do
   the :is_me field set to true, and that player's missiles will have the
   :is_mine field set to true.
   """
-  def get_objects(arena_view, params \\ []) do
+  def get_objects(arena_view, _params \\ []) do
     GenServer.call(arena_view, :get_objects)
   end
 

@@ -13,7 +13,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :tanx, Tanx.Endpoint,
   http: [port: 8080],
-  # url: [host: "localhost", port: 4010],
+  check_origin: false,  # Temporary
   cache_static_manifest: "priv/static/manifest.json"
 
 # ## SSL Support

@@ -8,6 +8,7 @@ use Mix.Config
 # with brunch.io to recompile .js and .css sources.
 config :tanx, Tanx.Endpoint,
   http: [port: 4000],
+  check_origin: false,
   debug_errors: true,
   code_reloader: true,
   cache_static_lookup: false,
@@ -32,4 +33,4 @@ config :tanx, Tanx.Repo,
   username: "postgres",
   password: "postgres",
   database: "tanx_dev",
-  size: 10 # The amount of database connections in the pool
+  pool_size: 10 # The amount of database connections in the pool

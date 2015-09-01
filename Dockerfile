@@ -7,13 +7,17 @@ ENV HOME /tanx
 ENV MIX_ENV prod
 WORKDIR ${HOME}
 
-COPY . ${HOME}
+COPY package.json ${HOME}/
+RUN /nodejs/bin/npm install
 
+COPY mix.* ${HOME}/
 RUN /elixir/bin/mix local.hex --force && \
     /elixir/bin/mix local.rebar --force && \
     /elixir/bin/mix deps.get && \
-    /nodejs/bin/npm install && \
-    /elixir/bin/mix compile && \
+    /elixir/bin/mix deps.compile
+
+COPY . ${HOME}
+RUN /elixir/bin/mix compile && \
     ./node_modules/brunch/bin/brunch build --production && \
     /elixir/bin/mix phoenix.digest
 
