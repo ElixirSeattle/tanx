@@ -1,0 +1,24 @@
+kind: ReplicationController
+apiVersion: v1
+metadata:
+  name: phoenix
+  labels:
+    run: tanx-1
+spec:
+  replicas: 1
+  selector:
+    run: tanx-1
+  template:
+    metadata:
+      labels:
+        run: tanx-1
+    spec:
+      containers:
+        - name: phoenix
+          image: gcr.io/daniel-azuma-com-1/tanx:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          imagePullPolicy: Always
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst

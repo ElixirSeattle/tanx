@@ -3,3 +3,4 @@ deps/
 node_modules/
 priv/static/
 test/
+kube/

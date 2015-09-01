@@ -1,0 +1,11 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: phoenix
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    run: tanx-1
+  type: LoadBalancer
