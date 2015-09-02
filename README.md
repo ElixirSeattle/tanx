@@ -27,8 +27,8 @@ This information is also available at https://cloud.google.com/container-engine/
     3. Log in: `gcloud auth login`
 
 3.  Configure gcloud for your project.
-    a. Make sure gcloud points to your project: `gcloud config set project <your-project-id>`
-    b. Set a default zone (i.e. data center location). I think "us-central1-c" is a good one. `gcloud config set compute/zone us-central1-c`
+    1. Make sure gcloud points to your project: `gcloud config set project <your-project-id>`
+    2. Set a default zone (i.e. data center location). I think "us-central1-c" is a good one. `gcloud config set compute/zone us-central1-c`
 
 4.  Install Docker. https://docs.docker.com/installation/
 
