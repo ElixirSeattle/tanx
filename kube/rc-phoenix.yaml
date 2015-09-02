@@ -3,19 +3,19 @@ apiVersion: v1
 metadata:
   name: phoenix
   labels:
-    run: tanx-1
+    run: phoenix
 spec:
   replicas: 1
   selector:
-    run: tanx-1
+    run: phoenix
   template:
     metadata:
       labels:
-        run: tanx-1
+        run: phoenix
     spec:
       containers:
         - name: phoenix
-          image: gcr.io/daniel-azuma-com-1/tanx:latest
+          image: gcr.io/<%= project %>/tanx:latest
           ports:
             - containerPort: 8080
               protocol: TCP

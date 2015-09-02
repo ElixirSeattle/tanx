@@ -7,5 +7,5 @@ spec:
     - port: 80
       targetPort: 8080
   selector:
-    run: tanx-1
+    run: phoenix
   type: LoadBalancer

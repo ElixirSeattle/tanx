@@ -13,45 +13,55 @@
 
 Now you can visit `localhost:4000` from your browser.
 
-## Production deployment with Docker and Google Compute Engine
+## Production deployment with Google Container Engine
 
 ### Prerequisites
 
-1. Set up a project on Google Cloud Console if you don't have one. Make sure Compute Engine is enabled. http://cloud.google.com/console
+This information is also available at https://cloud.google.com/container-engine/docs/before-you-begin
 
-2. Configure the gcloud SDK if you don't have it.
-   a. Install: `curl -sSL https://sdk.cloud.google.com | bash`
-   b. Log in: `gcloud auth login`
-   c. Make sure gcloud points to your project: `gcloud config set project <your-project-id>`
+1. Set up a project on Google Cloud Console if you don't have one. You will need to enable billing, and enable the Google Container Engine API. http://cloud.google.com/console
 
-3. Install Docker. https://docs.docker.com/installation/
+2. Install the gcloud SDK if you don't have it.
+   a. Install gcloud: `curl -sSL https://sdk.cloud.google.com | bash`
+   b. Install kubectl: `gcloud components update kubectl`
+   c. Log in: `gcloud auth login`
 
-### Provision a server
+3. Configure gcloud for your project.
+   a. Make sure gcloud points to your project: `gcloud config set project <your-project-id>`
+   b. Set a default zone (i.e. data center location). I think "us-central1-c" is a good one. `gcloud config set compute/zone us-central1-c`
 
-1. Launch a GCE instance. Choose a name for your instance. (I'll use "my-tanx-server-1" in the example below.) Also, feel free to use a different zone and machine type.
+4. Install Docker. https://docs.docker.com/installation/
 
-`gcloud compute instances create my-tanx-server-1 --image container-vm --zone us-central1-b --machine-type n1-highcpu-2`
+### Create a cluster
 
-2. Check the cloud console at http://cloud.google.com/console to see that your server is running.
+This information is also available at https://cloud.google.com/container-engine/docs/clusters/operations
 
-### Build and deploy the docker image
+1. Choose a cluster name. For the rest of these instructions, I'll assume that name is "tanx-1".
 
-1. Create a Docker image. `docker build -t mydockername/tanx .`
+2. Create the cluster. `gcloud container clusters create tanx-1 --machine-type=n1-highcpu-2 --num-nodes=1` You can of course replace the cluster name with a name of your choosing. You can use a different machine type as well, although for now I recommend highcpu types since the application seems CPU bound for the moment.
 
-2. Upload your docker image to Docker Hub: `docker push mydockername/tanx`
+3. Configure gcloud to use your cluster as default so you don't have to specify it every time for the remaining gcloud commands. `gcloud config set container/cluster tanx-1` Replace the name if you named your cluster differently.
 
-3. SSH into your server: `gcloud compute ssh --zone us-central1-a my-tanx-server-1`
+4. I'm not completely clear on this, but you may need to configure kubectl to point to this cluster with `gcloud container clusters get-credentials`
 
-4. Pull down the Docker image: `sudo docker pull mydockername/tanx`
+Check the cloud console at http://cloud.google.com/console under container engine to see that your cluster is running. Note that once the cluster is running, you will be charged for the VMs.
 
-5. Run the application: `sudo docker run -d -p 80:8080 mydockername/tanx`
+### Build and deploy
 
-### To update your deployment
+A production deployment comprises two parts: a running phoenix container, and a front-end load balancer (which doesn't do much load balancing per se, but provides a public IP address.)
 
-1. SSH into your server.
+We have provided mix commands to do builds and deployments. These commands require that you have gcloud's project configuration set to point to your project (see prerequisites).
 
-2. Find the running container: `sudo docker ps -l`
+To build your tanx container: `mix kube.build` which builds a Docker image and pushes it to your project's private image storage.
 
-3. Stop the service: `sudo docker stop <container-id>`
+To start/stop the front-end load balancer: `mix kube.balancer.start` and `mix kube.balancer.stop` Note that the start command will print out the public IP address for you.
 
-4. Build and install the new Docker image and start the app as above.
+To start/stop the phoenix container using the latest build: `mix kube.phoenix.start` and `mix kube.phoenix.stop`
+
+To update the phoenix container to a new build, perform the build, then stop and start the container. We don't have a zero-downtime or state-preserving update procedure yet.
+
+### Cleanup and tearing down a deployment
+
+First make sure your container and load balancer are stopped. (See above.)
+
+Tear down your cluster: `gcloud container clusters delete tanx-1` (replace "tanx-1" with the name of your cluster.) Once the cluster is down, you will no longer be charged.
