@@ -2,14 +2,14 @@
 
 ## Prerequisites
 
-1. Install elixir: http://elixir-lang.org/install.html
-2. Install hex: `mix local.hex`
-3. Install node.js: http://nodejs.org/download/
+1.  Install elixir: http://elixir-lang.org/install.html
+2.  Install hex: `mix local.hex`
+3.  Install node.js: http://nodejs.org/download/
 
 ## Running a development server
 
-1. Install dependencies with `mix deps.get`
-2. Start Phoenix endpoint with `mix phoenix.server`
+1.  Install dependencies with `mix deps.get`
+2.  Start Phoenix endpoint with `mix phoenix.server`
 
 Now you can visit `localhost:4000` from your browser.
 
@@ -19,30 +19,30 @@ Now you can visit `localhost:4000` from your browser.
 
 This information is also available at https://cloud.google.com/container-engine/docs/before-you-begin
 
-1. Set up a project on Google Cloud Console if you don't have one. You will need to enable billing, and enable the Google Container Engine API. http://cloud.google.com/console
+1.  Set up a project on Google Cloud Console if you don't have one. You will need to enable billing, and enable the Google Container Engine API. http://cloud.google.com/console
 
-2. Install the gcloud SDK if you don't have it.
-   a. Install gcloud: `curl -sSL https://sdk.cloud.google.com | bash`
-   b. Install kubectl: `gcloud components update kubectl`
-   c. Log in: `gcloud auth login`
+2.  Install the gcloud SDK if you don't have it.
+    1. Install gcloud: `curl -sSL https://sdk.cloud.google.com | bash`
+    2. Install kubectl: `gcloud components update kubectl`
+    3. Log in: `gcloud auth login`
 
-3. Configure gcloud for your project.
-   a. Make sure gcloud points to your project: `gcloud config set project <your-project-id>`
-   b. Set a default zone (i.e. data center location). I think "us-central1-c" is a good one. `gcloud config set compute/zone us-central1-c`
+3.  Configure gcloud for your project.
+    a. Make sure gcloud points to your project: `gcloud config set project <your-project-id>`
+    b. Set a default zone (i.e. data center location). I think "us-central1-c" is a good one. `gcloud config set compute/zone us-central1-c`
 
-4. Install Docker. https://docs.docker.com/installation/
+4.  Install Docker. https://docs.docker.com/installation/
 
 ### Create a cluster
 
 This information is also available at https://cloud.google.com/container-engine/docs/clusters/operations
 
-1. Choose a cluster name. For the rest of these instructions, I'll assume that name is "tanx-1".
+1.  Choose a cluster name. For the rest of these instructions, I'll assume that name is "tanx-1".
 
-2. Create the cluster. `gcloud container clusters create tanx-1 --machine-type=n1-highcpu-2 --num-nodes=1` You can of course replace the cluster name with a name of your choosing. You can use a different machine type as well, although for now I recommend highcpu types since the application seems CPU bound for the moment.
+2.  Create the cluster. `gcloud container clusters create tanx-1 --machine-type=n1-highcpu-2 --num-nodes=1` You can of course replace the cluster name with a name of your choosing. You can use a different machine type as well, although for now I recommend highcpu types since the application seems CPU bound for the moment.
 
-3. Configure gcloud to use your cluster as default so you don't have to specify it every time for the remaining gcloud commands. `gcloud config set container/cluster tanx-1` Replace the name if you named your cluster differently.
+3.  Configure gcloud to use your cluster as default so you don't have to specify it every time for the remaining gcloud commands. `gcloud config set container/cluster tanx-1` Replace the name if you named your cluster differently.
 
-4. I'm not completely clear on this, but you may need to configure kubectl to point to this cluster with `gcloud container clusters get-credentials`
+4.  I'm not completely clear on this, but you may need to configure kubectl to point to this cluster with `gcloud container clusters get-credentials`
 
 Check the cloud console at http://cloud.google.com/console under container engine to see that your cluster is running. Note that once the cluster is running, you will be charged for the VMs.
 
