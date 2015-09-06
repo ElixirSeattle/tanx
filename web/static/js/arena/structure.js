@@ -1,17 +1,29 @@
-const MAX_CANVAS_WIDTH = 600;
-const MAX_CANVAS_HEIGHT = 600;
+const WINDOW_HEIGHT_ADJUST = 100;
 
 
 class ArenaStructure {
 
   constructor(structure) {
     this._structure = structure;
+    this.recomputeScale();
+    $(window).on('resize', event => {
+      this.recomputeScale();
+    });
+  }
 
-    let xScale = MAX_CANVAS_WIDTH / structure.width;
-    let yScale = MAX_CANVAS_HEIGHT / structure.height;
-    this._scaleFactor = xScale < yScale ? xScale : yScale;
-    this._width = this._scaleFactor * structure.width;
-    this._height = this._scaleFactor * structure.height;
+
+  recomputeScale() {
+    let maxWidth = $('#tanx-arena-container').innerWidth();
+    let maxHeight = $(window).innerHeight() - WINDOW_HEIGHT_ADJUST;
+    let xScale = maxWidth / this._structure.width;
+    let yScale = maxHeight / this._structure.height;
+    let scale = xScale < yScale ? xScale : yScale;
+    this._width = scale * this._structure.width;
+    this._height = scale * this._structure.height;
+    this._scaleFactor = scale * 0.99;
+    $('#tanx-canvas')
+      .css({width: this._width + 'px', height: this._height + 'px'})
+      .attr({width: this._width, height: this._height});
   }
 
 

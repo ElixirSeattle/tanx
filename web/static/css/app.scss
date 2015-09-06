@@ -1,43 +1,36 @@
 body {
+  background: #ffe;
+}
+
+.navbar-form {
+  margin-top: 10px;
+}
+
+#messages {
   background: #fff;
-  margin-top: 40px;
 }
-.container {
-  width: 1200px;
-  margin: auto;
+#messages .row {
+  margin: 8px 0px;
 }
-.tanx-header {
-  margin-bottom: 20px;
-}
-.username {
+#messages .username {
+  font-size: 12px;
   color: #666666;
-  padding-right: 10px;
-  width: 125px;
-  display: block;
-  float: left;
   text-align: right;
+  padding-right: 0;
+  padding-top: 2px;
+  overflow-x: hidden;
 }
-.content {
-  width: 275px;
-  display: block;
-  float: left;
+#messages .content {
   word-wrap: break-word;
 }
-.user-entered, .user-left {
-  width: 100%;
-  left: 125px;
-  position: relative;
-  margin: 0;
-  padding-top: 15px;
+#messages .event {
   color: #666666;
   font-size: 12px;
   font-style: italic;
 }
-.top10 {
-  margin-top: 10px;
-}
-.bottom10 {
-  margin-bottom: 10px;
+
+#tanx-player-list {
+  background: #fff;
 }
 #tanx-canvas {
   border: 1px solid #888;
@@ -49,28 +42,26 @@ body {
   margin-top: 10px;
   font-size: 10px;
 }
-#tanx-instructions {
-  margin-top: 20px;
-}
 #tanx-chat {
   text-align: left;
-  padding-left: 30px;
-  height: 602px;
-  position: relative;
 }
 #message-input {
   width: 100%;
-  bottom: 0;
-  position: absolute;
 }
 #messages {
+  border: 1px solid #ccc;
   height: 565px;
   width: 100%;
-  position: absolute;
   overflow-y: scroll;
   overflow-x: hidden;
 }
+.slider-container {
+  padding-top: 15px;
+}
 #background-music-slider {
-  float: right;
-  margin-top: 5px;
+  width: 100%;
+}
+
+#tanx-arena-container {
+  width: 100%;
 }

@@ -1,60 +1,142 @@
-<div class="row">
-  <div class="col-xs-2">
-
-    <table class="table table-striped table-bordered table-condensed">
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Kills</th>
-          <th>Deaths</th>
-        </tr>
-      </thead>
-      <tbody id="player-rows">
-      </tbody>
-    </table>
-
-    <div>
-      <input type="text" id="tanx-name-field" class="form-control" maxlength="16" placeholder="Name">
+<nav class="navbar navbar-inverse navbar-static-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <span class="navbar-brand">Elixir Tanx</span>
     </div>
-    <div>
-      <button class="btn btn-primary btn-sm col-xs-12 top10 bottom10" id="tanx-join-btn">Join Game</button>
-      <button class="btn btn-default btn-sm col-xs-12 top10 bottom10" id="tanx-leave-btn">Leave Game</button>
+    <div id="navbar" class="navbar-collapse collapse">
+      <div class="navbar-form navbar-left">
+        <button class="btn btn-default btn-sm" id="tanx-join-btn">Join As</button>
+        <input type="text" id="tanx-name-field" class="form-control input-sm" size="30" maxlength="30" placeholder="Name">
+        <button class="btn btn-default btn-sm" id="tanx-leave-btn">Leave Game</button>
+      </div>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="#" data-toggle="modal" data-target="#settings-modal">Settings</a></li>
+        <li><a href="#" data-toggle="modal" data-target="#about-modal">About</a></li>
+      </ul>
     </div>
-    <div id="tanx-instructions">
-      <h4>Instructions</h4>
-      <p>Click on one of the pulsing yellow entry points to start your tank.</p>
-      <p>Move your tank with the arrow keys: forward, right, and left. Alternately, you can use the I, J, and L keys.</p>
-      <p>Space bar fires a missile. Shoot down the other players' tanks!</p>
-      <p>The Z key aborts (self-destructs) your tank.</p>
-    </div>
-
   </div>
-  <div class="col-xs-6">
+</nav>
 
-    <div id="tanx-arena-container">
-      <div class="row">
-        <canvas tabindex="0" id="tanx-canvas"></canvas>
-      </div>
+<div class="container-fluid" role="main">
+  <div class="row">
 
-      <div class="row">
-        <label>Background music:</label>
-        <div class="col-xs-9" id="background-music-slider"></div>
-        <audio id="background-music" loop>
-          <source src="sounds/tanx-music-loop.m4a" type="audio/mp4" />
-        </audio>
-      </div>
+    <div class="col-sm-8">
 
-      <div class="row">
+      <div id="tanx-arena-container">
+        <div>
+          <canvas tabindex="0" id="tanx-canvas"></canvas>
+        </div>
+
         <div id="tanx-framerate">
           Frame rate: <span id="tanx-fps"></span>
         </div>
         <pre id="tanx-arena-json"></pre>
       </div>
+
+    </div>
+
+    <div class="col-sm-4">
+
+      <div class="row">
+        <div class="col-xs-12">
+          <table class="table table-striped table-bordered table-condensed" id="tanx-player-list">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Kills</th>
+                <th>Deaths</th>
+              </tr>
+            </thead>
+            <tbody id="player-rows">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="row" id="tanx-chat">
+        <div class="col-xs-12">
+          <div id="messages"></div>
+          <input id="message-input" type="text" placeholder="Chat!">
+        </div>
+      </div>
+
     </div>
 
   </div>
-  <div id='tanx-chat' class='col-xs-4'>
-    <div id="messages"></div>
-    <input id="message-input" type="text">
+
+</div>
+
+
+<div class="modal fade" id="about-modal" tabindex="-1" role="dialog" aria-labelledby="about-modal-label">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <h2>Welcome to Elixir Tanx</h2>
+        <div>
+          Developed by Daniel Azuma, Greg Hill, Kyle Rippey, and Ben Stephens
+        </div>
+        <h3>Instructions</h3>
+        <p>Enter your name and join the game in the upper left.<p>
+        <p>Click on one of the pulsing yellow entry points to start your tank.</p>
+        <p>Move your tank with the arrow keys: forward, right, and left. Alternately, you can use the I, J, and L keys.</p>
+        <p>Space bar fires a missile. Shoot down the other players' tanks!</p>
+        <p>The Z key aborts (self-destructs) your tank.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
   </div>
 </div>
+
+
+<div class="modal fade" id="settings-modal" tabindex="-1" role="dialog" aria-labelledby="settings-modal-label">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="settings-modal-label">Settings</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label class="col-xs-4 control-label">Background music</label>
+              <div class="col-xs-8 slider-container">
+                <div id="background-music-slider"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-xs-offset-4 col-xs-8">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="show-framerate-checkbox"> Show Frame Rate
+                  </label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="show-arena-json-checkbox"> Show JSON Data
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<audio id="background-music" loop>
+  <source src="sounds/tanx-music-loop.m4a" type="audio/mp4" />
+</audio>

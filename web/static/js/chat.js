@@ -9,15 +9,26 @@ class ChatClient {
       let messageInputJq = $("#message-input");
 
       this._channel.on("user:entered", (message) => {
-        messagesJq.append("<p class='row message'><span class='user-entered'>"+this._sanitize(message.username)+" entered</span></p>")
+        messagesJq.append(
+          '<div class="row"><span class="col-xs-9 col-xs-offset-3 event">' +
+          this._sanitize(message.username) +
+          ' entered</span></div>')
       });
 
       this._channel.on("user:left", (message) => {
-        messagesJq.append("<p class='row message'><span class='user-left'>"+this._sanitize(message.username) +" left</span></p>")
+        messagesJq.append(
+          '<div class="row"><span class="col-xs-9 col-xs-offset-3 event">' +
+          this._sanitize(message.username) +
+          ' left</span></div>')
       });
 
       this._channel.on("new:message", (msg) => {
-        messagesJq.append("<p class='row message'><span class='username'>"+this._sanitize(msg.username)+"</span><span class='content'>"+this._sanitize(msg.content)+"</span></p>");
+        messagesJq.append(
+          '<div class="row"><span class="col-xs-3 username">' +
+          this._sanitize(msg.username) +
+          '</span><span class="col-xs-9 content">' +
+          this._sanitize(msg.content) +
+          '</span></div>');
         messagesJq.scrollTop(messagesJq[0].scrollHeight);
       });
 
