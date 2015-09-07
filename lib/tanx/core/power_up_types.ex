@@ -1,6 +1,6 @@
 defmodule Tanx.Core.PowerUpTypes do
 
-  # This is a collection of structs that represent power ups 
+  # This is a collection of structs that represent power ups
 
   defmodule BouncingMissile do
     @moduledoc """

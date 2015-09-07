@@ -104,9 +104,7 @@ defmodule Tanx.Core.Missile do
         update = %Tanx.Core.Updates.Explosion{pos: {nx, ny}, radius: @explosion_radius, age: 0.0}
       else
         wb = wb - 1
-        IO.puts "Heading: {#{hx},#{hy}}"
-        {nx, ny, {hx, hy}} = _calc_new_heading(state.x, state.y, nx, ny, hx, hy, normal)
-        IO.puts "New Heading: {#{hx},#{hy}}"
+        {nx, ny, {hx, hy}} = _calc_new_heading(nx, ny, hx, hy, normal)
         update = %Tanx.Core.Updates.MoveMissile{
           missile: self,
           player: state.player,
@@ -172,35 +170,22 @@ defmodule Tanx.Core.Missile do
     x_pos > (state.arena_width/2)
   end
 
-  defp _calc_new_heading(mx, my, ix, iy,hx, hy, n) do
-    IO.puts "missle pos: {#{mx},#{my}}"
-    IO.puts "Impact pos: {#{ix},#{iy}}"
+  defp _calc_new_heading(ix, iy,hx, hy, n) do
     {nx, ny} = n
-    #find heading from 
+    #use heading to adjust missile coordinates.
     nmx = ix - hx
     nmy = iy - hy
-    IO.puts "Adjusted missile pos: {#{nmx},#{nmy}}"
     # r is ratio of n to intersection point
-    r = ((hx * nx) + (hy * ny))
-    IO.puts "Ratio to intersection: #{r}"
+    r = ((nmx - ix) * nx) + ((nmy - iy) * ny)
     # {qx, qy} is point of intersection between n and the mirror line
     qx = (r * nx) + ix
     qy = (r * ny) + iy
-    IO.puts "coords of intersection: {#{qx},#{qy}}"
     #{sx,sy} is vector from missile to intersection
     sx = qx - nmx
     sy = qy - nmy
     #{nhx,nhy} is the vector of the new heading
-    nhx = (qx + sx) - ix
-    nhy = (qy + sy) - iy
- 
-    npx = ix + (nhx * @epsilon)
-    npy = iy + (nhy * @epsilon)
-    IO.puts "New pos coords: {#{npx},#{npy}"
     {ix + (nhx * @epsilon), iy + (nhy * @epsilon),{nhx, nhy}}
   end
-
-  #defp _new_heading_with_velocity
 end
 
 
