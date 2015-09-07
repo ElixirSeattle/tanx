@@ -51,7 +51,7 @@ class ArenaControls {
       case 32: // space
         if (this._spaceKey != isDown) {
           this._spaceKey = isDown;
-          this._gameChannel.push("fire_missile", {button: "space", down: isDown})
+          this._gameChannel.push("control_tank", {button: "fire", down: isDown})
         }
         event.preventDefault();
         break;
@@ -64,16 +64,16 @@ class ArenaControls {
         event.preventDefault();
         break;
       case 38: // up arrow
-      case 40: // down arrow
+      //case 40: // down arrow
       case 73: // I
-      case 75: // K
+      //case 75: // K
         if (this._upKey != isDown) {
           this._upKey = isDown;
           this._gameChannel.push("control_tank", {button: "forward", down: isDown})
         }
         event.preventDefault();
         break;
-      case 68: // D
+      //case 68: // D
       case 90: // Z
         if (isDown) {
           this._gameChannel.push("self_destruct_tank", {});

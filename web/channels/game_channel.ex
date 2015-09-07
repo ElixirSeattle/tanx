@@ -101,15 +101,6 @@ defmodule Tanx.GameChannel do
   end
 
 
-  def handle_in("fire_missile", _msg, socket) do
-    player = socket.assigns[:player]
-    if player do
-      player |> Tanx.Core.Player.new_missile()
-    end
-    {:noreply, socket}
-  end
-
-
   def handle_in("heartbeat", _msg, socket) do
     {:noreply, socket}
   end

@@ -65,7 +65,7 @@ defmodule Tanx.Core.Player do
     the maximum missile count has been reached.
   """
   def new_missile(player) do
-    GenServer.call(player, :new_missile)
+    GenServer.call(player, {:control_tank, "fire", true})
   end
 
   @doc """
@@ -215,28 +215,6 @@ defmodule Tanx.Core.Player do
   end
 
 
-  def handle_call(:new_missile, _from, state) do
-    curr_time = Tanx.Core.SystemTime.get(state.time_config)
-    if (curr_time - state.last_fired) >= @missile_fire_rate do
-
-      case _maybe_call_tank(state, :get_position) do
-        {:not_found, state} ->
-          {:reply, :no_tank, state}
-        {:ok, nil, state} ->
-          {:reply, :no_tank, state}
-        {:ok, {x, y, heading}, state } ->
-          missile = state.arena_objects |> Tanx.Core.ArenaObjects.create_missile(x, y, heading)
-          {:reply,:ok, %State{state |
-                                missiles: [missile | state.missiles],
-                                last_fired: curr_time}
-                              }
-      end
-    else
-      {:reply, :at_limit, state}
-    end
-  end
-
-
   def handle_call({:explode_missile, missile}, _from, state) do
     tank = state.current_tank
     if tank do
@@ -255,10 +233,32 @@ defmodule Tanx.Core.Player do
     handle_call({:control_tank, Atom.to_string(button), is_down}, from, state)
   end
 
-  def handle_call(:missile_count, _from, state) do
-    {:reply, Dict.size(state.missiles), state}
+  def handle_call({:control_tank, "fire", true}, _from, state) do
+    curr_time = Tanx.Core.SystemTime.get(state.time_config)
+    if (curr_time - state.last_fired) >= @missile_fire_rate do
+      case _maybe_call_tank(state, :get_position) do
+        {:not_found, state} ->
+          {:reply, :no_tank, state}
+        {:ok, nil, state} ->
+          {:reply, :no_tank, state}
+        {:ok, {x, y, heading}, state } ->
+          missile = state.arena_objects |> Tanx.Core.ArenaObjects.create_missile(x, y, heading)
+          {
+            :reply, :ok,
+            %State{state |
+              missiles: [missile | state.missiles],
+              last_fired: curr_time
+            }
+          }
+      end
+    else
+      {:reply, :at_limit, state}
+    end
   end
 
+  def handle_call({:control_tank, "fire", false}, _from, state) do
+    {:reply, :ok, state}
+  end
 
   def handle_call({:control_tank, button, is_down}, _from, state) do
     state = _movement_state(state, button, is_down)
@@ -272,6 +272,10 @@ defmodule Tanx.Core.Player do
       {:not_found, state} -> {:reply, :no_tank, state}
       {:ok, _, state} -> {:reply, :ok, state}
     end
+  end
+
+  def handle_call(:missile_count, _from, state) do
+    {:reply, Dict.size(state.missiles), state}
   end
 
   def handle_call(:view_players, _from, state) do
