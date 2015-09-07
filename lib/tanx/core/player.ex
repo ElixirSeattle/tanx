@@ -113,6 +113,13 @@ defmodule Tanx.Core.Player do
     GenServer.call(player, :inc_deaths)
   end
 
+  @doc """
+    Add a power up to the player. 
+  """
+  def addPowerUp(player, type) do
+    GenServer.call(player, {:add_powerup, type})
+  end
+
 
   @doc """
   Sends a control message to the tank in the form of a button press or release.
@@ -122,8 +129,7 @@ defmodule Tanx.Core.Player do
   - **:forward** Move forward
   - **:left** Rotate left
   - **:right** Rotate right
-
-  TODO: implement fire button and other controls.
+  - **:fire** Fire missile
   """
   def control_tank(player, button, is_down) do
     GenServer.call(player, {:control_tank, button, is_down})
@@ -167,7 +173,8 @@ defmodule Tanx.Core.Player do
               ltdown: false,
               rtdown: false,
               missiles: [],
-              last_fired: -1000
+              last_fired: -1000,
+              power_ups: %{wall_bounce: nil}
   end
 
 
@@ -208,7 +215,7 @@ defmodule Tanx.Core.Player do
     if tank do
       state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self)
       tank |> Tanx.Core.Tank.self_destruct
-      {:reply, :ok, %State{state | current_tank: nil,  missiles: []}}
+      {:reply, :ok, %State{state | current_tank: nil,  missiles: [], power_ups: %{}}}
     else
       {:reply, :no_tank, state}
     end
@@ -314,8 +321,18 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call(:inc_deaths, _from, state) do
+    state = %State{state | power_ups: %{}}
     reply = state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self)
     {:reply, reply, state}
+  end
+
+  def handle_call({:add_powerup, type}, _from, state) do
+    case type do
+      %Tanx.Core.PowerUpTypes.BouncingMissile{} ->
+        state =  %State{state | power_ups: Dict.put(state.power_ups,"wall_bounce", type)}
+      _ -> state
+    end
+    {:reply, :ok, state}
   end
 
   #### Internal utils

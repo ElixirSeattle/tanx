@@ -9,12 +9,16 @@ defmodule Tanx.Core.Structure do
   Walls are auto-closing; you do not need to repeat the first point at the end.
 
   Entry_points is a list of EntryPoint structures.
+
   """
 
   defstruct width: 20.0,
             height: 20.0,
             walls: [],
             entry_points: []
+                        
+          
+            
 
 
   defmodule EntryPoint do
@@ -30,6 +34,5 @@ defmodule Tanx.Core.Structure do
               buffer_up: 0.0,
               buffer_down: 0.0
   end
-
 
 end

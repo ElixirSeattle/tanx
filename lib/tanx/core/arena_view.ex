@@ -10,6 +10,7 @@ defmodule Tanx.Core.ArenaView do
   """
 
   @entry_point_radius 0.5
+  @entry_power_up_radius 0.3
 
   require Logger
 
@@ -49,8 +50,8 @@ defmodule Tanx.Core.ArenaView do
   @doc """
     Update the object list.
   """
-  def set_objects(arena_view, tanks, missiles, explosions, entry_points) do
-    GenServer.call(arena_view, {:set_objects, tanks, missiles, explosions, entry_points})
+  def set_objects(arena_view, tanks, missiles, explosions, powerups, entry_points) do
+    GenServer.call(arena_view, {:set_objects, tanks, missiles, explosions, powerups, entry_points})
   end
 
 
@@ -58,7 +59,7 @@ defmodule Tanx.Core.ArenaView do
     Clear the object list.
   """
   def clear_objects(arena_view) do
-    set_objects(arena_view, [], [], [], nil)
+    set_objects(arena_view, [], [], [], [], nil)
   end
 
 
@@ -72,6 +73,7 @@ defmodule Tanx.Core.ArenaView do
               tanks: [],             # list of TankInfo
               missiles: [],          # list of MissileInfo
               explosions: [],        # list of Tanx.Core.View.Explosion
+              powerups: [],           # list of Tanx.Core.View.PowerUp
               entry_points_available: %{}  # map of entry point name to availability
   end
 
@@ -94,6 +96,12 @@ defmodule Tanx.Core.ArenaView do
               radius: 0.1
   end
 
+  defmodule PowerupInfo do 
+    defstruct x: 0.0,
+              y: 0.0,
+              radius: 0.4,
+              type: nil
+  end
 
   def init({structure}) do
     walls = structure.walls
@@ -105,6 +113,8 @@ defmodule Tanx.Core.ArenaView do
       |> Enum.map(fn ep ->
         %Tanx.Core.View.EntryPoint{x: ep.x, y: ep.y, name: ep.name}
       end)
+
+    power_ups = structure
 
     structure_view = %Tanx.Core.View.Structure{
       height: structure.height,
@@ -148,10 +158,13 @@ defmodule Tanx.Core.ArenaView do
       entry_points_available = state.entry_points_available
     end
 
+    powerups = state.powerups |> Enum.map(power_up_view_builder(raw_maps))
+
     view = %Tanx.Core.View.Arena{
       tanks: tanks,
       missiles: missiles,
       explosions: explosions,
+      powerups: powerups,
       entry_points_available: entry_points_available
     }
 
@@ -160,7 +173,7 @@ defmodule Tanx.Core.ArenaView do
 
 
   # This is called from an updater to update the view with a new state.
-  def handle_call({:set_objects, tanks, missiles, explosions, entry_points_available}, _from, state) do
+  def handle_call({:set_objects, tanks, missiles, explosions, powerups, entry_points_available}, _from, state) do
 
     tanks = tanks
       |> Enum.map(fn tank ->
@@ -183,6 +196,14 @@ defmodule Tanx.Core.ArenaView do
           age: explosion.age |> truncate}
       end)
 
+    powerups = powerups |>  Enum.map(fn powerup ->
+      %Tanx.Core.View.PowerUp{powerup | 
+        x: powerup.x |> truncate,  
+        y: powerup.y |> truncate,
+        radius: powerup.radius |> truncate,
+        type: powerup.type |> truncate}
+      end)
+
     if entry_points_available == nil do
       entry_points_available = state.all_entry_points
     end
@@ -191,6 +212,7 @@ defmodule Tanx.Core.ArenaView do
       tanks: tanks,
       missiles: missiles,
       explosions: explosions,
+      powerups: powerups,
       entry_points_available: entry_points_available
     }
     {:reply, :ok, state}
@@ -227,5 +249,36 @@ defmodule Tanx.Core.ArenaView do
     end
   end
 
+  defp missile_view_builder(true, player) do
+    fn missile_info ->
+      %{
+        is_mine: missile_info.player == player,
+        x: missile_info.x,
+        y: missile_info.y,
+        heading: missile_info.heading
+      }
+    end
+  end
 
+  defp power_up_view_builder(false) do
+    fn power_up_info ->
+      %Tanx.Core.View.PowerUp{
+        x: power_up_info.x,
+        y: power_up_info.y,
+        radius: power_up_info.radius,
+        type: power_up_info.type
+      }
+    end
+  end
+  
+  defp power_up_view_builder(true) do
+    fn power_up_info ->
+      %{ 
+        x: power_up_info.x,
+        y: power_up_info.y,
+        radius: power_up_info.radius,
+        type: power_up_info.type
+      }
+    end
+  end
 end

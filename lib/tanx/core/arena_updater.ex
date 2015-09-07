@@ -88,6 +88,12 @@ defmodule Tanx.Core.ArenaUpdater do
     defstruct missile: nil
   end
 
+  defmodule DestroyPowerUp do 
+    defstruct powerup: nil,
+              collected_by: nil,
+              type: nil 
+  end
+
 
   def init({entry_points, arena_objects, arena_view, player_manager, clock, last_time, time}) do
     objects = arena_objects |> Tanx.Core.ArenaObjects.get_objects
@@ -152,32 +158,65 @@ defmodule Tanx.Core.ArenaUpdater do
         %Tanx.Core.Updates.MoveTank{} -> :tank
         %Tanx.Core.Updates.MoveMissile{} -> :missile
         %Tanx.Core.Updates.Explosion{} -> :explosion
+        %Tanx.Core.Updates.PowerUp{} -> :power_up
         _ -> :unknown
       end)
+
     tank_responses = Dict.get(categorized_responses, :tank, [])
     missile_responses = Dict.get(categorized_responses, :missile, [])
     explosion_responses = Dict.get(categorized_responses, :explosion, [])
+    powerup_responses = Dict.get(categorized_responses, :power_up, [])
 
+    powerup_responses = resolve_tank_powerup_collisions(tank_responses,powerup_responses)
     tank_responses = resolve_tank_forces(tank_responses)
     {missile_responses, tank_responses} = resolve_tank_missile_collisions(missile_responses, tank_responses)
     tank_responses = resolve_chain_reactions(explosion_responses, tank_responses)
+    
 
-    send_revisions(state.player_manager, tank_responses, missile_responses)
+    send_revisions(state.arena_objects, state.player_manager, tank_responses, missile_responses, powerup_responses)
 
     entry_point_availability = create_entry_point_availability(tank_responses, state.entry_points)
     tank_views = create_tank_views(state, tank_responses)
     missile_views = create_missile_views(missile_responses)
     explosion_views = create_explosion_views(explosion_responses)
+    powerup_views = create_powerup_views(powerup_responses)
 
     state.arena_objects |> Tanx.Core.ArenaObjects.update_entry_point_availability(entry_point_availability)
 
     :ok = state.arena_view |> Tanx.Core.ArenaView.set_objects(
-        tank_views, missile_views, explosion_views, entry_point_availability)
+        tank_views, missile_views, explosion_views, powerup_views, entry_point_availability)
 
     state.clock |> Tanx.Core.Clock.send_tock
     %State{state | expected: nil, received: nil}
   end
 
+  defp resolve_tank_powerup_collisions(tank_responses, powerup_responses) do 
+    IO.inspect tank_responses
+    tank_radius = Tanx.Core.Tank.collision_radius
+    final_responses = tank_responses |> Enum.map_reduce(powerup_responses, fn
+      (cur_tank, cur_powerups) -> 
+        next_powerups = cur_powerups |> Enum.map_reduce(cur_tank, fn 
+          (powerup = %DestroyPowerUp{}, tank) ->
+            {powerup, tank}
+          (powerup, tank) ->
+            collision = powerup_hit(powerup.pos, powerup.raius, tank.pos, tank_radius)
+            if collision == true do
+              powerup = %DestroyPowerUp{powerup: powerup.powerup, 
+                                        collected_by: tank.player, 
+                                        type: powerup.type}
+              
+            end
+          end
+        )
+        next_powerups
+      end
+    )
+    powerup_responses
+  end
+
+  defp powerup_hit({px, py}, pr, {tx, ty}, tr) do 
+    (px - tx) * (px - tx) + (py - ty) * (py - ty) <= (pr + tr) * (pr + tr)
+  end
 
   defp resolve_tank_missile_collisions(missile_responses, tank_responses) do
     tank_radius = Tanx.Core.Tank.collision_radius
@@ -300,7 +339,7 @@ defmodule Tanx.Core.ArenaUpdater do
   end
 
 
-  defp send_revisions(player_manager, tank_responses, missile_responses) do
+  defp send_revisions(arena_objects, player_manager, tank_responses, missile_responses, powerup_responses) do
     tank_responses |> Enum.each(fn
       %Tanx.Core.Updates.MoveTank{tank: tank, pos: {newx, newy}, armor: armor} ->
         tank |> Tanx.Core.Tank.adjust(newx, newy, armor)
@@ -310,6 +349,7 @@ defmodule Tanx.Core.ArenaUpdater do
         if culprit_player != dead_player do
           player_manager |> Tanx.Core.PlayerManager.inc_kills(culprit_player)
         end
+        Tanx.Core.ArenaObjects.create_power_up(arena_objects, tank.pos)
       end)
 
     missile_responses |> Enum.each(fn
@@ -317,6 +357,13 @@ defmodule Tanx.Core.ArenaUpdater do
         missile |> Tanx.Core.Missile.explode
       _ -> nil
       end)
+
+    # powerup_responses |> Enum.each(fn 
+    #   %DestroyPowerUp{powerup: powerup, collected_by: player, type: type} ->
+    #     powerup |> Tanx.Core.PowerUp.collect
+    #     player |> Tanx.Core.PlayerManager.addPowerUp(type)
+    #   _ -> nil
+    #   end)
   end
 
 
@@ -366,6 +413,13 @@ defmodule Tanx.Core.ArenaUpdater do
       {x, y} = response.pos
       %Tanx.Core.View.Explosion{x: x, y: y, radius: response.radius, age: response.age}
     end)
+  end
+
+  defp create_powerup_views(responses) do
+    responses |> Enum.map(fn response -> 
+                           {x,y} = response.pos
+                           %Tanx.Core.View.PowerUp{x: x, y: y, radius: response.radius}
+                        end)
   end
 
 

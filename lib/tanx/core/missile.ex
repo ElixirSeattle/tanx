@@ -12,7 +12,8 @@ defmodule Tanx.Core.Missile do
               y: 0.0,
               heading: 0.0,
               v: 10.0,
-              explosion: nil
+              explosion: nil,
+              wall_bounce: 0
   end
 
   @explosion_radius 0.5
@@ -23,8 +24,8 @@ defmodule Tanx.Core.Missile do
   #Missile API
 
   #Called by "Arena Objects" process.
-  def start_link(player, arena_width, arena_height, decomposed_walls, x, y, a) do
-    GenServer.start_link(__MODULE__, {player, arena_width, arena_height, decomposed_walls, x, y, a})
+  def start_link(player, arena_width, arena_height, decomposed_walls, x, y, a, bounces \\ 0) do
+    GenServer.start_link(__MODULE__, {player, arena_width, arena_height, decomposed_walls, x, y, a, bounces})
   end
 
   #This api currently isn't used as the :update cast is called directly.
@@ -41,14 +42,15 @@ defmodule Tanx.Core.Missile do
 
   use GenServer
 
-  def init({player, arena_width, arena_height, decomposed_walls, x, y, a}) do
+  def init({player, arena_width, arena_height, decomposed_walls, x, y, a, wall_bounce}) do
     {:ok, %Tanx.Core.Missile.State{arena_width: arena_width,
                                   arena_height: arena_height,
                                   decomposed_walls: decomposed_walls,
                                   player: player,
                                   x: x,
                                   y: y,
-                                  heading: a}}
+                                  heading: a,
+                                  wall_bounce: wall_bounce}}
   end
 
   def handle_cast({:update, last_time, time, updater}, state) do
@@ -76,14 +78,25 @@ defmodule Tanx.Core.Missile do
     v = state.v
     nx = state.x + v * dt * :math.cos(a)
     ny = state.y + v * dt * :math.sin(a)
+    wb = state.wall_bounce
     impact = _hit_obstacle?(nx, ny, state)
     if impact == nil and _hit_arena_edge?(nx, ny, state) do
       impact = {nx, ny}
     end
+
     if impact != nil do
       {nx, ny} = impact
-      state = %State{state | explosion: 0.0}
-      update = %Tanx.Core.Updates.Explosion{pos: impact, radius: @explosion_radius, age: 0.0}
+      if wb <= 0 do
+        state = %State{state | explosion: 0.0}
+        update = %Tanx.Core.Updates.Explosion{pos: impact, radius: @explosion_radius, age: 0.0}
+      else
+        wb = wb - 1
+        update = %Tanx.Core.Updates.MoveMissile{
+        missile: self,
+        player: state.player,
+        pos: {nx, ny},
+        heading: _calc_new_heading(a)}
+      end
     else
       update = %Tanx.Core.Updates.MoveMissile{
         missile: self,
@@ -92,7 +105,7 @@ defmodule Tanx.Core.Missile do
         heading: a}
     end
 
-    state = %State{state | x: nx, y: ny}
+    state = %State{state | x: nx, y: ny, wall_bounce: wb}
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
     {:noreply, state}
   end
@@ -139,5 +152,10 @@ defmodule Tanx.Core.Missile do
     y_pos > (state.arena_height/2) or
     x_pos < (0 - (state.arena_width/2)) or
     x_pos > (state.arena_width/2)
+  end
+
+  defp _calc_new_heading(a) do
+    #TODO
+    a
   end
 end
