@@ -16,9 +16,7 @@ defmodule Tanx.Core.Structure do
             height: 20.0,
             walls: [],
             entry_points: []
-                        
-          
-            
+
 
 
   defmodule EntryPoint do

@@ -174,7 +174,7 @@ defmodule Tanx.Core.Player do
               rtdown: false,
               missiles: [],
               last_fired: -1000,
-              power_ups: %{wall_bounce: nil}
+              powerups: %{wall_bounce: 0}
   end
 
 
@@ -200,7 +200,7 @@ defmodule Tanx.Core.Player do
       {:not_found, state} ->
         case state.arena_objects |> Tanx.Core.ArenaObjects.create_tank(params) do
           {:ok, tank} ->
-            {:reply, :ok, %State{state | current_tank: tank, missiles: []}}
+            {:reply, :ok, %State{state | current_tank: tank, missiles: [], powerups: %{wall_bounce: 0}}}
           {:error, error} ->
             {:reply, error, state}
         end
@@ -215,7 +215,7 @@ defmodule Tanx.Core.Player do
     if tank do
       state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self)
       tank |> Tanx.Core.Tank.self_destruct
-      {:reply, :ok, %State{state | current_tank: nil,  missiles: [], power_ups: %{}}}
+      {:reply, :ok, %State{state | current_tank: nil,  missiles: [], powerups: %{wall_bounce: 0}}}
     else
       {:reply, :no_tank, state}
     end
@@ -231,8 +231,13 @@ defmodule Tanx.Core.Player do
           {:reply, :no_tank, state}
         {:ok, nil, state} ->
           {:reply, :no_tank, state}
-        {:ok, {x, y, heading}, state } ->
-          missile = state.arena_objects |> Tanx.Core.ArenaObjects.create_missile(x, y, heading)
+        {:ok, {x, y, heading, tank_radius}, state } ->
+          missile = state.arena_objects
+           |> Tanx.Core.ArenaObjects.create_missile(x,
+                                                    y,
+                                                    heading,
+                                                    tank_radius,
+                                                    state.powerups.wall_bounce)
           {:reply,:ok, %State{state |
                                 missiles: [missile | state.missiles],
                                 last_fired: curr_time}
@@ -317,7 +322,7 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call(:inc_deaths, _from, state) do
-    state = %State{state | power_ups: %{}}
+    state = %State{state | powerups: %{}}
     reply = state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self)
     {:reply, reply, state}
   end
@@ -325,7 +330,7 @@ defmodule Tanx.Core.Player do
   def handle_call({:add_powerup, type}, _from, state) do
     case type do
       %Tanx.Core.PowerUpTypes.BouncingMissile{} ->
-        state =  %State{state | power_ups: Dict.put(state.power_ups,"wall_bounce", type)}
+        state =  %State{state | powerups: Dict.put(state.powerups, :wall_bounce, type.bounce_count)}
       _ -> state
     end
     {:reply, :ok, state}

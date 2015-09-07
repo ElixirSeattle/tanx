@@ -80,7 +80,8 @@ defmodule Tanx.Core.ArenaUpdater do
   defmodule DestroyTank do
     defstruct tank: nil,
               dead_player: nil,
-              culprit_player: nil
+              culprit_player: nil,
+              final_pos: nil
   end
 
 
@@ -88,10 +89,10 @@ defmodule Tanx.Core.ArenaUpdater do
     defstruct missile: nil
   end
 
-  defmodule DestroyPowerUp do 
+  defmodule DestroyPowerUp do
     defstruct powerup: nil,
               collected_by: nil,
-              type: nil 
+              type: nil
   end
 
 
@@ -166,12 +167,10 @@ defmodule Tanx.Core.ArenaUpdater do
     missile_responses = Dict.get(categorized_responses, :missile, [])
     explosion_responses = Dict.get(categorized_responses, :explosion, [])
     powerup_responses = Dict.get(categorized_responses, :power_up, [])
-
-    powerup_responses = resolve_tank_powerup_collisions(tank_responses,powerup_responses)
+    {tank_responses, powerup_responses} = resolve_tank_powerup_collisions(tank_responses, powerup_responses)
     tank_responses = resolve_tank_forces(tank_responses)
     {missile_responses, tank_responses} = resolve_tank_missile_collisions(missile_responses, tank_responses)
     tank_responses = resolve_chain_reactions(explosion_responses, tank_responses)
-    
 
     send_revisions(state.arena_objects, state.player_manager, tank_responses, missile_responses, powerup_responses)
 
@@ -190,32 +189,28 @@ defmodule Tanx.Core.ArenaUpdater do
     %State{state | expected: nil, received: nil}
   end
 
-  defp resolve_tank_powerup_collisions(tank_responses, powerup_responses) do 
-    IO.inspect tank_responses
+  defp resolve_tank_powerup_collisions(tank_responses, powerup_responses) do
+   # Kernel.inspect tank_responses
     tank_radius = Tanx.Core.Tank.collision_radius
-    final_responses = tank_responses |> Enum.map_reduce(powerup_responses, fn
-      (cur_tank, cur_powerups) -> 
-        next_powerups = cur_powerups |> Enum.map_reduce(cur_tank, fn 
-          (powerup = %DestroyPowerUp{}, tank) ->
-            {powerup, tank}
-          (powerup, tank) ->
-            collision = powerup_hit(powerup.pos, powerup.raius, tank.pos, tank_radius)
+    tank_responses |> Enum.map_reduce(powerup_responses, fn(cur_tank, cur_powerups) ->
+         {next_powerups, next_tank} = cur_powerups |> Enum.map_reduce(cur_tank, fn
+          (powerup = %DestroyPowerUp{}, cur_tank) ->
+            {powerup, cur_tank}
+          (powerup, cur_tank) ->
+            collision = powerup_hit(powerup.pos, powerup.radius, cur_tank.pos, tank_radius)
             if collision == true do
-              powerup = %DestroyPowerUp{powerup: powerup.powerup, 
-                                        collected_by: tank.player, 
+              powerup = %DestroyPowerUp{powerup: powerup.powerup,
+                                        collected_by: cur_tank.player,
                                         type: powerup.type}
-              
             end
-          end
-        )
-        next_powerups
-      end
-    )
-    powerup_responses
+            {powerup, cur_tank}
+          end)
+          {next_tank, next_powerups}
+      end)
   end
 
-  defp powerup_hit({px, py}, pr, {tx, ty}, tr) do 
-    (px - tx) * (px - tx) + (py - ty) * (py - ty) <= (pr + tr) * (pr + tr)
+  defp powerup_hit({px, py}, pr, {tx, ty}, tr) do
+    (px - tx) * (px - tx) + (py - ty) * (py - ty) <= ((pr + tr) * (pr + tr))/2
   end
 
   defp resolve_tank_missile_collisions(missile_responses, tank_responses) do
@@ -228,15 +223,11 @@ defmodule Tanx.Core.ArenaUpdater do
           (tank = %DestroyTank{} , missile) ->
             {tank, missile}
           (tank, missile) ->
-            if missile.player != tank.player do
               hit = missile_hit(missile.pos, missile.heading, tank.pos, tank_radius, missile.strength)
-            else
-              hit = 0.0
-            end
             if hit > 0.0 do
               armor = tank.armor - hit
               if armor <= 0.0 do
-                tank = %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: missile.player}
+                tank = %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: missile.player, final_pos: tank.pos}
               else
                 tank = %Tanx.Core.Updates.MoveTank{tank | armor: armor}
               end
@@ -250,12 +241,14 @@ defmodule Tanx.Core.ArenaUpdater do
   end
 
 
-  defp missile_hit({mx, my}, mh, {tx, ty}, radius, strength) do
+  defp missile_hit({mx, my}, {mhx, mhy}, {tx, ty}, radius, strength) do
     bx = tx - mx
     by = ty - my
     if bx * bx + by * by <= radius * radius do
-      vx = :math.cos(mh)
-      vy = :math.sin(mh)
+      hypotenuse = :math.sqrt(mhx * mhx + mhy * mhy)
+      vx = mhx / hypotenuse
+      vy = mhy / hypotenuse
+
       dot = vx * bx + vy * by
       cx = mx + dot * vx
       cy = my + dot * vy
@@ -280,7 +273,7 @@ defmodule Tanx.Core.ArenaUpdater do
             if hit > 0.0 do
               armor = tank.armor - hit
               if armor <= 0.0 do
-                %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: explosion.originator}
+                %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: explosion.originator, final_pos: tank.pos}
               else
                 %Tanx.Core.Updates.MoveTank{tank | armor: armor}
               end
@@ -340,16 +333,17 @@ defmodule Tanx.Core.ArenaUpdater do
 
 
   defp send_revisions(arena_objects, player_manager, tank_responses, missile_responses, powerup_responses) do
+
     tank_responses |> Enum.each(fn
       %Tanx.Core.Updates.MoveTank{tank: tank, pos: {newx, newy}, armor: armor} ->
         tank |> Tanx.Core.Tank.adjust(newx, newy, armor)
-      %DestroyTank{tank: tank, dead_player: dead_player, culprit_player: culprit_player} ->
+      %DestroyTank{tank: tank, dead_player: dead_player, culprit_player: culprit_player, final_pos: pos} ->
         tank |> Tanx.Core.Tank.destroy(culprit_player)
         player_manager |> Tanx.Core.PlayerManager.inc_deaths(dead_player)
         if culprit_player != dead_player do
           player_manager |> Tanx.Core.PlayerManager.inc_kills(culprit_player)
         end
-        Tanx.Core.ArenaObjects.create_power_up(arena_objects, tank.pos)
+        Tanx.Core.ArenaObjects.create_power_up(arena_objects, pos)
       end)
 
     missile_responses |> Enum.each(fn
@@ -358,12 +352,12 @@ defmodule Tanx.Core.ArenaUpdater do
       _ -> nil
       end)
 
-    # powerup_responses |> Enum.each(fn 
-    #   %DestroyPowerUp{powerup: powerup, collected_by: player, type: type} ->
-    #     powerup |> Tanx.Core.PowerUp.collect
-    #     player |> Tanx.Core.PlayerManager.addPowerUp(type)
-    #   _ -> nil
-    #   end)
+    powerup_responses |> Enum.each(fn
+      %DestroyPowerUp{powerup: powerup, collected_by: player, type: type} ->
+        powerup |> Tanx.Core.PowerUp.collect
+        player |> Tanx.Core.Player.addPowerUp(type)
+      _ -> nil
+      end)
   end
 
 
@@ -396,11 +390,13 @@ defmodule Tanx.Core.ArenaUpdater do
     responses |> Enum.flat_map(fn
       response = %Tanx.Core.Updates.MoveMissile{} ->
         {x, y} = response.pos
+        {hx, hy} = response.heading
         missile = %Tanx.Core.ArenaView.MissileInfo{
           player: response.player,
           x: x,
           y: y,
-          heading: response.heading
+          hx: hx,
+          hy: hy
         }
         [missile]
       _ -> []
@@ -416,9 +412,11 @@ defmodule Tanx.Core.ArenaUpdater do
   end
 
   defp create_powerup_views(responses) do
-    responses |> Enum.map(fn response -> 
+    responses |> Enum.flat_map(fn response = %Tanx.Core.Updates.PowerUp{}  ->
                            {x,y} = response.pos
-                           %Tanx.Core.View.PowerUp{x: x, y: y, radius: response.radius}
+                           powerup = %Tanx.Core.View.PowerUp{x: x, y: y, radius: response.radius, type: response.type}
+                          [powerup]
+                        _ -> []
                         end)
   end
 

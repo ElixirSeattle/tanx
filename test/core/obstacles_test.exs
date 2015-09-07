@@ -152,7 +152,7 @@ defmodule Tanx.ObstaclesTest do
 
   test "intersection with triangle, first segment" do
     wall = [{-1, 0}, {1, 2}, {1, -1}]
-    intersection = wall
+    {intersection, _normal} = wall
       |> Tanx.Core.Obstacles.decompose_wall
       |> Tanx.Core.Obstacles.collision_with_decomposed_wall({-2, 0.5}, {2, 0.5})
     assert_structure_in_epsilon(intersection, {-0.5, 0.5})
@@ -161,7 +161,7 @@ defmodule Tanx.ObstaclesTest do
 
   test "intersection with triangle, second segment" do
     wall = [{-1, 0}, {1, 2}, {1, -1}]
-    intersection = wall
+    {intersection, _normal} = wall
       |> Tanx.Core.Obstacles.decompose_wall
       |> Tanx.Core.Obstacles.collision_with_decomposed_wall({2, 0.5}, {-2, 0.5})
     assert_structure_in_epsilon(intersection, {1, 0.5})

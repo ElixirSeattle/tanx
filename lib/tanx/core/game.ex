@@ -58,6 +58,10 @@ defmodule Tanx.Core.Game do
     GenServer.call(game, :terminate)
   end
 
+  def get_state(game) do
+    GenServer.call(game, :get_state)
+  end
+
 
   @doc """
   Immediately ticks the clock with the given time value, and waits for all updates to
@@ -133,6 +137,10 @@ defmodule Tanx.Core.Game do
 
   def handle_call(:get_clock, _from, state) do
     {:reply, state.clock, state}
+  end
+
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
   end
 
 

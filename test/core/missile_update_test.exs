@@ -16,11 +16,11 @@ defmodule Tanx.MissileUpdateTest do
   end
 
   test "missile moves at constant velocity", %{game: game, player: player} do
-    :ok = player |> Tanx.Core.Player.new_missile()
+    assert :ok == player |> Tanx.Core.Player.new_missile()
 
-    game |> Tanx.Core.Game.manual_clock_tick(2000)
+    game |> Tanx.Core.Game.manual_clock_tick(1100)
 
-    _check_missile(player, 10.0, 0.0, 0.0)
+    _check_missile(player, 1.5, 0.0, {10.0, 0.0})
   end
 
   test "missile moves on an angle with constant velocity", %{game: game, player: player} do
@@ -29,11 +29,11 @@ defmodule Tanx.MissileUpdateTest do
     assert :ok = player |> Tanx.Core.Player.new_missile()
     game |> Tanx.Core.Game.manual_clock_tick(2000)
     # Missile has been created at the origin
-    _check_missile(player, 2.7, -4.21, -1.0)
+    _check_missile(player, 2.97, -4.63, {5.4, -8.41})
     game |> Tanx.Core.Game.manual_clock_tick(2100)
     # Missile should have changed position, but maintained the same angle.
     # View rounds to hundredths.
-    _check_missile(player, 3.24, -5.05, -1.0)
+    _check_missile(player, 3.51, -5.47, {5.4, -8.41})
   end
 
   test "missile explodes on impact with obstacle", %{game: game, player: player} do
@@ -41,10 +41,10 @@ defmodule Tanx.MissileUpdateTest do
     assert :ok == game |> Tanx.Core.Game.manual_clock_tick(2570)
     assert :ok == player |> Tanx.Core.Player.new_missile()
     assert :ok == game |> Tanx.Core.Game.manual_clock_tick(2670)
-    player |> _check_missile(-1.0, 0.0, -3.14)
-    assert :ok == game |> Tanx.Core.Game.manual_clock_tick(3070)
+    player |> _check_missile(-1.5, 0.0, {-10.0, -0.02})
+    assert :ok == game |> Tanx.Core.Game.manual_clock_tick(2770)
 
-    player |> _check_missile(-5.0, -0.01, -3.14)
+    player |> _check_missile(-2.5, -0.0, {-10.0, -0.02})
     assert :ok == game |> Tanx.Core.Game.manual_clock_tick(3080)
     view = player |> Tanx.Core.Player.view_arena_objects()
     assert view.missiles == []
@@ -55,21 +55,21 @@ defmodule Tanx.MissileUpdateTest do
     assert :ok == game |> Tanx.Core.Game.manual_clock_tick(1785)
     assert :ok == player |> Tanx.Core.Player.new_missile()
     assert :ok == game |> Tanx.Core.Game.manual_clock_tick(2185)
-    player |> _check_missile(0.0, -4.0, -1.57)
-    assert :ok == game |> Tanx.Core.Game.manual_clock_tick(2775)
-    player |> _check_missile(0.01, -9.9, -1.57)
-    assert :ok == game |> Tanx.Core.Game.manual_clock_tick(5000)
+    player |> _check_missile(0.0, -4.5, {0.01, -10.0})
+    assert :ok == game |> Tanx.Core.Game.manual_clock_tick(2275)
+    player |> _check_missile(0.0, -5.4, {0.01, -10.0})
+    assert :ok == game |> Tanx.Core.Game.manual_clock_tick(3000)
     view = player |> Tanx.Core.Player.view_arena_objects()
     assert view.missiles == []
   end
 
   # Utils
 
-  defp _check_missile(player, x, y, a) do
+  defp _check_missile(player, x, y, {hx, hy}) do
     view = player |> Tanx.Core.Player.view_arena_objects()
     assert view != []
     got = view.missiles |> hd()
-    want = %Tanx.Core.View.Missile{is_mine: true, x: x, y: y, heading: a}
+    want = %Tanx.Core.View.Missile{is_mine: true, x: x, y: y, hx: hx, hy: hy}
     assert got == want
   end
 

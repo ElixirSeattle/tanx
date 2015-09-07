@@ -5,6 +5,7 @@ defmodule Tanx.Core.PowerUp do
   defmodule State do
     defstruct x: 0.0,
               y: 0.0,
+              radius: 0.4,
               type: nil
   end
 
@@ -27,7 +28,7 @@ defmodule Tanx.Core.PowerUp do
 
   def init({x, y, type}) do
 
-    if(type == nil) do 
+    if(type == nil) do
       type = pick_power_up_type()
     end
 
@@ -36,9 +37,10 @@ defmodule Tanx.Core.PowerUp do
                                     type: type}}
   end
 
-  def handle_cast({:update, last_time, time, updater}, state) do
-    updater |> Tanx.Core.ArenaUpdater.send_update_reply(%Tanx.Core.Updates.PowerUp{powerup: self, 
-                                                        pos: {state.x, state.y}, 
+  def handle_cast({:update, _last_time, _time, updater}, state) do
+    updater |> Tanx.Core.ArenaUpdater.send_update_reply(%Tanx.Core.Updates.PowerUp{powerup: self,
+                                                        pos: {state.x, state.y},
+                                                        radius: state.radius,
                                                         type: state.type})
     {:noreply, state}
   end
