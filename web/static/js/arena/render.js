@@ -44,6 +44,10 @@ class ArenaRender {
       this._renderMissile(context, missile);
     });
 
+    objects.powerups.forEach(powerup => {
+      this._renderPowerUp(context, powerup);
+    });
+
     // Draw explosions
     objects.explosions.forEach(explosion => {
       this._renderExplosion(context, explosion);
@@ -131,21 +135,35 @@ class ArenaRender {
       context.restore();
   }
 
+  _renderPowerUp(context, powerup) {
+    context.save();
+
+    let powerupRect = this._arenaStructure.onScreenRect(powerup.x,
+                                                        powerup.y,
+                                                        powerup.radius * 2,
+                                                        powerup.radius * 2);
+    context.translate(powerupRect.x, powerupRect.y);
+
+    let spriteSheetX = 590;
+    let spriteSheetY = 177;
+    context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 79, 67,
+      -powerupRect.width/2, -powerupRect.height/2, powerupRect.width, powerupRect.height);
+    context.restore();
+  }
+
   _renderMissile(context, missile) {
     context.save();
 
-    let missileRect = this._arenaStructure.onScreenRect(missile.x, missile.y, 0.2, 0.2);
+    let missileRect = this._arenaStructure.onScreenRect(missile.x, missile.y, 0.3, 0.3);
     context.translate(missileRect.x, missileRect.y);
 
     context.rotate(-missile.heading);
 
-    let spriteSheetX = 455;
-    let spriteSheetY = 168;
-    let onScreenWidth = 40;
-    let onScreenHeight = 40;
-    context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 67, 79,
-      0, -onScreenHeight/2, onScreenWidth, onScreenHeight);
+    let spriteSheetX = 454;
+    let spriteSheetY = 201;
 
+    context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 17, 17,
+      -missileRect.width/2, -missileRect.height/2, missileRect.width, missileRect.height); 
     context.restore();
   }
 

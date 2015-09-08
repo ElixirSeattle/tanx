@@ -40,14 +40,14 @@ defmodule Tanx.Core.ArenaObjects do
   @doc """
     Create a new missile process. This must be called from the player that will own the missile.
   """
-  def create_missile(arena_objects, x, y, heading) do
-    GenServer.call(arena_objects, {:create_missile, x, y, heading})
+  def create_missile(arena_objects, x, y, heading, tank_radius, wall_bounce) do
+    GenServer.call(arena_objects, {:create_missile, x, y, heading, tank_radius, wall_bounce})
   end
 
   @doc """
     Create a new power up. This is call when the tank explodes in a game.
   """
-  def create_power_up(arena_objects, {x, y}, type \\ nil) do 
+  def create_power_up(arena_objects, {x, y}, type \\ nil) do
     GenServer.call(arena_objects, {:create_power_up, x, y, type})
   end
 
@@ -152,18 +152,20 @@ defmodule Tanx.Core.ArenaObjects do
 
 
   # Create a new missile process. This must be called from the player that fired the missile.
-  def handle_call({:create_missile, x, y, heading}, {player, _}, state) do
+  def handle_call({:create_missile, x, y, heading, tank_radius, wall_bounce}, {player, _}, state) do
     {:ok, missile}  = Tanx.Core.Missile.start_link(player,
                                                    state.arena_width,
                                                    state.arena_height,
-                                                   state.decomposed_walls, 
-                                                   x, 
-                                                   y, 
-                                                   heading)
+                                                   state.decomposed_walls,
+                                                   x,
+                                                   y,
+                                                   heading,
+                                                   tank_radius,
+                                                   wall_bounce)
     {:reply, missile, %State{state | objects: state.objects |> Dict.put(missile, player)}}
   end
 
-  def handle_call({:create_power_up, x, y, type}, _, state) do 
+  def handle_call({:create_power_up, x, y, type}, _, state) do
     {:ok, power_up} = Tanx.Core.PowerUp.start_link(x, y, type)
     {:reply, power_up, %State{state | objects: state.objects |> Dict.put(power_up, nil)}}
   end

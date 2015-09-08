@@ -11,7 +11,6 @@ defmodule Tanx.Core.Missile do
               x: 0.0,
               y: 0.0,
               heading: 0.0,
-              v: 10.0,
               explosion: nil,
               wall_bounce: 0
   end
@@ -19,13 +18,25 @@ defmodule Tanx.Core.Missile do
   @explosion_radius 0.5
   @explosion_time 0.4
   @explosion_intensity 0.25
+  @velocity 10.0
+  @epsilon 0.00001
+  @fire_buffer 0.00001
 
   ############
   #Missile API
 
   #Called by "Arena Objects" process.
-  def start_link(player, arena_width, arena_height, decomposed_walls, x, y, a, bounces \\ 0) do
-    GenServer.start_link(__MODULE__, {player, arena_width, arena_height, decomposed_walls, x, y, a, bounces})
+  def start_link(player, arena_width, arena_height, decomposed_walls, x, y, h, tank_radius, bounces \\ 0) do
+    GenServer.start_link(__MODULE__,
+                         {player,
+                         arena_width,
+                         arena_height,
+                         decomposed_walls,
+                         x,
+                         y,
+                         h,
+                         tank_radius,
+                         bounces})
   end
 
   #This api currently isn't used as the :update cast is called directly.
@@ -42,14 +53,18 @@ defmodule Tanx.Core.Missile do
 
   use GenServer
 
-  def init({player, arena_width, arena_height, decomposed_walls, x, y, a, wall_bounce}) do
+  def init({player, arena_width, arena_height, decomposed_walls, x, y, h, tr, wall_bounce}) do
+    #fire the missile from the front of the tank
+    nx = @fire_buffer + x + tr * :math.cos(h)
+    ny = @fire_buffer + y + tr * :math.sin(h)
+
     {:ok, %Tanx.Core.Missile.State{arena_width: arena_width,
                                   arena_height: arena_height,
                                   decomposed_walls: decomposed_walls,
                                   player: player,
-                                  x: x,
-                                  y: y,
-                                  heading: a,
+                                  x: nx,
+                                  y: ny,
+                                  heading: {:math.cos(h) * @velocity, :math.sin(h) * @velocity},
                                   wall_bounce: wall_bounce}}
   end
 
@@ -74,38 +89,39 @@ defmodule Tanx.Core.Missile do
   # Helper Functions
 
   defp update_missile(updater, dt, state) do
-    a = state.heading
-    v = state.v
-    nx = state.x + v * dt * :math.cos(a)
-    ny = state.y + v * dt * :math.sin(a)
+    {hx, hy} = state.heading
+    nx = state.x + hx * dt
+    ny = state.y + hy * dt
     wb = state.wall_bounce
     impact = _hit_obstacle?(nx, ny, state)
     if impact == nil and _hit_arena_edge?(nx, ny, state) do
-      impact = {nx, ny}
+      impact = {{nx, ny}, nil}
     end
 
     if impact != nil do
-      {nx, ny} = impact
+      {{nx, ny}, normal} = impact
       if wb <= 0 do
         state = %State{state | explosion: 0.0}
-        update = %Tanx.Core.Updates.Explosion{pos: impact, radius: @explosion_radius, age: 0.0}
+        update = %Tanx.Core.Updates.Explosion{pos: {nx, ny}, radius: @explosion_radius, age: 0.0}
       else
         wb = wb - 1
+        {nx, ny, {hx, hy}} = _calc_new_heading(nx, ny, hx, hy, normal)
         update = %Tanx.Core.Updates.MoveMissile{
-        missile: self,
-        player: state.player,
-        pos: {nx, ny},
-        heading: _calc_new_heading(a)}
+          missile: self,
+          player: state.player,
+          pos: {nx, ny},
+          heading: {hx, hy}
+        }
       end
     else
       update = %Tanx.Core.Updates.MoveMissile{
         missile: self,
         player: state.player,
         pos: {nx, ny},
-        heading: a}
+        heading: {hx, hy}
+      }
     end
-
-    state = %State{state | x: nx, y: ny, wall_bounce: wb}
+    state = %State{state | x: nx, y: ny, wall_bounce: wb, heading: {hx, hy}}
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
     {:noreply, state}
   end
@@ -154,8 +170,34 @@ defmodule Tanx.Core.Missile do
     x_pos > (state.arena_width/2)
   end
 
-  defp _calc_new_heading(a) do
-    #TODO
-    a
+  defp _calc_new_heading(ix, iy,hx, hy, n) do
+    {nx, ny} = n
+    #use heading to adjust missile coordinates.
+    nmx = ix - hx
+    nmy = iy - hy
+    # r is ratio of n to intersection point
+    r = ((nmx - ix) * nx) + ((nmy - iy) * ny)
+    # {qx, qy} is point of intersection between n and the mirror line
+    qx = (r * nx) + ix
+    qy = (r * ny) + iy
+    #{sx,sy} is vector from missile to intersection
+    sx = qx - nmx
+    sy = qy - nmy
+    nhx = (qx + sx) - ix
+    nhy = (qy + sy) - iy
+    #{nhx,nhy} is the vector of the new heading
+    {ix + (nhx * @epsilon), iy + (nhy * @epsilon),{nhx, nhy}}
   end
 end
+
+
+
+
+
+
+
+
+
+
+
+

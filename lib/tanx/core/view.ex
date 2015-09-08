@@ -77,7 +77,8 @@ defmodule Tanx.Core.View do
     defstruct is_mine: false,
               x: 0.0,
               y: 0.0,
-              heading: 0.0
+              hx: 0.0,
+              hy: 0.0
   end
 
 

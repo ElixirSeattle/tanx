@@ -112,7 +112,7 @@ defmodule Tanx.Core.Tank do
 
   def handle_call(:get_position, _from, state = %State{explosion_progress: nil}) do
     {x, y} = state.pos
-    {:reply, {x, y, state.heading}, state}
+    {:reply, {x, y, state.heading, @tank_radius}, state}
   end
   def handle_call(:get_position, _from, state) do
     {:reply, nil, state}

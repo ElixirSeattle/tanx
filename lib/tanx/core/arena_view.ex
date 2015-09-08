@@ -92,11 +92,12 @@ defmodule Tanx.Core.ArenaView do
     defstruct player: nil,
               x: 0.0,
               y: 0.0,
-              heading: 0.0,
+              hx: 0.0,
+              hy: 0.0,
               radius: 0.1
   end
 
-  defmodule PowerupInfo do 
+  defmodule PowerupInfo do
     defstruct x: 0.0,
               y: 0.0,
               radius: 0.4,
@@ -158,7 +159,7 @@ defmodule Tanx.Core.ArenaView do
       entry_points_available = state.entry_points_available
     end
 
-    powerups = state.powerups |> Enum.map(power_up_view_builder(raw_maps))
+    powerups = state.powerups |> Enum.map(power_up_view_builder())
 
     view = %Tanx.Core.View.Arena{
       tanks: tanks,
@@ -186,7 +187,9 @@ defmodule Tanx.Core.ArenaView do
       |> Enum.map(fn missile ->
         %MissileInfo{missile |
           x: missile.x |> truncate, y: missile.y |> truncate,
-          heading: missile.heading |> truncate}
+          hx: missile.hx |> truncate,
+          hy: missile.hy |> truncate
+        }
       end)
 
     explosions = explosions
@@ -197,11 +200,12 @@ defmodule Tanx.Core.ArenaView do
       end)
 
     powerups = powerups |>  Enum.map(fn powerup ->
-      %Tanx.Core.View.PowerUp{powerup | 
-        x: powerup.x |> truncate,  
+
+      %Tanx.Core.View.PowerUp{powerup |
+        x: powerup.x |> truncate,
         y: powerup.y |> truncate,
         radius: powerup.radius |> truncate,
-        type: powerup.type |> truncate}
+        type: powerup.type} #TODO: map the power up map to a string name
       end)
 
     if entry_points_available == nil do
@@ -219,8 +223,9 @@ defmodule Tanx.Core.ArenaView do
   end
 
 
-  defp truncate(value), do: round(value * 100) / 100
-
+  defp truncate(value) do
+    round(value * 100) / 100
+  end
 
   defp tank_view_builder(player) do
     fn tank_info ->
@@ -244,18 +249,19 @@ defmodule Tanx.Core.ArenaView do
         is_mine: missile_info.player == player,
         x: missile_info.x,
         y: missile_info.y,
-        heading: missile_info.heading
+        hx: missile_info.hx,
+        hy: missile_info.hy
       }
     end
   end
 
-  defp missile_view_builder(true, player) do
-    fn missile_info ->
-      %{
-        is_mine: missile_info.player == player,
-        x: missile_info.x,
-        y: missile_info.y,
-        heading: missile_info.heading
+  defp power_up_view_builder() do
+    fn power_up_info ->
+      %Tanx.Core.View.PowerUp{
+        x: power_up_info.x,
+        y: power_up_info.y,
+        radius: power_up_info.radius,
+        type: power_up_info.type
       }
     end
   end
@@ -270,10 +276,10 @@ defmodule Tanx.Core.ArenaView do
       }
     end
   end
-  
+
   defp power_up_view_builder(true) do
     fn power_up_info ->
-      %{ 
+      %{
         x: power_up_info.x,
         y: power_up_info.y,
         radius: power_up_info.radius,
