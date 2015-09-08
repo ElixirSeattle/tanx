@@ -172,6 +172,7 @@ defmodule Tanx.Core.Player do
               fwdown: false,
               ltdown: false,
               rtdown: false,
+              bwdown: false,
               missiles: [],
               last_fired: -1000,
               powerups: %{wall_bounce: 0}
@@ -179,6 +180,7 @@ defmodule Tanx.Core.Player do
 
 
   @forward_velocity 2.0
+  @backward_velocity 2.0
   @angular_velocity 2.0
   @missile_fire_rate 200
 
@@ -272,7 +274,11 @@ defmodule Tanx.Core.Player do
 
   def handle_call({:control_tank, button, is_down}, _from, state) do
     state = _movement_state(state, button, is_down)
-    v = if state.fwdown, do: @forward_velocity, else: 0.0
+    v = cond do
+      state.fwdown -> @forward_velocity
+      state.bwdown -> 0 - @backward_velocity
+      true -> 0.0
+    end
     av = cond do
       state.ltdown -> @angular_velocity
       state.rtdown -> -@angular_velocity
@@ -357,6 +363,8 @@ defmodule Tanx.Core.Player do
   defp _movement_state(state, "right", true), do: %State{state | rtdown: true, ltdown: false}
   defp _movement_state(state, "right", false), do: %State{state | rtdown: false}
   defp _movement_state(state, "forward", value), do: %State{state | fwdown: value}
+  defp _movement_state(state, "backward", value), do: %State{state | bwdown: value}
+
   # TODO: Fire button - do we need a fire button state?
   defp _movement_state(state, _button, _down), do: state
 end
