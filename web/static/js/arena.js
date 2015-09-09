@@ -5,11 +5,11 @@ import ArenaControls from "web/static/js/arena/controls"
 
 class Arena {
 
-  constructor(gameChannel) {
+  constructor(gameChannel, arenaSound) {
     this._gameChannel = gameChannel;
 
     this._arenaControls = new ArenaControls(gameChannel);
-    this._arenaAnimate = new ArenaAnimate(gameChannel);
+    this._arenaAnimate = new ArenaAnimate(gameChannel, arenaSound);
 
     this._gameChannel.on("view_structure", structure => {
       let arenaStructure = new ArenaStructure(structure);

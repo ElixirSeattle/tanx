@@ -5,8 +5,6 @@ class ArenaRender {
     this._tankSprite = new Image();
     this._tankSprite.src = 'images/tank_sprite.png';
     this._canvas = $('#tanx-canvas');
-    this._explosionSound = new Audio("sounds/Explosion3.wav");
-    this._backgroundMusic = $('#background-music')[0];
     this._arenaStructure = arenaStructure;
 
     this._canvas.attr({
@@ -52,9 +50,6 @@ class ArenaRender {
     objects.explosions.forEach(explosion => {
       this._renderExplosion(context, explosion);
     });
-
-    // Start background music
-    this._backgroundMusic.play();
   }
 
 
@@ -186,11 +181,6 @@ class ArenaRender {
       context.fillStyle = "#fff";
       context.arc(point.x, point.y, radius, 0, Math.PI*2, false);
       context.fill();
-    }
-
-    if (explosion.sound != null) {
-      //this._explosionSound.play();
-      new Audio("sounds/Explosion3.wav").play();
     }
 
     context.restore();

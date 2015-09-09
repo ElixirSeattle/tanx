@@ -5,7 +5,7 @@ const SHOW_JSON_INITIALLY = false;
 
 class Settings {
 
-  constructor() {
+  constructor(arenaSound) {
     $('#settings-modal').on('shown.bs.modal', event => {
       $('#settings-modal button').focus();
     });
@@ -30,7 +30,7 @@ class Settings {
       max: 100,
       slide: function() {
         var value = $('#background-music-slider').slider('value');
-        $('#background-music').prop("volume", value/100);
+        arenaSound.setMusicVolume(value / 100);
       }
     });
   }

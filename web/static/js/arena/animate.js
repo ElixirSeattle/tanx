@@ -6,8 +6,9 @@ const NUM_TIMESTAMPS = 10;
 
 class ArenaAnimate {
 
-  constructor(gameChannel) {
+  constructor(gameChannel, arenaSound) {
     this._gameChannel = gameChannel;
+    this._arenaSound = arenaSound;
     this._arenaRender = null;
     this._receivedArena = null;
     this._receivedFrame = false;
@@ -58,6 +59,7 @@ class ArenaAnimate {
     // Render the frame
     if (this._arenaRender != null) {
       this._arenaRender.render(arena);
+      this._arenaSound.play(arena);
     }
 
     $('#tanx-arena-json').text(JSON.stringify(arena, null, 4));
