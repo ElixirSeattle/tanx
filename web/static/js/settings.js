@@ -24,13 +24,25 @@ class Settings {
 
     $('#background-music-slider').slider({
       orientation: "horizontal",
-      value: 50,
+      value: 100,
       step: 1,
       min: 0,
       max: 100,
       slide: function() {
         var value = $('#background-music-slider').slider('value');
         arenaSound.setMusicVolume(value / 100);
+      }
+    });
+
+    $('#fx-volume-slider').slider({
+      orientation: "horizontal",
+      value: 100,
+      step: 1,
+      min: 0,
+      max: 100,
+      slide: function() {
+        var value = $('#fx-volume-slider').slider('value');
+        arenaSound.setSoundVolume(value / 100);
       }
     });
   }
