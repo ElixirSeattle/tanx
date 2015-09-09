@@ -142,6 +142,7 @@ defmodule Tanx.Core.Missile do
         pos: {state.x, state.y},
         radius: @explosion_radius,
         intensity: @explosion_intensity,
+        starting: old_age == 0.0,
         age: age,
         chain_radius: chain_radius,
         originator: state.player

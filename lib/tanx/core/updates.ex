@@ -25,6 +25,7 @@ defmodule Tanx.Core.Updates do
     defstruct pos: {0.0, 0.0},
               radius: 1.0,
               intensity: 1.0,
+              starting: false,
               chain_radius: nil,
               age: 0.0,
               originator: nil

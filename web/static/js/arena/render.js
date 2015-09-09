@@ -188,8 +188,9 @@ class ArenaRender {
       context.fill();
     }
 
-    if (explosion.age < .07) {
-      this._explosionSound.play();
+    if (explosion.sound != null) {
+      //this._explosionSound.play();
+      new Audio("sounds/Explosion3.wav").play();
     }
 
     context.restore();

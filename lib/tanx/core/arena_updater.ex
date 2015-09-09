@@ -408,7 +408,14 @@ defmodule Tanx.Core.ArenaUpdater do
   defp create_explosion_views(responses) do
     responses |> Enum.map(fn response ->
       {x, y} = response.pos
-      %Tanx.Core.View.Explosion{x: x, y: y, radius: response.radius, age: response.age}
+      sound = if response.starting, do: response.intensity, else: nil
+      %Tanx.Core.View.Explosion{
+        x: x,
+        y: y,
+        radius: response.radius,
+        age: response.age,
+        sound: sound
+      }
     end)
   end
 

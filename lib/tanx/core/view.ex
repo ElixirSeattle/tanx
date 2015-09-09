@@ -90,7 +90,8 @@ defmodule Tanx.Core.View do
     defstruct x: 0.0,
               y: 0.0,
               radius: 1.0,
-              age: 0.0
+              age: 0.0,
+              sound: nil
   end
 
   defmodule PowerUp do

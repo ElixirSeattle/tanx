@@ -208,6 +208,7 @@ defmodule Tanx.Core.Tank do
         pos: state.pos,
         radius: state.explosion_radius,
         intensity: state.explosion_intensity,
+        starting: old_age == 0.0,
         chain_radius: chain_radius,
         age: age,
         originator: state.explosion_originator
