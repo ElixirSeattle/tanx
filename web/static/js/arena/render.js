@@ -158,7 +158,7 @@ class ArenaRender {
     let spriteSheetY = 201;
 
     context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 17, 17,
-      -missileRect.width/2, -missileRect.height/2, missileRect.width, missileRect.height); 
+      -missileRect.width/2, -missileRect.height/2, missileRect.width, missileRect.height);
     context.restore();
   }
 
