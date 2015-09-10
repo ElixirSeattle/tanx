@@ -2,6 +2,9 @@
 const SHOW_FRAMERATE_INITIALLY = true;
 const SHOW_JSON_INITIALLY = false;
 
+const MUTE_MUSIC_INITIALLY = false;
+const MUTE_SOUND_INITIALLY = false;
+
 
 class Settings {
 
@@ -22,28 +25,40 @@ class Settings {
       $('#tanx-arena-json').toggle($('#show-arena-json-checkbox').prop('checked'));
     });
 
-    $('#background-music-slider').slider({
-      orientation: "horizontal",
-      value: 100,
-      step: 1,
+    let backgroundMusicSlider = new Slider('#background-music-slider', {
+      id: 'background-music-slider-elem',
       min: 0,
       max: 100,
-      slide: function() {
-        var value = $('#background-music-slider').slider('value');
-        arenaSound.setMusicVolume(value / 100);
-      }
+      step: 1,
+      value: 100,
+      tooltip: 'hide'
+    });
+    backgroundMusicSlider.on('slide', () => {
+      arenaSound.setMusicVolume(backgroundMusicSlider.getValue() / 100);
     });
 
-    $('#fx-volume-slider').slider({
-      orientation: "horizontal",
-      value: 100,
-      step: 1,
+    $('#music-mute-checkbox').prop('checked', MUTE_MUSIC_INITIALLY);
+    arenaSound.setMusicMute(MUTE_MUSIC_INITIALLY);
+    $('#music-mute-checkbox').on('change', event => {
+      arenaSound.setMusicMute($('#music-mute-checkbox').prop('checked'));
+    });
+
+    let soundFxSlider = new Slider('#fx-volume-slider', {
+      id: 'fx-slider-elem',
       min: 0,
       max: 100,
-      slide: function() {
-        var value = $('#fx-volume-slider').slider('value');
-        arenaSound.setSoundVolume(value / 100);
-      }
+      step: 1,
+      value: 100,
+      tooltip: 'hide'
+    });
+    soundFxSlider.on('slide', () => {
+      arenaSound.setSoundVolume(soundFxSlider.getValue() / 100);
+    });
+
+    $('#fx-mute-checkbox').prop('checked', MUTE_SOUND_INITIALLY);
+    arenaSound.setSoundMute(MUTE_SOUND_INITIALLY);
+    $('#fx-mute-checkbox').on('change', event => {
+      arenaSound.setSoundMute($('#fx-mute-checkbox').prop('checked'));
     });
   }
 

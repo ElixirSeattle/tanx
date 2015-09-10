@@ -108,14 +108,32 @@
           <div class="form-horizontal">
             <div class="form-group">
               <label class="col-xs-4 control-label">Background music</label>
-              <div class="col-xs-8 slider-container">
-                <div id="background-music-slider"></div>
+              <div class="col-xs-6">
+                <div class="slider-container">
+                  <input type="text" id="background-music-slider">
+                </div>
+              </div>
+              <div class="col-xs-2">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="music-mute-checkbox"> Mute
+                  </label>
+                </div>
               </div>
             </div>
             <div class="form-group">
               <label class="col-xs-4 control-label">Sound effects</label>
-              <div class="col-xs-8 slider-container">
-                <div id="fx-volume-slider"></div>
+              <div class="col-xs-6">
+                <div class="slider-container">
+                  <input type="text" id="fx-volume-slider">
+                </div>
+              </div>
+              <div class="col-xs-2">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="fx-mute-checkbox"> Mute
+                  </label>
+                </div>
               </div>
             </div>
             <div class="form-group">

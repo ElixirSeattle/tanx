@@ -8,19 +8,18 @@
     <meta name="author" content="">
 
     <title>Elixir Tanx</title>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap.min.css") %>">
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-theme.min.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-3.3.5.min.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-theme-3.3.5.min.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-slider-5.1.1.min.css") %>">
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/jquery-ui-1.11.4.min.css") %>">
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/jquery-ui.theme-smoothness.min.css") %>">
   </head>
 
   <body>
     <%= @inner %>
 
     <script src="<%= static_path(@conn, "/js/jquery-2.1.4.min.js") %>"></script>
-    <script src="<%= static_path(@conn, "/js/jquery-ui-1.11.4.min.js") %>"></script>
-    <script src="<%= static_path(@conn, "/js/bootstrap.min.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/bootstrap-3.3.5.min.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/bootstrap-slider-5.1.1.min.js") %>"></script>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
 
     <script>require("web/static/js/app")</script>

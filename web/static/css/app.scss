@@ -57,11 +57,13 @@ body {
 }
 .slider-container {
   padding-top: 15px;
-}
-#background-music-slider {
-  width: 100%;
+  position: relative;
+  .slider.slider-horizontal {
+    width: 100%;
+  }
 }
 
 #tanx-arena-container {
   width: 100%;
 }
+
