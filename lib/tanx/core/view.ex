@@ -65,7 +65,8 @@ defmodule Tanx.Core.View do
               heading: 0.0,
               radius: 0.5,
               armor: 0.0,
-              max_armor: 1.0
+              max_armor: 1.0,
+              tread: 0.0
   end
 
 

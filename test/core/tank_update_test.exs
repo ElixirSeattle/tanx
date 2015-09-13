@@ -22,6 +22,13 @@ defmodule Tanx.TankUpdateTest do
     game |> Tanx.Core.Game.manual_clock_tick(2000)
     _check_tank(%{player: player, x: 0.0, y: 0.0, heading: 0.0})
   end
+
+  test "tank tread increments as it moves forward", %{game: game, player: player} do
+    :ok = player |> Tanx.Core.Player.new_tank()
+    :ok = player |> Tanx.Core.Player.control_tank(:forward, true)
+  
+    game |> Tanx.Core.Game.manual_clock_tick(1000)
+    _check_tank(%{player: player, x: 0.0, y: 0.0, heading: 0.0, tread: 0.5})
   end
 
   test "tank moves forward with constant velocity", %{game: game, player: player} do
@@ -67,6 +74,14 @@ defmodule Tanx.TankUpdateTest do
 
 
   # Utils
+  defp _check_tank(%{player: player, x: x, y: y, heading: heading, tread: tread}) do
+    view = player |> Tanx.Core.Player.view_arena_objects()
+    got = view.tanks |> hd()
+    want = %Tanx.Core.View.Tank{is_me: true, name: "daniel", x: x, y: y, heading: heading, tread: tread}
+    assert_in_delta(got.x, want.x, @epsilon)
+    assert_in_delta(got.y, want.y, @epsilon)
+    assert_in_delta(got.tread, want.tread, @epsilon)
+  end
 
   defp _check_tank(%{player: player, x: x, y: y, heading: heading}) do
     view = player |> Tanx.Core.Player.view_arena_objects()
