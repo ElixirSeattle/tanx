@@ -20,36 +20,37 @@ defmodule Tanx.TankUpdateTest do
   test "tank remains at rest", %{game: game, player: player} do
     :ok = player |> Tanx.Core.Player.new_tank()
     game |> Tanx.Core.Game.manual_clock_tick(2000)
-    _check_tank(player, 0.0, 0.0, 0.0)
+    _check_tank(%{player: player, x: 0.0, y: 0.0, heading: 0.0})
+  end
   end
 
   test "tank moves forward with constant velocity", %{game: game, player: player} do
     :ok = player |> Tanx.Core.Player.new_tank()
     :ok = player |> Tanx.Core.Player.control_tank(:forward, true)
     game |> Tanx.Core.Game.manual_clock_tick(2000)
-    _check_tank(player, 2.0, 0.0, 0.0)
+    _check_tank(%{player: player, x: 2.0, y: 0.0, heading: 0.0})
     game |> Tanx.Core.Game.manual_clock_tick(4000)
-    _check_tank(player, 6.0, 0.0, 0.0)
+    _check_tank(%{player: player, x: 6.0, y: 0.0, heading: 0.0})
   end
 
   test "tank stops at arena edge", %{game: game, player: player} do
     :ok = player |> Tanx.Core.Player.new_tank()
     :ok = player |> Tanx.Core.Player.control_tank(:forward, true)
     game |> Tanx.Core.Game.manual_clock_tick(5500)
-    _check_tank(player, 9.0, 0.0, 0.0)
+    _check_tank(%{player: player, x: 9.0, y: 0.0, heading: 0.0})
     game |> Tanx.Core.Game.manual_clock_tick(6000)
-    _check_tank(player, 9.5, 0.0, 0.0)
+    _check_tank(%{player: player, x: 9.5, y: 0.0, heading: 0.0})
     game |> Tanx.Core.Game.manual_clock_tick(6500)
-    _check_tank(player, 9.5, 0.0, 0.0)
+    _check_tank(%{player: player, x: 9.5, y: 0.0, heading: 0.0})
   end
 
   test "tank rotates with constant velocity", %{game: game, player: player} do
     :ok = player |> Tanx.Core.Player.new_tank()
     :ok = player |> Tanx.Core.Player.control_tank(:right, true)
     game |> Tanx.Core.Game.manual_clock_tick(1500)
-    _check_tank(player, 0.0, 0.0, -1.0)
+    _check_tank(%{player: player, x: 0.0, y: 0.0, heading: -1.0})
     game |> Tanx.Core.Game.manual_clock_tick(2500)
-    _check_tank(player, 0.0, 0.0, -3.0)
+    _check_tank(%{player: player, x: 0.0, y: 0.0, heading: -3.0})
   end
 
   test "tank stops at wall", %{game: game, player: player} do
@@ -57,17 +58,17 @@ defmodule Tanx.TankUpdateTest do
     :ok = player |> Tanx.Core.Player.new_tank(heading: pi)
     :ok = player |> Tanx.Core.Player.control_tank(:forward, true)
     game |> Tanx.Core.Game.manual_clock_tick(3000)
-    _check_tank(player, -4.0, 0.0, pi)
+    _check_tank(%{player: player, x: -4.0, y: 0.0, heading: pi})
     game |> Tanx.Core.Game.manual_clock_tick(3250)
-    _check_tank(player, -4.4, 0.0, pi)
+    _check_tank(%{player: player, x: -4.4, y: 0.0, heading: pi})
     game |> Tanx.Core.Game.manual_clock_tick(3300)
-    _check_tank(player, -4.4, 0.0, pi)
+    _check_tank(%{player: player, x: -4.4, y: 0.0, heading: pi})
   end
 
 
   # Utils
 
-  defp _check_tank(player, x, y, heading) do
+  defp _check_tank(%{player: player, x: x, y: y, heading: heading}) do
     view = player |> Tanx.Core.Player.view_arena_objects()
     got = view.tanks |> hd()
     want = %Tanx.Core.View.Tank{is_me: true, name: "daniel", x: x, y: y, heading: heading}
