@@ -284,13 +284,17 @@ defmodule Tanx.Core.Tank do
     min_tread = 0.0  
     dist = state.velocity * dt
     new_tread = state.tread + dist / 4
-    get_tread_position_in_range(new_tread, max_tread)
+    get_tread_position_in_range(new_tread, min_tread, max_tread)
   end
 
-  defp get_tread_position_in_range(tread_position, max_tread) when tread_position > max_tread do
-    get_tread_position_in_range(tread_position-max_tread, max_tread)
+  defp get_tread_position_in_range(tread_position, min_tread, max_tread) when tread_position > max_tread do
+    get_tread_position_in_range(tread_position-max_tread, min_tread, max_tread)
   end
 
-  defp get_tread_position_in_range(tread_position, max_tread), do: tread_position
+  defp get_tread_position_in_range(tread_position, min_tread, max_tread) when tread_position < min_tread do
+    get_tread_position_in_range(tread_position+max_tread, min_tread, max_tread)
+  end
+
+  defp get_tread_position_in_range(tread_position, min_tread, max_tread), do: tread_position
 
 end
