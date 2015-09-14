@@ -28,13 +28,13 @@ defmodule Tanx.TankUpdateTest do
     :ok = player |> Tanx.Core.Player.control_tank(:forward, true)
   
     game |> Tanx.Core.Game.manual_clock_tick(2000)
-    _check_tank(%{player: player, x: 2.0, y: 0.0, heading: 0.0, tread: 0.5})
+    _check_tank(%{player: player, x: 2.0, y: 0.0, heading: 0.0, tread: 1.0})
     game |> Tanx.Core.Game.manual_clock_tick(2500)
-    _check_tank(%{player: player, x: 3.0, y: 0.0, heading: 0.0, tread: 0.75})
+    _check_tank(%{player: player, x: 3.0, y: 0.0, heading: 0.0, tread: 0.50})
     game |> Tanx.Core.Game.manual_clock_tick(3000)
     _check_tank(%{player: player, x: 4.0, y: 0.0, heading: 0.0, tread: 1.0})
     game |> Tanx.Core.Game.manual_clock_tick(4000)
-    _check_tank(%{player: player, x: 6.0, y: 0.0, heading: 0.0, tread: 0.5})
+    _check_tank(%{player: player, x: 6.0, y: 0.0, heading: 0.0, tread: 1.0})
   end
   
   test "tank tread decrements as it moves backward", %{game: game, player: player} do
@@ -42,13 +42,13 @@ defmodule Tanx.TankUpdateTest do
     :ok = player |> Tanx.Core.Player.control_tank(:backward, true)
   
     game |> Tanx.Core.Game.manual_clock_tick(2000)
-    _check_tank(%{player: player, x: -2.0, y: 0.0, heading: 0.0, tread: 0.5})
+    _check_tank(%{player: player, x: -2.0, y: 0.0, heading: 0.0, tread: 0.0})
     game |> Tanx.Core.Game.manual_clock_tick(2500)
-    _check_tank(%{player: player, x: -3.0, y: 0.0, heading: 0.0, tread: 0.25})
+    _check_tank(%{player: player, x: -3.0, y: 0.0, heading: 0.0, tread: 0.50})
     game |> Tanx.Core.Game.manual_clock_tick(3000)
     _check_tank(%{player: player, x: -4.0, y: 0.0, heading: 0.0, tread: 0.0})
     game |> Tanx.Core.Game.manual_clock_tick(4000)
-    _check_tank(%{player: player, x: -6.0, y: 0.0, heading: 0.0, tread: 0.5})
+    _check_tank(%{player: player, x: -6.0, y: 0.0, heading: 0.0, tread: 0.0})
   end
 
   test "tank moves forward with constant velocity", %{game: game, player: player} do
