@@ -122,8 +122,62 @@ class ArenaRender {
     let rotateTankImage90Degrees = 90 * Math.PI/180;
     context.rotate(-tank.heading + rotateTankImage90Degrees);
 
-    let spriteSheetX = 92;
-    let spriteSheetY = tank.is_me ? 1 : 84;
+    let rowOffset = 1;
+    let rowOne = rowOffset;
+    let rowTwo = rowOffset+(84*1);
+    let rowThree = rowOffset+(84*2);
+    
+    let columnOffset = 8;
+    let columnOne = columnOffset;
+    let columnTwo = columnOffset+(84*1);
+    let columnThree = columnOffset+(84*2);
+    let columnFour = columnOffset+(84*3);
+    let columnFive = columnOffset+(84*4);
+    let columnSix = columnOffset+(84*5);
+    let columnSeven = columnOffset+(84*6);
+    let columnEight = columnOffset+(84*7);
+
+    if (tank.is_me === true) {
+      var spriteSheetY = rowOne; 
+      if (tank.tread < 0.125) {
+        var spriteSheetX = columnTwo;
+      } else if (tank.tread < 0.250) {
+        var spriteSheetX = columnThree;
+      } else if (tank.tread < 0.375) {
+        var spriteSheetX = columnFour;
+      } else if (tank.tread < 0.5) {
+        var spriteSheetX = columnFive;
+      } else if (tank.tread < 0.625) {
+        var spriteSheetX = columnSix;
+      } else if (tank.tread < 0.750) {
+        var spriteSheetX = columnSeven;
+      } else if (tank.tread < 0.875) {
+        var spriteSheetX = columnEight;
+      } else {
+        spriteSheetY = rowTwo;
+        var spriteSheetX = columnOne;
+      }
+    } else {
+      var spriteSheetY = rowTwo; 
+      if (tank.tread < 0.125) {
+        var spriteSheetX = columnTwo;
+      } else if (tank.tread < 0.250) {
+        var spriteSheetX = columnThree;
+      } else if (tank.tread < 0.375) {
+        var spriteSheetX = columnFour;
+      } else if (tank.tread < 0.5) {
+        var spriteSheetX = columnFive;
+      } else if (tank.tread < 0.625) {
+        var spriteSheetX = columnSix;
+      } else if (tank.tread < 0.750) {
+        var spriteSheetX = columnSeven;
+      } else if (tank.tread < 0.875) {
+        var spriteSheetX = columnEight;
+      } else {
+        spriteSheetY = rowThree;
+        var spriteSheetX = columnOne;
+      }
+    }
     context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 67, 79,
       -screenRadius, -screenRadius, screenRadius * 2, screenRadius * 2);
 
