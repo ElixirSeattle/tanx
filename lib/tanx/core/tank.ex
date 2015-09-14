@@ -86,7 +86,8 @@ defmodule Tanx.Core.Tank do
               explosion_originator: nil,
               explosion_time: nil,
               explosion_radius: nil,
-              explosion_intensity: nil
+              explosion_intensity: nil,
+              tread: 0.0
   end
 
 
@@ -225,6 +226,7 @@ defmodule Tanx.Core.Tank do
   defp update_tank(updater, dt, state) do
     new_heading = new_heading(state, dt)
     pos = new_pos(state, new_heading, dt)
+    tread_position = new_tread_position(state, new_heading, pos, dt) 
 
     force = Tanx.Core.Obstacles.force_from_decomposed_walls(
       state.decomposed_walls, pos, @tank_radius + @tank_collision_buffer)
@@ -237,11 +239,12 @@ defmodule Tanx.Core.Tank do
       radius: @tank_radius,
       armor: state.armor,
       max_armor: state.max_armor,
-      force: force
+      force: force,
+      tread: tread_position 
     }
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
 
-    state = %State{state | pos: pos, heading: new_heading}
+    state = %State{state | pos: pos, heading: new_heading, tread: tread_position}
     {:noreply, state}
   end
 
@@ -275,5 +278,19 @@ defmodule Tanx.Core.Tank do
     end
     {new_x, new_y}
   end
+
+  defp new_tread_position(state, new_heading, pos, dt) do
+    max_tread = 1.0
+    min_tread = 0.0  
+    dist = state.velocity * dt
+    new_tread = state.tread + dist / 4
+    get_tread_position_in_range(new_tread, max_tread)
+  end
+
+  defp get_tread_position_in_range(tread_position, max_tread) when tread_position > max_tread do
+    get_tread_position_in_range(tread_position-max_tread, max_tread)
+  end
+
+  defp get_tread_position_in_range(tread_position, max_tread), do: tread_position
 
 end

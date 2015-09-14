@@ -85,7 +85,8 @@ defmodule Tanx.Core.ArenaView do
               heading: 0.0,
               radius: 0.5,
               armor: 0.0,
-              max_armor: 1.0
+              max_armor: 1.0,
+              tread: 0.0
   end
 
   defmodule MissileInfo do
@@ -237,7 +238,8 @@ defmodule Tanx.Core.ArenaView do
         heading: tank_info.heading,
         radius: tank_info.radius,
         armor: tank_info.armor,
-        max_armor: tank_info.max_armor
+        max_armor: tank_info.max_armor,
+        tread: tank_info.tread 
       }
     end
   end

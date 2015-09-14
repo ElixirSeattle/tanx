@@ -14,7 +14,8 @@ defmodule Tanx.Core.Updates do
               radius: 0.5,
               armor: 0.0,
               max_armor: 1.0,
-              force: {0.0, 0.0}
+              force: {0.0, 0.0},
+              tread: 0.0
   end
 
 
