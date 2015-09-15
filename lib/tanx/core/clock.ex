@@ -117,6 +117,9 @@ defmodule Tanx.Core.Clock do
     {:reply, {:error, :backwards_time}, state}
   end
   def handle_call({:manual_tick, time}, {from, _}, state) do
+    if state.time_config != nil do
+      Tanx.Core.SystemTime.set(state.time_config, time)
+    end
     GenServer.cast(state.recipient_pid, {:clock_tick, self, state.last, time})
     state = %State{state | is_waiting: from, last: time}
     {:reply, :ok, state}
