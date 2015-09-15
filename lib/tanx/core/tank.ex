@@ -226,7 +226,7 @@ defmodule Tanx.Core.Tank do
   defp update_tank(updater, dt, state) do
     new_heading = new_heading(state, dt)
     pos = new_pos(state, new_heading, dt)
-    tread_position = new_tread_position(state, new_heading, pos, dt) 
+    tread_position = new_tread_position(state, new_heading, pos, dt)
 
     force = Tanx.Core.Obstacles.force_from_decomposed_walls(
       state.decomposed_walls, pos, @tank_radius + @tank_collision_buffer)

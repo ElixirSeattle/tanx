@@ -17,6 +17,10 @@ defmodule Tanx.Core.PowerUp do
     GenServer.start_link(__MODULE__, { x, y, type})
   end
 
+  def get_state(powerup) do
+    GenServer.call(powerup, :get_state)
+  end
+
   def collect(pid) do
     GenServer.call(pid, :collect)
   end
@@ -37,7 +41,7 @@ defmodule Tanx.Core.PowerUp do
                                     type: type}}
   end
 
- def handle_cast({:update, _last_time, _time, updater}, state) do
+  def handle_cast({:update, _last_time, _time, updater}, state) do
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(%Tanx.Core.Updates.PowerUp{powerup: self,
                                                         pos: {state.x, state.y},
                                                         radius: state.radius,
@@ -47,6 +51,10 @@ defmodule Tanx.Core.PowerUp do
 
   def handle_call(:collect, _from, state) do
     {:stop, :normal, :ok, state}
+  end
+
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
   end
 
   defp pick_power_up_type() do

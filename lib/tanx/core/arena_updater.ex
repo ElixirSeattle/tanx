@@ -377,7 +377,7 @@ defmodule Tanx.Core.ArenaUpdater do
             radius: response.radius,
             armor: response.armor,
             max_armor: response.max_armor,
-            tread: response.tread 
+            tread: response.tread
           }
           [tank]
         else
