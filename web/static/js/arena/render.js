@@ -142,40 +142,40 @@ class ArenaRender {
       if (tank.tread < 0.125) {
         var spriteSheetX = columnTwo;
       } else if (tank.tread < 0.250) {
-        var spriteSheetX = columnThree;
+        spriteSheetY = rowTwo;
+        var spriteSheetX = columnOne;
       } else if (tank.tread < 0.375) {
-        var spriteSheetX = columnFour;
+        var spriteSheetX = columnEight;
       } else if (tank.tread < 0.5) {
-        var spriteSheetX = columnFive;
+        var spriteSheetX = columnSeven;
       } else if (tank.tread < 0.625) {
         var spriteSheetX = columnSix;
       } else if (tank.tread < 0.750) {
-        var spriteSheetX = columnSeven;
+        var spriteSheetX = columnFive;
       } else if (tank.tread < 0.875) {
-        var spriteSheetX = columnEight;
+        var spriteSheetX = columnFour;
       } else {
-        spriteSheetY = rowTwo;
-        var spriteSheetX = columnOne;
+        var spriteSheetX = columnThree;
       }
     } else {
       var spriteSheetY = rowTwo; 
       if (tank.tread < 0.125) {
         var spriteSheetX = columnTwo;
       } else if (tank.tread < 0.250) {
-        var spriteSheetX = columnThree;
+        spriteSheetY = rowThree;
+        var spriteSheetX = columnOne;
       } else if (tank.tread < 0.375) {
-        var spriteSheetX = columnFour;
+        var spriteSheetX = columnEight;
       } else if (tank.tread < 0.5) {
-        var spriteSheetX = columnFive;
+        var spriteSheetX = columnSeven;
       } else if (tank.tread < 0.625) {
         var spriteSheetX = columnSix;
       } else if (tank.tread < 0.750) {
-        var spriteSheetX = columnSeven;
+        var spriteSheetX = columnFive;
       } else if (tank.tread < 0.875) {
-        var spriteSheetX = columnEight;
+        var spriteSheetX = columnFour;
       } else {
-        spriteSheetY = rowThree;
-        var spriteSheetX = columnOne;
+        var spriteSheetX = columnThree;
       }
     }
     context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 67, 79,
