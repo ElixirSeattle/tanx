@@ -95,7 +95,9 @@ defmodule Tanx.Core.View do
               sound: nil
   end
 
+
   defmodule PowerUp do
+    @derive [Poison.Encoder]
     @moduledoc """
     A view of a power_up.
     """
@@ -105,32 +107,4 @@ defmodule Tanx.Core.View do
               type: nil
   end
 
-
-
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

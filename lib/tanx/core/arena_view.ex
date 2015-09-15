@@ -116,8 +116,6 @@ defmodule Tanx.Core.ArenaView do
         %Tanx.Core.View.EntryPoint{x: ep.x, y: ep.y, name: ep.name}
       end)
 
-    power_ups = structure
-
     structure_view = %Tanx.Core.View.Structure{
       height: structure.height,
       width: structure.width,
@@ -239,7 +237,7 @@ defmodule Tanx.Core.ArenaView do
         radius: tank_info.radius,
         armor: tank_info.armor,
         max_armor: tank_info.max_armor,
-        tread: tank_info.tread 
+        tread: tank_info.tread
       }
     end
   end
@@ -268,25 +266,4 @@ defmodule Tanx.Core.ArenaView do
     end
   end
 
-  defp power_up_view_builder(false) do
-    fn power_up_info ->
-      %Tanx.Core.View.PowerUp{
-        x: power_up_info.x,
-        y: power_up_info.y,
-        radius: power_up_info.radius,
-        type: power_up_info.type
-      }
-    end
-  end
-
-  defp power_up_view_builder(true) do
-    fn power_up_info ->
-      %{
-        x: power_up_info.x,
-        y: power_up_info.y,
-        radius: power_up_info.radius,
-        type: power_up_info.type
-      }
-    end
-  end
 end

@@ -15,9 +15,7 @@ defmodule Tanx.Core.SystemTime do
     Otherwise, the last time set in the configuration is returned.
   """
   def get(nil) do
-    # TODO: Use new time API in Erlang 18
-    {gs, s, ms} = :erlang.now()
-    gs * 1000000000 + s * 1000 + div(ms, 1000)
+    :erlang.system_time(:milli_seconds)
   end
   def get(config) do
     Agent.get(config, &(&1))

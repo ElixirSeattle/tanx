@@ -240,7 +240,7 @@ defmodule Tanx.Core.Tank do
       armor: state.armor,
       max_armor: state.max_armor,
       force: force,
-      tread: tread_position 
+      tread: tread_position
     }
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
 
@@ -279,9 +279,9 @@ defmodule Tanx.Core.Tank do
     {new_x, new_y}
   end
 
-  defp new_tread_position(state, new_heading, pos, dt) do
+  defp new_tread_position(state, _new_heading, _pos, dt) do
     max_tread = 1.0
-    min_tread = 0.0  
+    min_tread = 0.0
     dist = state.velocity * dt
     new_tread = state.tread + dist/2
     get_tread_position_in_range(new_tread, min_tread, max_tread)
@@ -295,6 +295,6 @@ defmodule Tanx.Core.Tank do
     get_tread_position_in_range(tread_position+max_tread, min_tread, max_tread)
   end
 
-  defp get_tread_position_in_range(tread_position, min_tread, max_tread), do: tread_position
+  defp get_tread_position_in_range(tread_position, _min_tread, _max_tread), do: tread_position
 
 end
