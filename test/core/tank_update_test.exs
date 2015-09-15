@@ -26,7 +26,7 @@ defmodule Tanx.TankUpdateTest do
   test "tank tread increments as it moves forward", %{game: game, player: player} do
     :ok = player |> Tanx.Core.Player.new_tank()
     :ok = player |> Tanx.Core.Player.control_tank(:forward, true)
-  
+
     game |> Tanx.Core.Game.manual_clock_tick(2000)
     _check_tank(%{player: player, x: 2.0, y: 0.0, heading: 0.0, tread: 1.0})
     game |> Tanx.Core.Game.manual_clock_tick(2500)
@@ -36,11 +36,11 @@ defmodule Tanx.TankUpdateTest do
     game |> Tanx.Core.Game.manual_clock_tick(4000)
     _check_tank(%{player: player, x: 6.0, y: 0.0, heading: 0.0, tread: 1.0})
   end
-  
+
   test "tank tread decrements as it moves backward", %{game: game, player: player} do
     :ok = player |> Tanx.Core.Player.new_tank()
     :ok = player |> Tanx.Core.Player.control_tank(:backward, true)
-  
+
     game |> Tanx.Core.Game.manual_clock_tick(2000)
     _check_tank(%{player: player, x: -2.0, y: 0.0, heading: 0.0, tread: 0.0})
     game |> Tanx.Core.Game.manual_clock_tick(2500)
