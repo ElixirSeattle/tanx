@@ -347,6 +347,9 @@ defmodule Tanx.Core.Player do
     case type do
       %Tanx.Core.PowerUpTypes.BouncingMissile{} ->
         state =  %State{state | powerups: Dict.put(state.powerups, :wall_bounce, type.bounce_count)}
+      %Tanx.Core.PowerUpTypes.HealthKit{} ->
+        state.current_tank |> Tanx.Core.Tank.adjust(nil, nil, 2.0)
+        state
       _ -> state
     end
     {:reply, :ok, state}

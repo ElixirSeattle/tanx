@@ -152,7 +152,11 @@ defmodule Tanx.Core.Tank do
     end
   end
 
-
+  def handle_cast({:adjust, _x = nil, _y = nil, armor}, state = %State{explosion_progress: nil}) do
+    state = %State{state | armor: armor}
+    {:noreply, state}
+  end
+  
   def handle_cast({:adjust, x, y, armor}, state = %State{explosion_progress: nil}) do
     state = %State{state | pos: {x, y}, armor: armor}
     {:noreply, state}

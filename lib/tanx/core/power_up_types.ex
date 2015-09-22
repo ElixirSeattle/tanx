@@ -8,4 +8,11 @@ defmodule Tanx.Core.PowerUpTypes do
     defstruct name: "Bouncing Missile",
               bounce_count: 1
   end
+
+  defmodule HealthKit do
+    @moduledoc """
+    A power up that will restore health to the player that obtains it
+    """
+    defstruct name: "Health Kit"
+  end
 end

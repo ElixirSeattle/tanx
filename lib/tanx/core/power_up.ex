@@ -58,6 +58,8 @@ defmodule Tanx.Core.PowerUp do
   end
 
   defp pick_power_up_type() do
-    %Tanx.Core.PowerUpTypes.BouncingMissile{}
+    list_of_types = [%Tanx.Core.PowerUpTypes.BouncingMissile{}, %Tanx.Core.PowerUpTypes.HealthKit{}]
+    :random.seed(:erlang.now)
+    Enum.at(list_of_types, :random.uniform(length(list_of_types)) - 1)
   end
 end
