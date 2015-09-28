@@ -4,6 +4,8 @@ class ArenaRender {
   constructor(arenaStructure) {
     this._tankSprite = new Image();
     this._tankSprite.src = 'images/tank_sprite.png';
+    this._heartImage = new Image();
+    this._heartImage.src = 'images/heart.png';
     this._canvas = $('#tanx-canvas');
     this._arenaStructure = arenaStructure;
 
@@ -193,10 +195,18 @@ class ArenaRender {
                                                         powerup.radius * 2);
     context.translate(powerupRect.x, powerupRect.y);
 
-    let spriteSheetX = 590;
-    let spriteSheetY = 177;
-    context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 79, 67,
-      -powerupRect.width/2, -powerupRect.height/2, powerupRect.width, powerupRect.height);
+    switch(powerup.type.name) {
+      case 'Bouncing Missile':
+        var spriteSheetX = 590;
+        var spriteSheetY = 177;
+        context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 79, 67,
+          -powerupRect.width/2, -powerupRect.height/2, powerupRect.width, powerupRect.height);
+        break;
+      case 'Health Kit':
+        context.drawImage(this._heartImage, -powerupRect.width/2, -powerupRect.height/2, 
+            powerupRect.width, powerupRect.height);
+        break;
+    }
     context.restore();
   }
 
