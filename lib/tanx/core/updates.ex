@@ -51,6 +51,7 @@ defmodule Tanx.Core.Updates do
     defstruct powerup: nil,
               pos: {0.0, 0.0},
               radius: 0.4,
-              type: nil
+              type: nil,
+              created_at: nil
   end
 end

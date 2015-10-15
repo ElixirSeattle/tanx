@@ -168,6 +168,7 @@ defmodule Tanx.Core.ArenaUpdater do
     explosion_responses = Dict.get(categorized_responses, :explosion, [])
     powerup_responses = Dict.get(categorized_responses, :power_up, [])
 
+    powerup_responses = expire_powerups(powerup_responses)
     {tank_responses, powerup_responses} = resolve_tank_powerup_collisions(tank_responses, powerup_responses)
     tank_responses = resolve_tank_forces(tank_responses)
     {missile_responses, tank_responses} = resolve_tank_missile_collisions(missile_responses, tank_responses)
@@ -188,6 +189,19 @@ defmodule Tanx.Core.ArenaUpdater do
 
     state.clock |> Tanx.Core.Clock.send_tock
     %State{state | expected: nil, received: nil}
+  end
+
+  defp expire_powerups(powerup_responses) do
+    now = Tanx.Core.SystemTime.get(nil)
+    powerup_responses |> Enum.map(fn
+      powerup = %Tanx.Core.Updates.PowerUp{} ->
+        if powerup.created_at < now - 10000 do
+          powerup = %DestroyPowerUp{powerup: powerup.powerup,
+                                    collected_by: nil,
+                                    type: powerup.type}
+        end
+        powerup
+    end)
   end
 
   defp resolve_tank_powerup_collisions(tank_responses, powerup_responses) do
@@ -354,6 +368,8 @@ defmodule Tanx.Core.ArenaUpdater do
       end)
 
     powerup_responses |> Enum.each(fn
+      %DestroyPowerUp{powerup: powerup, collected_by: nil, type: _type} ->
+        powerup |> Tanx.Core.PowerUp.collect
       %DestroyPowerUp{powerup: powerup, collected_by: player, type: type} ->
         powerup |> Tanx.Core.PowerUp.collect
         player |> Tanx.Core.Player.addPowerUp(type)
