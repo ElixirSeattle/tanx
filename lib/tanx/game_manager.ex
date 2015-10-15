@@ -37,7 +37,7 @@ defmodule Tanx.GameManager do
     Enum.at(structures, position || random_element(length(structures)))
   end
 
-  defp random_element(length) do
+  def random_element(length) do
     << a :: 32, b :: 32, c :: 32 >> = :crypto.rand_bytes(12)
     :random.seed(a, b, c)
     :random.uniform(length) - 1

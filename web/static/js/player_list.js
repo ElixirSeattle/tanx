@@ -91,8 +91,8 @@ class PlayerList {
 
     if (!this._hasPlayer) {
       this._hasPlayer = true;
-      this._gameChannel.push("join", {name: $('#tanx-name-field').val()});
-      this._chatClient.push("join", {name: $('#tanx-name-field').val()});
+      this._gameChannel.push("join", {name: this._escapedTankName()});
+      this._chatClient.push("join", {name: this._escapedTankName()});
       this._joinCallbacks.forEach(callback => {
         callback();
       });
@@ -116,7 +116,7 @@ class PlayerList {
     if (this._hasPlayer) {
       this._hasPlayer = false;
       this._gameChannel.push("leave", {});
-      this._chatClient.push("leave", {name: $('#tanx-name-field').val()});
+      this._chatClient.push("leave", {name: this._escapedTankName()});
       this._leaveCallbacks.forEach(callback => {
         callback();
       });
@@ -126,8 +126,19 @@ class PlayerList {
 
   _renamePlayer() {
     if (this._hasPlayer) {
-      this._gameChannel.push("rename", {name: $('#tanx-name-field').val()});
+      this._gameChannel.push("rename", {name: this._escapedTankName()});
     }
+  }
+
+  _escapedTankName(){
+    return this._escapeHtml($('#tanx-name-field').val())
+  }
+
+  _escapeHtml(str) {
+
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML
   }
 
 }

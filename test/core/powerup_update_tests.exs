@@ -137,4 +137,10 @@ defmodule Tanx.PowerupUpdateTest do
     want = %{wall_bounce: 0}
     assert player_powerups == want
   end
+
+  test "pick random powerup" do
+    list = [:one, :two, :three]
+    ret = Tanx.Core.PowerUp.pick_power_up_type(list)
+    assert is_atom ret
+  end
 end
