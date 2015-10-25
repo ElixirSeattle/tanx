@@ -31,12 +31,12 @@ defmodule Tanx.Mixfile do
   defp deps do
     [
       {:poison, "~> 1.5"},
-      {:phoenix, "~> 1.0"},
+      {:phoenix, "~> 1.0.3"},
       {:phoenix_ecto, "~> 1.2"},
-      {:postgrex, ">= 0.0.0"},
+      {:postgrex, ">= 0.9.1"},
       {:phoenix_html, "~> 2.2"},
-      {:phoenix_live_reload, "~> 1.0", only: :dev},
-      {:cowboy, "~> 1.0"}
+      {:phoenix_live_reload, "~> 1.0.1", only: :dev},
+      {:cowboy, "~> 1.0.3"}
     ]
   end
 end

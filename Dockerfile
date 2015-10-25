@@ -1,6 +1,6 @@
 FROM trenpixster/elixir
 
-RUN mkdir /nodejs && curl https://nodejs.org/dist/v0.12.7/node-v0.12.7-linux-x64.tar.gz | tar xvzf - -C /nodejs --strip-components=1
+RUN mkdir /nodejs && curl https://nodejs.org/dist/v4.2.1/node-v4.2.1-linux-x64.tar.gz | tar xvzf - -C /nodejs --strip-components=1
 
 ENV PATH $PATH:/nodejs/bin:/elixir/bin
 ENV HOME /tanx
