@@ -34,7 +34,7 @@
         </div>
 
         <div id="tanx-framerate">
-          Frame rate: <span id="tanx-fps"></span>
+          Frame rate: <span id="tanx-fps"></span> / Buffer: <span id="tanx-framebuflen"></span>
         </div>
         <pre id="tanx-arena-json"></pre>
       </div>

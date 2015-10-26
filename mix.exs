@@ -57,9 +57,19 @@ defmodule Tanx.MixUtil do
     cmd |> String.to_char_list |> :os.cmd |> IO.puts
   end
 
+  def run_stream(cmd) do
+    [bin | args] = String.split(cmd)
+    {_, 0} = System.cmd(bin, args, into: IO.stream(:stdio, :line))
+  end
+
   def echo_and_run(cmd) do
     IO.puts cmd
     run cmd
+  end
+
+  def echo_and_run_stream(cmd) do
+    IO.puts cmd
+    run_stream cmd
   end
 
 end
@@ -72,8 +82,8 @@ defmodule Mix.Tasks do
 
     def run(_args) do
       project = Tanx.MixUtil.get_project
-      Tanx.MixUtil.echo_and_run "docker build -t gcr.io/#{project}/tanx ."
-      Tanx.MixUtil.echo_and_run "gcloud docker push gcr.io/#{project}/tanx"
+      Tanx.MixUtil.echo_and_run_stream "docker build -t gcr.io/#{project}/tanx ."
+      Tanx.MixUtil.echo_and_run_stream "gcloud docker push gcr.io/#{project}/tanx"
     end
   end
 
@@ -99,7 +109,8 @@ defmodule Mix.Tasks do
 
     def run(_args) do
       yaml = Tanx.MixUtil.build_yaml("rc-phoenix.yaml")
-      Tanx.MixUtil.run "echo '#{yaml}' | kubectl rolling-update phoenix -f -"
+      Tanx.MixUtil.echo_and_run "kubectl stop rc phoenix"
+      Tanx.MixUtil.run "echo '#{yaml}' | kubectl create -f -"
     end
   end
 
@@ -109,6 +120,13 @@ defmodule Mix.Tasks do
     def run(_args) do
       yaml = Tanx.MixUtil.build_yaml("service-phoenix.yaml")
       Tanx.MixUtil.run "echo '#{yaml}' | kubectl create -f -"
+    end
+  end
+
+  defmodule Kube.Balancer.Ip do
+    use Mix.Task
+
+    def run(_args) do
       ipaddr = get_ipaddr()
       IO.puts("IP ADDRESS: #{ipaddr}")
     end
@@ -118,6 +136,7 @@ defmodule Mix.Tasks do
       match = ~r{\n\s+(\d+\.\d+\.\d+\.\d+)} |> Regex.run(result)
       case match do
         nil ->
+          IO.puts("ip address not yet available...")
           :timer.sleep(5000)
           get_ipaddr()
         [_, ipaddr] -> ipaddr
