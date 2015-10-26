@@ -3,7 +3,7 @@ import ArenaRender from "web/static/js/arena/render"
 
 const NUM_TIMESTAMPS = 10;
 const INITIAL_BUFFER_LEN = 2;
-const MAX_BUFFER_LEN = 6;
+const MAX_BUFFER_LEN = 10;
 const TARGET_FPS_LO = 30;
 const TARGET_FPS_HI = 50;
 const MEASUREMENT_INTERVAL = 2000;
