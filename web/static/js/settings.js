@@ -2,8 +2,8 @@
 const SHOW_FRAMERATE_INITIALLY = true;
 const SHOW_JSON_INITIALLY = false;
 
-const MUTE_MUSIC_INITIALLY = false;
-const MUTE_SOUND_INITIALLY = false;
+const MUTE_MUSIC_INITIALLY = true;
+const MUTE_SOUND_INITIALLY = true;
 
 
 class Settings {

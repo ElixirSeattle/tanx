@@ -30,7 +30,7 @@ defmodule Tanx.GameManager do
   end
 
   defp structure do
-    pick_structure(%Tanx.Core.Structure.MapDetails{}.maps)
+    pick_structure(%Tanx.Core.Structure.MapDetails{}.maps, 0)
   end
 
   defp pick_structure(structures, position \\ nil) do
