@@ -84,7 +84,7 @@
         <h3>Instructions</h3>
         <p>Enter your name and join the game in the upper left.<p>
         <p>Click on one of the pulsing yellow entry points to start your tank.</p>
-        <p>Move your tank with the arrow keys: forward, right, and left. Alternately, you can use the I, J, and L keys.</p>
+        <p>Move your tank with the arrow keys: forward, right, left, and back. Alternately, you can use the I, J, L, and K keys.</p>
         <p>Space bar fires a missile. Shoot down the other players' tanks!</p>
         <p>The Z key aborts (self-destructs) your tank.</p>
       </div>

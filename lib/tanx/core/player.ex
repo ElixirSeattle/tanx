@@ -188,7 +188,7 @@ defmodule Tanx.Core.Player do
 
 
   @forward_velocity 2.0
-  @backward_velocity 2.0
+  @backward_velocity 1.0
   @angular_velocity 2.0
   @missile_fire_rate 200
 
