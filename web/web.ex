@@ -18,7 +18,10 @@ defmodule Tanx.Web do
 
   def model do
     quote do
-      use Ecto.Model
+      use Ecto.Schema
+
+      import Ecto
+      import Ecto.Changeset
     end
   end
 
@@ -28,6 +31,7 @@ defmodule Tanx.Web do
 
       # Alias the data repository and import query/model functions
       alias Tanx.Repo
+      import Ecto
       import Ecto.Model
       import Ecto.Query, only: [from: 2]
 
@@ -63,6 +67,7 @@ defmodule Tanx.Web do
 
       # Alias the data repository and import query/model functions
       alias Tanx.Repo
+      import Ecto
       import Ecto.Model
       import Ecto.Query, only: [from: 2]
 
