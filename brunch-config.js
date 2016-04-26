@@ -38,8 +38,6 @@ exports.config = {
   paths: {
     // Which directories to watch
     watched: [
-      "deps/phoenix/web/static",
-      "deps/phoenix_html/web/static",
       "web/static",
       "test/static"
     ],
@@ -54,5 +52,9 @@ exports.config = {
       // Do not use ES6 compiler in vendor code
       ignore: [/^(web\/static\/vendor)/]
     }
+  },
+  npm: {
+    enabled: true,
+    whitelist: ["phoenix", "phoenix_html"]
   }
 };

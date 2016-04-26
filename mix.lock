@@ -8,7 +8,7 @@
   "phoenix": {:hex, :phoenix, "1.1.4"},
   "phoenix_ecto": {:hex, :phoenix_ecto, "2.0.1"},
   "phoenix_html": {:hex, :phoenix_html, "2.5.1"},
-  "phoenix_live_reload": {:hex, :phoenix_live_reload, "1.0.1"},
+  "phoenix_live_reload": {:hex, :phoenix_live_reload, "1.0.3"},
   "plug": {:hex, :plug, "1.1.4"},
   "poison": {:hex, :poison, "1.5.2"},
   "poolboy": {:hex, :poolboy, "1.5.1"},
