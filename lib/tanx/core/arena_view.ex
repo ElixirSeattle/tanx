@@ -152,11 +152,12 @@ defmodule Tanx.Core.ArenaView do
     missiles = state.missiles |> Enum.map(missile_view_builder(from))
     explosions = state.explosions
 
-    if tanks |> Enum.any?(&(&1.is_me)) do
-      entry_points_available = %{}
-    else
-      entry_points_available = state.entry_points_available
-    end
+    entry_points_available =
+      if tanks |> Enum.any?(&(&1.is_me)) do
+        %{}
+      else
+        state.entry_points_available
+      end
 
     powerups = state.powerups |> Enum.map(power_up_view_builder())
 

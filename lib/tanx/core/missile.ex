@@ -98,29 +98,32 @@ defmodule Tanx.Core.Missile do
       impact = {{nx, ny}, nil}
     end
 
-    if impact != nil do
-      {{nx, ny}, normal} = impact
-      if wb <= 0 do
-        state = %State{state | explosion: 0.0}
-        update = %Tanx.Core.Updates.Explosion{pos: {nx, ny}, radius: @explosion_radius, age: 0.0}
+    update =
+      if impact != nil do
+        {{nx, ny}, normal} = impact
+        update =
+          if wb <= 0 do
+            state = %State{state | explosion: 0.0}
+            %Tanx.Core.Updates.Explosion{pos: {nx, ny}, radius: @explosion_radius, age: 0.0}
+          else
+            wb = wb - 1
+            {nx, ny, {hx, hy}} = _calc_new_heading(nx, ny, hx, hy, normal)
+            %Tanx.Core.Updates.MoveMissile{
+              missile: self,
+              player: state.player,
+              pos: {nx, ny},
+              heading: {hx, hy}
+            }
+          end
+        update
       else
-        wb = wb - 1
-        {nx, ny, {hx, hy}} = _calc_new_heading(nx, ny, hx, hy, normal)
-        update = %Tanx.Core.Updates.MoveMissile{
+        %Tanx.Core.Updates.MoveMissile{
           missile: self,
           player: state.player,
           pos: {nx, ny},
           heading: {hx, hy}
         }
       end
-    else
-      update = %Tanx.Core.Updates.MoveMissile{
-        missile: self,
-        player: state.player,
-        pos: {nx, ny},
-        heading: {hx, hy}
-      }
-    end
     state = %State{state | x: nx, y: ny, wall_bounce: wb, heading: {hx, hy}}
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
     {:noreply, state}

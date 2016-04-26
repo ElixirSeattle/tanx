@@ -105,12 +105,14 @@ defmodule Tanx.Core.PlayerManager do
 
   def init({arena_objects, arena_view, time_config, change_handler, handler_args}) do
     Process.flag(:trap_exit, true)
-    if change_handler do
-      {:ok, broadcaster} = GenEvent.start_link()
-      :ok = broadcaster |> GenEvent.add_handler(change_handler, handler_args)
-    else
-      broadcaster = nil
-    end
+    broadcaster =
+      if change_handler do
+        {:ok, broadcaster} = GenEvent.start_link()
+        :ok = broadcaster |> GenEvent.add_handler(change_handler, handler_args)
+        broadcaster
+      else
+        nil
+      end
 
     state = %State{
       arena_objects: arena_objects,

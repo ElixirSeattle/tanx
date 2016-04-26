@@ -174,17 +174,19 @@ defmodule Tanx.Core.Tank do
 
   defp do_destroy(state, destroyer) do
     if state.explosion_progress == nil do
-      if destroyer == nil do
-        explosion_time = @self_destruct_explosion_time
-        explosion_radius = @self_destruct_explosion_radius
-        explosion_intensity = @self_destruct_explosion_intensity
-        originator = state.player
-      else
-        explosion_time = @normal_explosion_time
-        explosion_radius = @normal_explosion_radius
-        explosion_intensity = @normal_explosion_intensity
-        originator = destroyer
-      end
+      [explosion_time, explosion_radius,explosion_intensity, originator] =
+        if destroyer == nil do
+          [@self_destruct_explosion_time,
+           @self_destruct_explosion_radius,
+           @self_destruct_explosion_intensity,
+           state.player]
+        else
+          [@normal_explosion_time,
+          @normal_explosion_radius,
+          @normal_explosion_intensity,
+          destroyer]
+        end
+
       %State{state |
         explosion_progress: 0.0,
         explosion_originator: originator,
