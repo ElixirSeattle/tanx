@@ -20,5 +20,10 @@ spec:
             - containerPort: 8080
               protocol: TCP
           imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "250m"
+            limits:
+              cpu: "1"
       restartPolicy: Always
       dnsPolicy: ClusterFirst
