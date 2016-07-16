@@ -196,11 +196,14 @@ defmodule Tanx.Core.ArenaUpdater do
     powerup_responses |> Enum.map(fn
       powerup = %Tanx.Core.Updates.PowerUp{} ->
         if powerup.created_at < now - 10000 do
-          powerup = %DestroyPowerUp{powerup: powerup.powerup,
-                                    collected_by: nil,
-                                    type: powerup.type}
+          %DestroyPowerUp{
+            powerup: powerup.powerup,
+            collected_by: nil,
+            type: powerup.type
+          }
+        else
+          powerup
         end
-        powerup
     end)
   end
 
@@ -213,11 +216,16 @@ defmodule Tanx.Core.ArenaUpdater do
             {powerup, cur_tank}
           (powerup, cur_tank) ->
             collision = powerup_hit(powerup.pos, powerup.radius, cur_tank.pos, tank_radius)
-            if collision == true do
-              powerup = %DestroyPowerUp{powerup: powerup.powerup,
-                                        collected_by: cur_tank.player,
-                                        type: powerup.type}
-            end
+            powerup =
+              if collision == true do
+                %DestroyPowerUp{
+                  powerup: powerup.powerup,
+                  collected_by: cur_tank.player,
+                  type: powerup.type
+                }
+              else
+                powerup
+              end
             {powerup, cur_tank}
           end)
           {next_tank, next_powerups}
@@ -238,13 +246,13 @@ defmodule Tanx.Core.ArenaUpdater do
           (tank = %DestroyTank{} , missile) ->
             {tank, missile}
           (tank, missile) ->
-              hit = missile_hit(missile.pos, missile.heading, tank.pos, tank_radius, missile.strength)
+            hit = missile_hit(missile.pos, missile.heading, tank.pos, tank_radius, missile.strength)
             if hit > 0.0 do
               armor = tank.armor - hit
-              if armor <= 0.0 do
-                tank = %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: missile.player, final_pos: tank.pos}
+              tank = if armor <= 0.0 do
+                %DestroyTank{tank: tank.tank, dead_player: tank.player, culprit_player: missile.player, final_pos: tank.pos}
               else
-                tank = %Tanx.Core.Updates.MoveTank{tank | armor: armor}
+                %Tanx.Core.Updates.MoveTank{tank | armor: armor}
               end
               {tank, %DestroyMissile{missile: missile.missile}}
             else

@@ -244,9 +244,12 @@ defmodule Tanx.Core.PlayerManager do
 
 
   defp build_player_view(%PlayerInfo{name: name, kills: kills, deaths: deaths}, is_me) do
-    if name == nil or name == "" do
-      name = "Anonymous Coward"
-    end
+    name =
+      if name == nil or name == "" do
+        "Anonymous Coward"
+      else
+        name
+      end
     %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths, is_me: is_me}
   end
 

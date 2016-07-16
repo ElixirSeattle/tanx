@@ -208,9 +208,12 @@ defmodule Tanx.Core.ArenaView do
         type: powerup.type} #TODO: map the power up map to a string name
       end)
 
-    if entry_points_available == nil do
-      entry_points_available = state.all_entry_points
-    end
+    entry_points_available =
+      if entry_points_available == nil do
+        state.all_entry_points
+      else
+        entry_points_available
+      end
 
     state = %State{state |
       tanks: tanks,

@@ -33,8 +33,10 @@ defmodule Tanx.Core.PowerUp do
 
   def init({x, y, type}) do
 
-    if(type == nil) do
-      type = pick_power_up_type()
+    type = if type == nil do
+      pick_power_up_type()
+    else
+      type
     end
 
     {:ok, %Tanx.Core.PowerUp.State{ x: x,

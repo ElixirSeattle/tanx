@@ -79,8 +79,10 @@ defmodule Tanx.Core.Missile do
 
 
   def handle_cast(:explode, state) do
-    if state.explosion == nil do
-      state = %State{state | explosion: 0.0}
+    state = if state.explosion == nil do
+      %State{state | explosion: 0.0}
+    else
+      state
     end
     {:noreply, state}
   end
@@ -92,39 +94,50 @@ defmodule Tanx.Core.Missile do
     {hx, hy} = state.heading
     nx = state.x + hx * dt
     ny = state.y + hy * dt
-    wb = state.wall_bounce
     impact = _hit_obstacle?(nx, ny, state)
-    if impact == nil and _hit_arena_edge?(nx, ny, state) do
-      impact = {{nx, ny}, nil}
+    impact = if impact == nil and _hit_arena_edge?(nx, ny, state) do
+      {{nx, ny}, nil}
+    else
+      impact
     end
 
-    update =
+    {update, state} =
       if impact != nil do
+        wb = state.wall_bounce
         {{nx, ny}, normal} = impact
-        update =
-          if wb <= 0 do
-            state = %State{state | explosion: 0.0}
-            %Tanx.Core.Updates.Explosion{pos: {nx, ny}, radius: @explosion_radius, age: 0.0}
-          else
-            wb = wb - 1
-            {nx, ny, {hx, hy}} = _calc_new_heading(nx, ny, hx, hy, normal)
+        if wb <= 0 do
+          {
+            %Tanx.Core.Updates.Explosion{
+              pos: {nx, ny},
+              radius: @explosion_radius,
+              age: 0.0
+            },
+            %State{state | explosion: 0.0, x: nx, y: ny, heading: {hx, hy}}
+          }
+        else
+          {nx, ny, {hx, hy}} = _calc_new_heading(nx, ny, hx, hy, normal)
+          {
             %Tanx.Core.Updates.MoveMissile{
               missile: self,
               player: state.player,
               pos: {nx, ny},
               heading: {hx, hy}
-            }
-          end
-        update
+            },
+            %State{state | x: nx, y: ny, wall_bounce: wb - 1, heading: {hx, hy}}
+          }
+        end
       else
-        %Tanx.Core.Updates.MoveMissile{
-          missile: self,
-          player: state.player,
-          pos: {nx, ny},
-          heading: {hx, hy}
+        {
+          %Tanx.Core.Updates.MoveMissile{
+            missile: self,
+            player: state.player,
+            pos: {nx, ny},
+            heading: {hx, hy}
+          },
+          %State{state | x: nx, y: ny, heading: {hx, hy}}
         }
       end
-    state = %State{state | x: nx, y: ny, wall_bounce: wb, heading: {hx, hy}}
+
     updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
     {:noreply, state}
   end

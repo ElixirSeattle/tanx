@@ -22,9 +22,10 @@ defmodule Tanx.Core.Game do
   """
   def start_link(opts \\ []) do
     Logger.info("Starting game core")
-    genserver_opts = []
-    if opts |> Keyword.has_key?(:name) do
-      genserver_opts = genserver_opts |> Keyword.put(:name, opts[:name])
+    genserver_opts = if opts |> Keyword.has_key?(:name) do
+      [name: opts[:name]]
+    else
+      []
     end
     GenServer.start_link(__MODULE__, opts, genserver_opts)
   end
