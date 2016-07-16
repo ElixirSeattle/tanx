@@ -11,9 +11,11 @@ defmodule Tanx.GameChannel do
 
 
   def handle_in("join", %{"name" => player_name}, socket) do
-    if !socket.assigns[:player] do
+    socket = if !socket.assigns[:player] do
       {:ok, player} = :game_core |> Tanx.Core.Game.connect(name: player_name)
-      socket = assign(socket, :player, player)
+      assign(socket, :player, player)
+    else
+      socket
     end
     {:noreply, socket}
   end
@@ -21,9 +23,11 @@ defmodule Tanx.GameChannel do
 
   def handle_in("leave", _msg, socket) do
     player = socket.assigns[:player]
-    if player do
+    socket = if player do
       player |> Tanx.Core.Player.leave
-      socket = assign(socket, :player, nil)
+      assign(socket, :player, nil)
+    else
+      socket
     end
     {:noreply, socket}
   end
@@ -74,8 +78,10 @@ defmodule Tanx.GameChannel do
     player = socket.assigns[:player]
     if player do
       params = [armor: 2.0, max_armor: 2.0]
-      if msg |> Dict.has_key?("entry_point") do
-        params = params |> Keyword.put(:entry_point, msg["entry_point"])
+      params = if msg |> Dict.has_key?("entry_point") do
+        params |> Keyword.put(:entry_point, msg["entry_point"])
+      else
+        params
       end
       player |> Tanx.Core.Player.new_tank(params)
     end
@@ -135,9 +141,11 @@ defmodule Tanx.GameChannel do
   def terminate(reason, socket) do
     Logger.info("Connection terminated due to #{inspect(reason)}")
     player = socket.assigns[:player]
-    if player do
+    socket = if player do
       player |> Tanx.Core.Player.leave
-      socket = assign(socket, :player, nil)
+      assign(socket, :player, nil)
+    else
+      socket
     end
     {reason, socket}
   end

@@ -299,7 +299,7 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call(:missile_count, _from, state) do
-    {:reply, Dict.size(state.missiles), state}
+    {:reply, length(state.missiles), state}
   end
 
   def handle_call(:view_players, _from, state) do

@@ -33,7 +33,7 @@ defmodule Tanx.GameManager do
     pick_structure(%Tanx.Core.Structure.MapDetails{}.maps, 0)
   end
 
-  defp pick_structure(structures, position \\ nil) do
+  defp pick_structure(structures, position) do
     Enum.at(structures, position || random_element(length(structures)))
   end
 

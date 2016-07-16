@@ -133,6 +133,7 @@ defmodule Tanx.Core.Obstacles do
     if cross_magnitude(p0, p1, p2) <= 0 do
       elem = {vdiff(p1, p0) |> turn_left |> vadd(p1), p1, vdiff(p1, p2) |> turn_right |> vadd(p1)}
       convex = [elem | convex]
+      {concave, convex, segments}
     else
       dir0 = vdiff(p0, p1) |> normalize
       dir2 = vdiff(p2, p1) |> normalize
@@ -144,8 +145,8 @@ defmodule Tanx.Core.Obstacles do
       t_ratio = :math.sqrt(((dist0 + dist2) * (dist0 + dist2) - csquared) / denom)
       s_ratio = :math.sqrt(4.0 * dist0 * dist2 / denom)
       concave = [{p1, dir0, dir1, dir2, t_ratio, s_ratio} | concave]
+      {concave, convex, segments}
     end
-    {concave, convex, segments}
   end
 
 

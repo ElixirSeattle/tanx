@@ -93,7 +93,7 @@ defmodule Tanx.BasicTanksTest do
   end
 
 
-  test "one player fires 2 missiles", %{game: game, time_config: time_config} do
+  test "one player fires 2 missiles", %{game: game} do
     {:ok, player1} = game |> Tanx.Core.Game.connect(name: "Kyle")
     :ok = player1 |> Tanx.Core.Player.new_tank()
     :ok = player1 |> Tanx.Core.Player.new_missile()
