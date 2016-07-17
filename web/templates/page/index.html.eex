@@ -79,6 +79,9 @@
       <div class="modal-body">
         <h2>Welcome to Elixir Tanx</h2>
         <div>
+          Build ID: "<%= @build_id %>"
+        </div>
+        <div>
           Developed by Daniel Azuma, Greg Hill, Kyle Rippey, and Ben Stephens
         </div>
         <h3>Instructions</h3>

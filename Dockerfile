@@ -1,6 +1,6 @@
 FROM trenpixster/elixir
 
-RUN mkdir /nodejs && curl https://nodejs.org/dist/v6.1.0/node-v6.1.0-linux-x64.tar.gz | tar xvzf - -C /nodejs --strip-components=1
+RUN mkdir /nodejs && curl https://nodejs.org/dist/v6.3.0/node-v6.3.0-linux-x64.tar.gz | tar xvzf - -C /nodejs --strip-components=1
 
 ENV PATH $PATH:/nodejs/bin:/elixir/bin
 ENV HOME /tanx
@@ -23,3 +23,6 @@ RUN /elixir/bin/mix compile && \
 
 EXPOSE 8080
 ENTRYPOINT /elixir/bin/mix phoenix.server
+
+ARG TANX_BUILD_ID=unknown
+ENV TANX_BUILD_ID ${TANX_BUILD_ID:-unknown}

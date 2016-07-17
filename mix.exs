@@ -2,23 +2,32 @@ defmodule Tanx.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :tanx,
-     version: "0.0.1",
-     elixir: "~> 1.2",
-     elixirc_paths: elixirc_paths(Mix.env),
-     compilers: [:phoenix] ++ Mix.compilers,
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps]
+    [
+      app: :tanx,
+      version: "0.0.1",
+      elixir: "~> 1.2",
+      elixirc_paths: elixirc_paths(Mix.env),
+      compilers: [:phoenix] ++ Mix.compilers,
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      deps: deps
+    ]
   end
 
   # Configuration for the OTP application
   #
   # Type `mix help compile.app` for more information
   def application do
-    [mod: {Tanx, []},
-     applications: [:phoenix, :phoenix_html, :cowboy, :logger,
-                    :phoenix_ecto, :postgrex]]
+    [
+      mod: {Tanx, []},
+      applications: [
+        :cowboy,
+        :logger,
+        :phoenix,
+        :phoenix_html,
+        :timex
+      ]
+    ]
   end
 
   # Specifies which paths to compile per environment
@@ -30,13 +39,129 @@ defmodule Tanx.Mixfile do
   # Type `mix help deps` for examples and options
   defp deps do
     [
-      {:poison, "~> 1.5"},
-      {:phoenix, "~> 1.1.2"},
-      {:phoenix_ecto, "~> 2.0"},
-      {:postgrex, ">= 0.9.1"},
-      {:phoenix_html, "~> 2.3"},
-      {:phoenix_live_reload, "~> 1.0.1", only: :dev},
-      {:cowboy, "~> 1.0.3"}
+      {:poison, "~> 2.0"},
+      {:phoenix, "~> 1.2.0"},
+      {:phoenix_html, "~> 2.6"},
+      {:phoenix_live_reload, "~> 1.0.5", only: :dev},
+      {:cowboy, "~> 1.0.4"},
+      {:timex, "~> 3.0"}
     ]
   end
+end
+
+
+defmodule Tanx.MixUtil do
+
+  def get_project() do
+    {result, 0} = System.cmd("gcloud", ["config", "list", "project"])
+    ~r{project\s=\s(\S+)} |> Regex.run(result) |> Enum.at(1)
+  end
+
+  def build_yaml(source) do
+    EEx.eval_file("kube/#{source}", [project: get_project()])
+  end
+
+  def run(cmd) do
+    cmd |> String.to_char_list |> :os.cmd |> IO.puts
+  end
+
+  def run_stream(cmd) do
+    [bin | args] = String.split(cmd)
+    {_, 0} = System.cmd(bin, args, into: IO.stream(:stdio, :line))
+  end
+
+  def echo_and_run(cmd) do
+    IO.puts cmd
+    run cmd
+  end
+
+  def echo_and_run_stream(cmd) do
+    IO.puts cmd
+    run_stream cmd
+  end
+
+  def get_build_id() do
+    Timex.now |> Timex.format!("%Y%m%d-%H%M%S", :strftime)
+  end
+
+end
+
+
+defmodule Mix.Tasks do
+
+  defmodule Kube.Build do
+    use Mix.Task
+
+    def run(_args) do
+      project = Tanx.MixUtil.get_project
+      Tanx.MixUtil.echo_and_run_stream "docker build --pull --build-arg TANX_BUILD_ID=#{Tanx.MixUtil.get_build_id} -t gcr.io/#{project}/tanx ."
+      Tanx.MixUtil.echo_and_run_stream "gcloud docker push gcr.io/#{project}/tanx"
+    end
+  end
+
+  defmodule Kube.Phoenix.Start do
+    use Mix.Task
+
+    def run(_args) do
+      yaml = Tanx.MixUtil.build_yaml("rc-phoenix.yaml")
+      Tanx.MixUtil.run "echo '#{yaml}' | kubectl create -f -"
+    end
+  end
+
+  defmodule Kube.Phoenix.Stop do
+    use Mix.Task
+
+    def run(_args) do
+      Tanx.MixUtil.echo_and_run "kubectl delete rc phoenix"
+    end
+  end
+
+  defmodule Kube.Phoenix.Update do
+    use Mix.Task
+
+    def run(_args) do
+      yaml = Tanx.MixUtil.build_yaml("rc-phoenix.yaml")
+      Tanx.MixUtil.echo_and_run "kubectl delete rc phoenix"
+      Tanx.MixUtil.run "echo '#{yaml}' | kubectl create -f -"
+    end
+  end
+
+  defmodule Kube.Balancer.Start do
+    use Mix.Task
+
+    def run(_args) do
+      yaml = Tanx.MixUtil.build_yaml("service-phoenix.yaml")
+      Tanx.MixUtil.run "echo '#{yaml}' | kubectl create -f -"
+    end
+  end
+
+  defmodule Kube.Balancer.Ip do
+    use Mix.Task
+
+    def run(_args) do
+      ipaddr = get_ipaddr()
+      IO.puts("IP ADDRESS: #{ipaddr}")
+    end
+
+    defp get_ipaddr() do
+      {result, 0} = System.cmd("kubectl", ["get", "services", "phoenix", "--no-headers"])
+      match = ~r{phoenix\s+\S+\s+(\d+\.\d+\.\d+\.\d+)} |> Regex.run(result)
+      case match do
+        nil ->
+          IO.puts("ip address not yet available...")
+          :timer.sleep(5000)
+          get_ipaddr()
+        [_, ipaddr] -> ipaddr
+      end
+    end
+  end
+
+  defmodule Kube.Balancer.Stop do
+    use Mix.Task
+
+    def run(_args) do
+      Tanx.MixUtil.echo_and_run "kubectl delete services phoenix"
+    end
+  end
+
 end

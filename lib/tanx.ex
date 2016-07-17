@@ -9,8 +9,6 @@ defmodule Tanx do
     children = [
       # Start the endpoint when the application starts
       supervisor(Tanx.Endpoint, []),
-      # Start the Ecto repository
-      worker(Tanx.Repo, []),
       # Start a GameManager
       worker(Tanx.GameManager, [])
     ]

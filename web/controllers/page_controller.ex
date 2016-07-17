@@ -2,6 +2,10 @@ defmodule Tanx.PageController do
   use Tanx.Web, :controller
 
   def index(conn, _params) do
-    conn |> render("index.html")
+    build_id = System.get_env("TANX_BUILD_ID")
+    build_id = if build_id == nil, do: "local", else: build_id
+    conn
+      |> assign(:build_id, build_id)
+      |> render("index.html")
   end
 end
