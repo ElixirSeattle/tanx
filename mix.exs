@@ -112,7 +112,7 @@ defmodule Mix.Tasks do
     use Mix.Task
 
     def run(_args) do
-      Tanx.MixUtil.echo_and_run "kubectl delete rc phoenix"
+      Tanx.MixUtil.echo_and_run "kubectl delete rc tanx-phoenix"
     end
   end
 
@@ -121,7 +121,7 @@ defmodule Mix.Tasks do
 
     def run(_args) do
       yaml = Tanx.MixUtil.build_yaml("rc-phoenix.yaml")
-      Tanx.MixUtil.echo_and_run "kubectl delete rc phoenix"
+      Tanx.MixUtil.echo_and_run "kubectl delete rc tanx-phoenix"
       Tanx.MixUtil.run "echo '#{yaml}' | kubectl create -f -"
     end
   end
@@ -130,7 +130,7 @@ defmodule Mix.Tasks do
     use Mix.Task
 
     def run(_args) do
-      yaml = Tanx.MixUtil.build_yaml("service-phoenix.yaml")
+      yaml = Tanx.MixUtil.build_yaml("service-tanx.yaml")
       Tanx.MixUtil.run "echo '#{yaml}' | kubectl create -f -"
     end
   end
@@ -144,8 +144,8 @@ defmodule Mix.Tasks do
     end
 
     defp get_ipaddr() do
-      {result, 0} = System.cmd("kubectl", ["get", "services", "phoenix", "--no-headers"])
-      match = ~r{phoenix\s+\S+\s+(\d+\.\d+\.\d+\.\d+)} |> Regex.run(result)
+      {result, 0} = System.cmd("kubectl", ["get", "services", "tanx", "--no-headers"])
+      match = ~r{tanx\s+\S+\s+(\d+\.\d+\.\d+\.\d+)} |> Regex.run(result)
       case match do
         nil ->
           IO.puts("ip address not yet available...")
@@ -160,7 +160,7 @@ defmodule Mix.Tasks do
     use Mix.Task
 
     def run(_args) do
-      Tanx.MixUtil.echo_and_run "kubectl delete services phoenix"
+      Tanx.MixUtil.echo_and_run "kubectl delete services tanx"
     end
   end
 

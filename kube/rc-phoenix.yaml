@@ -1,20 +1,20 @@
 kind: ReplicationController
 apiVersion: v1
 metadata:
-  name: phoenix
+  name: tanx-phoenix
   labels:
-    run: phoenix
+    run: tanx-phoenix
 spec:
   replicas: 1
   selector:
-    run: phoenix
+    run: tanx-phoenix
   template:
     metadata:
       labels:
-        run: phoenix
+        run: tanx-phoenix
     spec:
       containers:
-        - name: phoenix
+        - name: tanx-phoenix-pod
           image: gcr.io/<%= project %>/tanx:latest
           ports:
             - containerPort: 8080
