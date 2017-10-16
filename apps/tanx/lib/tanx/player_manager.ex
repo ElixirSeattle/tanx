@@ -1,16 +1,16 @@
-defmodule Tanx.Core.PlayerManager do
+defmodule Tanx.PlayerManager do
 
   @moduledoc """
   The PlayerManager is an internal process that keeps track of players connected to the game.
   It handles creation of Player endpoint processes, responds to requests to view the
   player list, and deals with players leaving.
 
-  This is not part of the Tanx.Core interface. Hence there are no public API functions in
+  This is not part of the Tanx interface. Hence there are no public API functions in
   this module. You generally interact with the PlayerManager through the Game module.
   """
 
 
-  #### API internal to Tanx.Core
+  #### API internal to Tanx
 
 
   @doc """
@@ -32,7 +32,7 @@ defmodule Tanx.Core.PlayerManager do
 
 
   @doc """
-    Returns views of all connected players as a list of Tanx.Core.View.Player structs.
+    Returns views of all connected players as a list of Tanx.View.Player structs.
     If the calling process is a player, the :is_me field of that player will be set to true.
   """
   def view_all_players(player_manager) do
@@ -41,7 +41,7 @@ defmodule Tanx.Core.PlayerManager do
 
 
   @doc """
-    Returns a view of the specified player as a Tanx.Core.View.Player struct.
+    Returns a view of the specified player as a Tanx.View.Player struct.
     If the calling process is a player, the :is_me field of that player will be set to true.
     Returns nil if the specified player was not found.
   """
@@ -119,7 +119,7 @@ defmodule Tanx.Core.PlayerManager do
   # - {:ok, player} if successful
   # - {:error, reason} if not
   def handle_call({:create_player, name}, _from, state) do
-    player = Tanx.Core.Player.start_link(
+    player = Tanx.Player.start_link(
         self(), state.arena_objects, state.arena_view, state.time_config)
     player_info = %PlayerInfo{name: name}
     players = state.players |> Map.put(player, player_info)
@@ -129,7 +129,7 @@ defmodule Tanx.Core.PlayerManager do
   end
 
 
-  # Returns a list of Tanx.Core.View.Player representing the players.
+  # Returns a list of Tanx.View.Player representing the players.
   # If called from a Player, that player's :is_me field will be set to true.
   def handle_call(:view_all, {from, _}, state) do
     player_views = state.players
@@ -142,7 +142,7 @@ defmodule Tanx.Core.PlayerManager do
   end
 
 
-  # Returns the Tanx.Core.View.Player representing the given Player, or nil if the
+  # Returns the Tanx.View.Player representing the given Player, or nil if the
   # given player is not part of this game.
   def handle_call({:view_player, player}, {from, _}, state) do
     reply = case state.players[player] do
@@ -220,7 +220,7 @@ defmodule Tanx.Core.PlayerManager do
 
   # Remove the given player from the current list.
   defp internal_remove_player(player, state) do
-    :ok = state.arena_objects |> Tanx.Core.ArenaObjects.kill_player_objects(player)
+    :ok = state.arena_objects |> Tanx.ArenaObjects.kill_player_objects(player)
     state = %State{state | players: state.players |> Map.delete(player)}
     _broadcast_change(state)
     state
@@ -248,13 +248,13 @@ defmodule Tanx.Core.PlayerManager do
       else
         name
       end
-    %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths, is_me: is_me}
+    %Tanx.View.Player{name: name, kills: kills, deaths: deaths, is_me: is_me}
   end
 
 
   defp sort_views(views) do
     views |> Enum.sort_by(fn
-      %Tanx.Core.View.Player{name: name, kills: kills, deaths: deaths} ->
+      %Tanx.View.Player{name: name, kills: kills, deaths: deaths} ->
         {deaths - 2 * kills, name}
     end)
   end

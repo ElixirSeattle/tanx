@@ -1,4 +1,4 @@
-defmodule Tanx.Core.Game do
+defmodule Tanx.Game do
 
   @moduledoc """
   The Game process forms the main entry point into the game core.
@@ -32,7 +32,7 @@ defmodule Tanx.Core.Game do
 
   Supported options include:
 
-  - **:structure** A Tanx.Core.Structure representing the arena size, shape, and walls.
+  - **:structure** A Tanx.Structure representing the arena size, shape, and walls.
   - **:clock_interval** The interval between clock ticks in milliseconds. Defaults to 20.
     Set to nil to disable automatic clock ticks (useful for unit testing).
   """
@@ -49,7 +49,7 @@ defmodule Tanx.Core.Game do
 
   @doc """
   Connect as a player, and return a player reference that can be passed to
-  functions in the Tanx.Core.Player module.
+  functions in the Tanx.Player module.
 
   Supported options include:
 
@@ -61,7 +61,7 @@ defmodule Tanx.Core.Game do
 
 
   @doc """
-  Returns a view of the connected players, as a list of Tanx.Core.View.Player structs.
+  Returns a view of the connected players, as a list of Tanx.View.Player structs.
   """
   def view_players(game) do
     GenServer.call(game, :view_players)
@@ -90,10 +90,10 @@ defmodule Tanx.Core.Game do
   Immediately ticks the clock with the given time value, and waits for all updates to
   complete. This is generally used in unit tests.
 
-  See Tanx.Core.Clock.manual_tick() for return values.
+  See Tanx.Clock.manual_tick() for return values.
   """
   def manual_clock_tick(game, time) do
-    GenServer.call(game, :get_clock) |> Tanx.Core.Clock.manual_tick(time)
+    GenServer.call(game, :get_clock) |> Tanx.Clock.manual_tick(time)
   end
 
 
@@ -109,11 +109,11 @@ defmodule Tanx.Core.Game do
     clock_interval = Keyword.get(opts, :clock_interval, 20)
     time_config = Keyword.get(opts, :time_config, nil)
 
-    arena_objects = Tanx.Core.ArenaObjects.start_link(structure)
-    arena_view = Tanx.Core.ArenaView.start_link(structure)
-    player_manager = Tanx.Core.PlayerManager.start_link(
+    arena_objects = Tanx.ArenaObjects.start_link(structure)
+    arena_view = Tanx.ArenaView.start_link(structure)
+    player_manager = Tanx.PlayerManager.start_link(
         arena_objects, arena_view, time_config)
-    clock = Tanx.Core.Clock.start_link(self(), clock_interval, time_config)
+    clock = Tanx.Clock.start_link(self(), clock_interval, time_config)
 
     state = %State{
       structure: structure,
@@ -128,13 +128,13 @@ defmodule Tanx.Core.Game do
 
 
   def handle_call({:connect, name}, _from, state) do
-    response = state.player_manager |> Tanx.Core.PlayerManager.create_player(name)
+    response = state.player_manager |> Tanx.PlayerManager.create_player(name)
     {:reply, response, state}
   end
 
 
   def handle_call(:view_players, _from, state) do
-    views = state.player_manager |> Tanx.Core.PlayerManager.view_all_players
+    views = state.player_manager |> Tanx.PlayerManager.view_all_players
     {:reply, views, state}
   end
 
@@ -158,17 +158,17 @@ defmodule Tanx.Core.Game do
   # all the update computation, including getting information from arena object processes
   # such as tanks, and then updates the ArenaView state.
   def handle_cast({:clock_tick, _clock, last_time, time}, state) do
-    Tanx.Core.ArenaUpdater.start(
+    Tanx.ArenaUpdater.start(
         state.structure.entry_points, state.arena_objects, state.arena_view,
         state.player_manager, state.clock, last_time, time)
     {:noreply, state}
   end
 
 
-  defp choose_structure(nil), do: %Tanx.Core.Structure{}
-  defp choose_structure(structure = %Tanx.Core.Structure{}), do: structure
+  defp choose_structure(nil), do: %Tanx.Structure{}
+  defp choose_structure(structure = %Tanx.Structure{}), do: structure
   defp choose_structure(index) when is_integer(index) do
-    Enum.at(%Tanx.Core.Structure.MapDetails{}.maps, index)
+    Enum.at(%Tanx.Structure.MapDetails{}.maps, index)
   end
 
 end

@@ -12,7 +12,7 @@ defmodule TanxWeb.GameChannel do
 
   def handle_in("join", %{"name" => player_name}, socket) do
     socket = if !socket.assigns[:player] do
-      {:ok, player} = :game_core |> Tanx.Core.Game.connect(name: player_name)
+      {:ok, player} = :game_core |> Tanx.Game.connect(name: player_name)
       assign(socket, :player, player)
     else
       socket
@@ -24,7 +24,7 @@ defmodule TanxWeb.GameChannel do
   def handle_in("leave", _msg, socket) do
     player = socket.assigns[:player]
     socket = if player do
-      player |> Tanx.Core.Player.leave
+      player |> Tanx.Player.leave
       assign(socket, :player, nil)
     else
       socket
@@ -36,9 +36,9 @@ defmodule TanxWeb.GameChannel do
   def handle_in("view_players", _msg, socket) do
     player = socket.assigns[:player]
     players_view = if player do
-      player |> Tanx.Core.Player.view_players()
+      player |> Tanx.Player.view_players()
     else
-      :game_core |> Tanx.Core.Game.view_players()
+      :game_core |> Tanx.Game.view_players()
     end
     push(socket, "view_players", %{players: players_view})
     {:noreply, socket}
@@ -48,7 +48,7 @@ defmodule TanxWeb.GameChannel do
   def handle_in("view_structure", _msg, socket) do
     player = socket.assigns[:player]
     if player do
-      view = player |> Tanx.Core.Player.view_arena_structure()
+      view = player |> Tanx.Player.view_arena_structure()
       push(socket, "view_structure", view)
     end
     {:noreply, socket}
@@ -58,7 +58,7 @@ defmodule TanxWeb.GameChannel do
   def handle_in("view_arena", _msg, socket) do
     player = socket.assigns[:player]
     if player do
-      arena_view = player |> Tanx.Core.Player.view_arena_objects()
+      arena_view = player |> Tanx.Player.view_arena_objects()
       push(socket, "view_arena", arena_view)
     end
     {:noreply, socket}
@@ -68,7 +68,7 @@ defmodule TanxWeb.GameChannel do
   def handle_in("rename", %{"name" => name}, socket) do
     player = socket.assigns[:player]
     if player do
-      :ok = player |> Tanx.Core.Player.rename(name)
+      :ok = player |> Tanx.Player.rename(name)
     end
     {:noreply, socket}
   end
@@ -83,7 +83,7 @@ defmodule TanxWeb.GameChannel do
       else
         params
       end
-      player |> Tanx.Core.Player.new_tank(params)
+      player |> Tanx.Player.new_tank(params)
     end
     {:noreply, socket}
   end
@@ -92,7 +92,7 @@ defmodule TanxWeb.GameChannel do
   def handle_in("self_destruct_tank", _msg, socket) do
     player = socket.assigns[:player]
     if player do
-      player |> Tanx.Core.Player.self_destruct_tank
+      player |> Tanx.Player.self_destruct_tank
     end
     {:noreply, socket}
   end
@@ -101,7 +101,7 @@ defmodule TanxWeb.GameChannel do
   def handle_in("control_tank", %{"button" => button, "down" => down}, socket) do
     player = socket.assigns[:player]
     if player do
-      player |> Tanx.Core.Player.control_tank(button, down)
+      player |> Tanx.Player.control_tank(button, down)
     end
     {:noreply, socket}
   end
@@ -124,7 +124,7 @@ defmodule TanxWeb.GameChannel do
   def handle_out("view_players", original_view, socket) do
     player = socket.assigns[:player]
     if player do
-      players_view = player |> Tanx.Core.Player.view_players()
+      players_view = player |> Tanx.Player.view_players()
       push(socket, "view_players", %{players: players_view})
     else
       push(socket, "view_players", original_view)
@@ -142,7 +142,7 @@ defmodule TanxWeb.GameChannel do
     Logger.info("Connection terminated due to #{inspect(reason)}")
     player = socket.assigns[:player]
     socket = if player do
-      player |> Tanx.Core.Player.leave
+      player |> Tanx.Player.leave
       assign(socket, :player, nil)
     else
       socket

@@ -1,4 +1,4 @@
-defmodule Tanx.Core.SystemTime do
+defmodule Tanx.SystemTime do
 
   @moduledoc """
     This module provides an interface for getting system time. You can get either

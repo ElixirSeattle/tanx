@@ -1,12 +1,12 @@
-defmodule Tanx.Core.ArenaView do
+defmodule Tanx.ArenaView do
 
   @moduledoc """
   The ArenaView is an internal process that stores the latest state of the arena. It is here
   so view requests can be served quickly.
 
-  This is not part of the Tanx.Core interface. Hence there are no public API functions in
-  this module. To get the current arena view, call the appropriate function in Tanx.Core.Game
-  or Tanx.Core.Player.
+  This is not part of the Tanx interface. Hence there are no public API functions in
+  this module. To get the current arena view, call the appropriate function in Tanx.Game
+  or Tanx.Player.
   """
 
   @entry_point_radius 0.5
@@ -14,7 +14,7 @@ defmodule Tanx.Core.ArenaView do
   require Logger
 
 
-  #### API internal to Tanx.Core
+  #### API internal to Tanx
 
 
   @doc """
@@ -27,7 +27,7 @@ defmodule Tanx.Core.ArenaView do
 
 
   @doc """
-  Gets the arena's Tanx.Core.View.Structure.
+  Gets the arena's Tanx.View.Structure.
   """
   def get_structure(arena_view) do
     GenServer.call(arena_view, :get_structure)
@@ -35,7 +35,7 @@ defmodule Tanx.Core.ArenaView do
 
 
   @doc """
-  Gets the current list of arena objects as a Tanx.Core.View.Arena.
+  Gets the current list of arena objects as a Tanx.View.Arena.
 
   If this function is called by a Player process, that player's tanks will have
   the :is_me field set to true, and that player's missiles will have the
@@ -67,12 +67,12 @@ defmodule Tanx.Core.ArenaView do
   use GenServer
 
   defmodule State do
-    defstruct structure: nil,        # Tanx.Core.View.Structure
+    defstruct structure: nil,        # Tanx.View.Structure
               all_entry_points: %{},  # Default entry_points_available
               tanks: [],             # list of TankInfo
               missiles: [],          # list of MissileInfo
-              explosions: [],        # list of Tanx.Core.View.Explosion
-              powerups: [],           # list of Tanx.Core.View.PowerUp
+              explosions: [],        # list of Tanx.View.Explosion
+              powerups: [],           # list of Tanx.View.PowerUp
               entry_points_available: %{}  # map of entry point name to availability
   end
 
@@ -112,10 +112,10 @@ defmodule Tanx.Core.ArenaView do
 
     entry_points = structure.entry_points
       |> Enum.map(fn ep ->
-        %Tanx.Core.View.EntryPoint{x: ep.x, y: ep.y, name: ep.name}
+        %Tanx.View.EntryPoint{x: ep.x, y: ep.y, name: ep.name}
       end)
 
-    structure_view = %Tanx.Core.View.Structure{
+    structure_view = %Tanx.View.Structure{
       height: structure.height,
       width: structure.width,
       walls: walls,
@@ -160,7 +160,7 @@ defmodule Tanx.Core.ArenaView do
 
     powerups = state.powerups |> Enum.map(power_up_view_builder())
 
-    view = %Tanx.Core.View.Arena{
+    view = %Tanx.View.Arena{
       tanks: tanks,
       missiles: missiles,
       explosions: explosions,
@@ -193,14 +193,14 @@ defmodule Tanx.Core.ArenaView do
 
     explosions = explosions
       |> Enum.map(fn explosion ->
-        %Tanx.Core.View.Explosion{explosion |
+        %Tanx.View.Explosion{explosion |
           x: explosion.x |> truncate, y: explosion.y |> truncate,
           age: explosion.age |> truncate}
       end)
 
     powerups = powerups |>  Enum.map(fn powerup ->
 
-      %Tanx.Core.View.PowerUp{powerup |
+      %Tanx.View.PowerUp{powerup |
         x: powerup.x |> truncate,
         y: powerup.y |> truncate,
         radius: powerup.radius |> truncate,
@@ -231,7 +231,7 @@ defmodule Tanx.Core.ArenaView do
 
   defp tank_view_builder(player) do
     fn tank_info ->
-      %Tanx.Core.View.Tank{
+      %Tanx.View.Tank{
         is_me: tank_info.player == player,
         name: tank_info.name,
         x: tank_info.x,
@@ -248,7 +248,7 @@ defmodule Tanx.Core.ArenaView do
 
   defp missile_view_builder(player) do
     fn missile_info ->
-      %Tanx.Core.View.Missile{
+      %Tanx.View.Missile{
         is_mine: missile_info.player == player,
         x: missile_info.x,
         y: missile_info.y,
@@ -260,7 +260,7 @@ defmodule Tanx.Core.ArenaView do
 
   defp power_up_view_builder() do
     fn power_up_info ->
-      %Tanx.Core.View.PowerUp{
+      %Tanx.View.PowerUp{
         x: power_up_info.x,
         y: power_up_info.y,
         radius: power_up_info.radius,

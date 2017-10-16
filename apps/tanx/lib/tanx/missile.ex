@@ -1,4 +1,4 @@
-defmodule Tanx.Core.Missile do
+defmodule Tanx.Missile do
 
   require Logger
 
@@ -58,7 +58,7 @@ defmodule Tanx.Core.Missile do
     nx = @fire_buffer + x + tr * :math.cos(h)
     ny = @fire_buffer + y + tr * :math.sin(h)
 
-    {:ok, %Tanx.Core.Missile.State{arena_width: arena_width,
+    {:ok, %Tanx.Missile.State{arena_width: arena_width,
                                   arena_height: arena_height,
                                   decomposed_walls: decomposed_walls,
                                   player: player,
@@ -107,7 +107,7 @@ defmodule Tanx.Core.Missile do
         {{nx, ny}, normal} = impact
         if wb <= 0 do
           {
-            %Tanx.Core.Updates.Explosion{
+            %Tanx.Updates.Explosion{
               pos: {nx, ny},
               radius: @explosion_radius,
               age: 0.0
@@ -117,7 +117,7 @@ defmodule Tanx.Core.Missile do
         else
           {nx, ny, {hx, hy}} = _calc_new_heading(nx, ny, hx, hy, normal)
           {
-            %Tanx.Core.Updates.MoveMissile{
+            %Tanx.Updates.MoveMissile{
               missile: self(),
               player: state.player,
               pos: {nx, ny},
@@ -128,7 +128,7 @@ defmodule Tanx.Core.Missile do
         end
       else
         {
-          %Tanx.Core.Updates.MoveMissile{
+          %Tanx.Updates.MoveMissile{
             missile: self(),
             player: state.player,
             pos: {nx, ny},
@@ -138,7 +138,7 @@ defmodule Tanx.Core.Missile do
         }
       end
 
-    updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
+    updater |> Tanx.ArenaUpdater.send_update_reply(update)
     {:noreply, state}
   end
 
@@ -154,7 +154,7 @@ defmodule Tanx.Core.Missile do
       else
         nil
       end
-      update = %Tanx.Core.Updates.Explosion{
+      update = %Tanx.Updates.Explosion{
         pos: {state.x, state.y},
         radius: @explosion_radius,
         intensity: @explosion_intensity,
@@ -163,11 +163,11 @@ defmodule Tanx.Core.Missile do
         chain_radius: chain_radius,
         originator: state.player
       }
-      updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
+      updater |> Tanx.ArenaUpdater.send_update_reply(update)
       {:noreply, state}
     else
-      Tanx.Core.Player.explode_missile(state.player, self())
-      updater |> Tanx.Core.ArenaUpdater.send_update_reply(nil)
+      Tanx.Player.explode_missile(state.player, self())
+      updater |> Tanx.ArenaUpdater.send_update_reply(nil)
       {:stop, :normal, state}
     end
   end
@@ -175,7 +175,7 @@ defmodule Tanx.Core.Missile do
   defp _hit_obstacle?(x_pos, y_pos, state) do
     state.decomposed_walls
       |> Enum.find_value(fn(wall) ->
-                           Tanx.Core.Obstacles.collision_with_decomposed_wall(wall,
+                           Tanx.Obstacles.collision_with_decomposed_wall(wall,
                                                        {state.x, state.y},
                                                        {x_pos, y_pos}) end)
   end

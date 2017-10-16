@@ -1,4 +1,4 @@
-defmodule Tanx.Core.Tank do
+defmodule Tanx.Tank do
 
   @moduledoc """
   This process models a tank.
@@ -17,7 +17,7 @@ defmodule Tanx.Core.Tank do
   @self_destruct_explosion_intensity 4.0
 
 
-  #### API internal to Tanx.Core
+  #### API internal to Tanx
 
 
   @doc """
@@ -211,7 +211,7 @@ defmodule Tanx.Core.Tank do
       else
         nil
       end
-      update = %Tanx.Core.Updates.Explosion{
+      update = %Tanx.Updates.Explosion{
         pos: state.pos,
         radius: state.explosion_radius,
         intensity: state.explosion_intensity,
@@ -220,10 +220,10 @@ defmodule Tanx.Core.Tank do
         age: age,
         originator: state.explosion_originator
       }
-      updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
+      updater |> Tanx.ArenaUpdater.send_update_reply(update)
       {:noreply, state}
     else
-      updater |> Tanx.Core.ArenaUpdater.send_update_reply(nil)
+      updater |> Tanx.ArenaUpdater.send_update_reply(nil)
       {:stop, :normal, state}
     end
   end
@@ -234,10 +234,10 @@ defmodule Tanx.Core.Tank do
     pos = new_pos(state, new_heading, dt)
     tread_position = new_tread_position(state, new_heading, pos, dt)
 
-    force = Tanx.Core.Obstacles.force_from_decomposed_walls(
+    force = Tanx.Obstacles.force_from_decomposed_walls(
       state.decomposed_walls, pos, @tank_radius + @tank_collision_buffer)
 
-    update = %Tanx.Core.Updates.MoveTank{
+    update = %Tanx.Updates.MoveTank{
       tank: self(),
       player: state.player,
       pos: pos,
@@ -248,7 +248,7 @@ defmodule Tanx.Core.Tank do
       force: force,
       tread: tread_position
     }
-    updater |> Tanx.Core.ArenaUpdater.send_update_reply(update)
+    updater |> Tanx.ArenaUpdater.send_update_reply(update)
 
     state = %State{state | pos: pos, heading: new_heading, tread: tread_position}
     {:noreply, state}

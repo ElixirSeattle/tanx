@@ -1,4 +1,4 @@
-defmodule Tanx.Core.Updates do
+defmodule Tanx.Updates do
 
   # This is a collection of structs that represent updates sent from arena objects
   # back to the arena updater, describing how they have updated themselves.

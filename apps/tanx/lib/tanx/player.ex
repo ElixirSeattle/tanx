@@ -1,9 +1,9 @@
-defmodule Tanx.Core.Player do
+defmodule Tanx.Player do
 
   @moduledoc """
   The Player process is the entry point for a connected player.
 
-  To connect to a game, call Tanx.Core.Game.connect, which returns a player reference.
+  To connect to a game, call Tanx.Game.connect, which returns a player reference.
   That reference can then be passed to functions in this module to control the player.
   """
 
@@ -12,7 +12,7 @@ defmodule Tanx.Core.Player do
 
 
   @doc """
-  Returns a view of the connected players, as a list of Tanx.Core.View.Player structs.
+  Returns a view of the connected players, as a list of Tanx.View.Player structs.
   The current player will have the :is_me field set to true.
   """
   def view_players(player) do
@@ -21,7 +21,7 @@ defmodule Tanx.Core.Player do
 
 
   @doc """
-  Returns a view of the current player only, as a Tanx.Core.View.Player struct.
+  Returns a view of the current player only, as a Tanx.View.Player struct.
   """
   def view_myself(player) do
     GenServer.call(player, :view_myself)
@@ -37,7 +37,7 @@ defmodule Tanx.Core.Player do
 
 
   @doc """
-  Returns a view of the current arena state, as a Tanx.Core.View.Arena struct.
+  Returns a view of the current arena state, as a Tanx.View.Arena struct.
   The current player's tank (if any) will have its :is_me field set to true.
   """
   def view_arena_objects(player, params \\ []) do
@@ -46,7 +46,7 @@ defmodule Tanx.Core.Player do
 
 
   @doc """
-  Returns a view of the arena structure, as a Tanx.Core.View.Structure.
+  Returns a view of the arena structure, as a Tanx.View.Structure.
   """
   def view_arena_structure(player) do
     GenServer.call(player, :view_arena_structure)
@@ -153,7 +153,7 @@ defmodule Tanx.Core.Player do
   end
 
 
-  #### API internal to Tanx.Core
+  #### API internal to Tanx
 
 
   @doc """
@@ -208,7 +208,7 @@ defmodule Tanx.Core.Player do
   def handle_call({:new_tank, params}, _from, state) do
     case _maybe_call_tank(state, :ping) do
       {:not_found, state} ->
-        case state.arena_objects |> Tanx.Core.ArenaObjects.create_tank(params) do
+        case state.arena_objects |> Tanx.ArenaObjects.create_tank(params) do
           {:ok, tank} ->
             {:reply, :ok, %State{state | current_tank: tank, missiles: [], powerups: %{wall_bounce: 0}}}
           {:error, error} ->
@@ -223,8 +223,8 @@ defmodule Tanx.Core.Player do
   def handle_call(:self_destruct_tank, _from, state) do
     tank = state.current_tank
     if tank do
-      state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self())
-      tank |> Tanx.Core.Tank.self_destruct
+      state.player_manager |> Tanx.PlayerManager.inc_deaths(self())
+      tank |> Tanx.Tank.self_destruct
       {:reply, :ok, %State{state | current_tank: nil,  missiles: [], powerups: %{wall_bounce: 0}}}
     else
       {:reply, :no_tank, state}
@@ -235,7 +235,7 @@ defmodule Tanx.Core.Player do
   def handle_call({:explode_missile, missile}, _from, state) do
     tank = state.current_tank
     if tank do
-      :ok = state.arena_objects |> Tanx.Core.ArenaObjects.explode_missile(missile)
+      :ok = state.arena_objects |> Tanx.ArenaObjects.explode_missile(missile)
       {:reply, :ok, %State{state | missiles: List.delete(state.missiles, missile)}}
     else
       {:reply, :no_missile, state}
@@ -251,7 +251,7 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call({:control_tank, "fire", true}, _from, state) do
-    curr_time = Tanx.Core.SystemTime.get(state.time_config)
+    curr_time = Tanx.SystemTime.get(state.time_config)
     if (curr_time - state.last_fired) >= @missile_fire_rate do
 
       case _maybe_call_tank(state, :get_position) do
@@ -261,7 +261,7 @@ defmodule Tanx.Core.Player do
           {:reply, :no_tank, state}
         {:ok, {x, y, heading, tank_radius}, state } ->
           missile = state.arena_objects
-           |> Tanx.Core.ArenaObjects.create_missile(x,
+           |> Tanx.ArenaObjects.create_missile(x,
                                                     y,
                                                     heading,
                                                     tank_radius,
@@ -303,52 +303,52 @@ defmodule Tanx.Core.Player do
   end
 
   def handle_call(:view_players, _from, state) do
-    view = state.player_manager |> Tanx.Core.PlayerManager.view_all_players
+    view = state.player_manager |> Tanx.PlayerManager.view_all_players
     {:reply, view, state}
   end
 
   def handle_call(:view_myself, _from, state) do
-    view = state.player_manager |> Tanx.Core.PlayerManager.view_player(self())
+    view = state.player_manager |> Tanx.PlayerManager.view_player(self())
     {:reply, view, state}
   end
 
   def handle_call({:view_arena_objects, params}, _from, state) do
-    view = state.arena_view |> Tanx.Core.ArenaView.get_objects(params)
+    view = state.arena_view |> Tanx.ArenaView.get_objects(params)
     {:reply, view, state}
   end
 
   def handle_call(:view_arena_structure, _from, state) do
-    view = state.arena_view |> Tanx.Core.ArenaView.get_structure()
+    view = state.arena_view |> Tanx.ArenaView.get_structure()
     {:reply, view, state}
   end
 
   def handle_call({:rename, name}, _from, state) do
-    reply = state.player_manager |> Tanx.Core.PlayerManager.rename(name)
+    reply = state.player_manager |> Tanx.PlayerManager.rename(name)
     {:reply, reply, state}
   end
 
   def handle_call(:leave, _from, state) do
-    :ok = state.player_manager |> Tanx.Core.PlayerManager.remove_player
+    :ok = state.player_manager |> Tanx.PlayerManager.remove_player
     {:stop, :normal, :ok, %State{}}
   end
 
   def handle_call(:inc_kills, _from, state) do
-    reply = state.player_manager |> Tanx.Core.PlayerManager.inc_kills(self())
+    reply = state.player_manager |> Tanx.PlayerManager.inc_kills(self())
     {:reply, reply, state}
   end
 
   def handle_call(:inc_deaths, _from, state) do
     state = %State{state | powerups: %{}}
-    reply = state.player_manager |> Tanx.Core.PlayerManager.inc_deaths(self())
+    reply = state.player_manager |> Tanx.PlayerManager.inc_deaths(self())
     {:reply, reply, state}
   end
 
   def handle_call({:add_powerup, type}, _from, state) do
     state = case type do
-      %Tanx.Core.PowerUpTypes.BouncingMissile{} ->
+      %Tanx.PowerUpTypes.BouncingMissile{} ->
         %State{state | powerups: Map.put(state.powerups, :wall_bounce, type.bounce_count)}
-      %Tanx.Core.PowerUpTypes.HealthKit{} ->
-        Tanx.Core.Tank.adjust(state.current_tank, nil, nil, 2.0)
+      %Tanx.PowerUpTypes.HealthKit{} ->
+        Tanx.Tank.adjust(state.current_tank, nil, nil, 2.0)
         state
       _ -> state
     end

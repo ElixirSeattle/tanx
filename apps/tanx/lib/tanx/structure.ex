@@ -1,4 +1,4 @@
-defmodule Tanx.Core.Structure do
+defmodule Tanx.Structure do
 
   @moduledoc """
   The Structure module defines the static structure of an arena, including its size, shape,
@@ -38,7 +38,7 @@ defmodule Tanx.Core.Structure do
     pi = :math.pi()
     defstruct maps: [
                 # A maze with diagonal passages and an open area in the center.
-                %Tanx.Core.Structure{
+                %Tanx.Structure{
                   width: 20.0,height: 20.0,
 
                   walls: [
@@ -78,29 +78,29 @@ defmodule Tanx.Core.Structure do
                   ],
 
                   entry_points: [
-                    %Tanx.Core.Structure.EntryPoint{
+                    %Tanx.Structure.EntryPoint{
                       name: "nw",
                       x: -9.25, y: 9.25, heading: -pi/2,
                       buffer_left: 0.75, buffer_right: 1.25, buffer_up: 0.75, buffer_down: 4.25
                     },
-                    %Tanx.Core.Structure.EntryPoint{
+                    %Tanx.Structure.EntryPoint{
                       name: "ne",
                       x: 9.25, y: 9.25, heading: pi,
                       buffer_left: 4.25, buffer_right: 0.75, buffer_up: 0.75, buffer_down: 1.25
                     },
-                    %Tanx.Core.Structure.EntryPoint{
+                    %Tanx.Structure.EntryPoint{
                       name: "se",
                       x: 9.25, y: -9.25, heading: pi/2,
                       buffer_left: 1.25, buffer_right: 0.75, buffer_up: 4.25, buffer_down: 0.75
                     },
-                    %Tanx.Core.Structure.EntryPoint{
+                    %Tanx.Structure.EntryPoint{
                       name: "sw",
                       x: -9.25, y: -9.25, heading: 0.0,
                       buffer_left: 0.75, buffer_right: 4.25, buffer_up: 1.25, buffer_down: 0.75
                     },
                   ]
                 },
-                %Tanx.Core.Structure{
+                %Tanx.Structure{
                   width: 20.0,height: 20.0,
 
                   walls: [
@@ -152,22 +152,22 @@ defmodule Tanx.Core.Structure do
                   ],
 
                   entry_points: [
-                    %Tanx.Core.Structure.EntryPoint{
+                    %Tanx.Structure.EntryPoint{
                       name: "nw",
                       x: -9.25, y: 9.25, heading: 0.0,
                       buffer_left: 0.75, buffer_right: 1.25, buffer_up: 0.75, buffer_down: 4.25
                     },
-                    %Tanx.Core.Structure.EntryPoint{
+                    %Tanx.Structure.EntryPoint{
                       name: "ne",
                       x: 9.25, y: 9.25, heading: pi,
                       buffer_left: 4.25, buffer_right: 0.75, buffer_up: 0.75, buffer_down: 1.25
                     },
-                    %Tanx.Core.Structure.EntryPoint{
+                    %Tanx.Structure.EntryPoint{
                       name: "se",
                       x: 9.25, y: -9.25, heading: pi,
                       buffer_left: 1.25, buffer_right: 0.75, buffer_up: 4.25, buffer_down: 0.75
                     },
-                    %Tanx.Core.Structure.EntryPoint{
+                    %Tanx.Structure.EntryPoint{
                       name: "sw",
                       x: -9.25, y: -9.25, heading: 0.0,
                       buffer_left: 0.75, buffer_right: 4.25, buffer_up: 1.25, buffer_down: 0.75

@@ -1,4 +1,4 @@
-defmodule Tanx.Core.Clock do
+defmodule Tanx.Clock do
 
   @moduledoc """
   The Clock process implements a clock that sends a tick message to a recipient process
@@ -91,7 +91,7 @@ defmodule Tanx.Core.Clock do
 
 
   def init({recipient_pid, interval, time_config}) do
-    initial_time = if interval == nil, do: 0, else: Tanx.Core.SystemTime.get(time_config)
+    initial_time = if interval == nil, do: 0, else: Tanx.SystemTime.get(time_config)
     state = %State{
       recipient_pid: recipient_pid,
       time_config: time_config,
@@ -118,7 +118,7 @@ defmodule Tanx.Core.Clock do
   end
   def handle_call({:manual_tick, time}, {from, _}, state) do
     if state.time_config != nil do
-      Tanx.Core.SystemTime.set(state.time_config, time)
+      Tanx.SystemTime.set(state.time_config, time)
     end
     GenServer.cast(state.recipient_pid, {:clock_tick, self(), state.last, time})
     state = %State{state | is_waiting: from, last: time}
@@ -142,7 +142,7 @@ defmodule Tanx.Core.Clock do
 
 
   def handle_info(:timeout, state) do
-    cur = Tanx.Core.SystemTime.get(state.time_config)
+    cur = Tanx.SystemTime.get(state.time_config)
     GenServer.cast(state.recipient_pid, {:clock_tick, self(), state.last, cur})
     state = %State{state | is_waiting: true, last: cur}
     {:noreply, state}
@@ -157,7 +157,7 @@ defmodule Tanx.Core.Clock do
     if state.is_waiting || state.interval == nil do
       :infinity
     else
-      max(state.last + state.interval - Tanx.Core.SystemTime.get(state.time_config), 0)
+      max(state.last + state.interval - Tanx.SystemTime.get(state.time_config), 0)
     end
   end
 

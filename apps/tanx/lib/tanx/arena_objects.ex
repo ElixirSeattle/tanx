@@ -1,4 +1,4 @@
-defmodule Tanx.Core.ArenaObjects do
+defmodule Tanx.ArenaObjects do
 
   @moduledoc """
   The ArenaObjects is an internal process that keeps track of processes that manage objects
@@ -6,12 +6,12 @@ defmodule Tanx.Core.ArenaObjects do
   get the current list. It also deals with process exiting, and makes sure any running updater
   is kept informed.
 
-  This is not part of the Tanx.Core interface. Hence there are no public API functions in
+  This is not part of the Tanx interface. Hence there are no public API functions in
   this module.
   """
 
 
-  #### API internal to Tanx.Core
+  #### API internal to Tanx
 
 
   @doc """
@@ -120,7 +120,7 @@ defmodule Tanx.Core.ArenaObjects do
   def init({structure}) do
     Process.flag(:trap_exit, true)
     decomposed_walls = structure.walls
-      |> Enum.map(&Tanx.Core.Obstacles.decompose_wall/1)
+      |> Enum.map(&Tanx.Obstacles.decompose_wall/1)
     entry_points = structure.entry_points
       |> Enum.reduce(%{}, fn (ep, dict) ->
         dict |> Map.put(ep.name, %EntryPointInfo{x: ep.x, y: ep.y, heading: ep.heading})
@@ -143,7 +143,7 @@ defmodule Tanx.Core.ArenaObjects do
       {nil, state} ->
         {:reply, {:error, :entry_point_occupied}, state}
       {params, state} ->
-        tank = Tanx.Core.Tank.start_link(
+        tank = Tanx.Tank.start_link(
             state.arena_width, state.arena_height, state.decomposed_walls, from, params)
         state = %State{state | objects: state.objects |> Map.put(tank, from)}
         {:reply, {:ok, tank}, state}
@@ -153,7 +153,7 @@ defmodule Tanx.Core.ArenaObjects do
 
   # Create a new missile process. This must be called from the player that fired the missile.
   def handle_call({:create_missile, x, y, heading, tank_radius, wall_bounce}, {player, _}, state) do
-    {:ok, missile}  = Tanx.Core.Missile.start_link(player,
+    {:ok, missile}  = Tanx.Missile.start_link(player,
                                                    state.arena_width,
                                                    state.arena_height,
                                                    state.decomposed_walls,
@@ -166,7 +166,7 @@ defmodule Tanx.Core.ArenaObjects do
   end
 
   def handle_call({:create_power_up, x, y, type}, _, state) do
-    {:ok, power_up} = Tanx.Core.PowerUp.start_link(x, y, type)
+    {:ok, power_up} = Tanx.PowerUp.start_link(x, y, type)
     {:reply, power_up, %State{state | objects: state.objects |> Map.put(power_up, nil)}}
   end
 
@@ -228,7 +228,7 @@ defmodule Tanx.Core.ArenaObjects do
   # ensure that any running updater knows not to wait for updates from it.
   def handle_info({:EXIT, pid, _}, state) do
     if state.updater do
-      state.updater |> Tanx.Core.ArenaUpdater.forget_object(pid)
+      state.updater |> Tanx.ArenaUpdater.forget_object(pid)
     end
     {:noreply, %State{state | objects: state.objects |> Map.delete(pid)}}
   end

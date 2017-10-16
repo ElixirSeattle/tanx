@@ -1,4 +1,4 @@
-defmodule Tanx.Core.PowerUp do
+defmodule Tanx.PowerUp do
 
   require Logger
 
@@ -39,14 +39,14 @@ defmodule Tanx.Core.PowerUp do
       type
     end
 
-    {:ok, %Tanx.Core.PowerUp.State{ x: x,
+    {:ok, %Tanx.PowerUp.State{ x: x,
                                     y: y,
                                     type: type,
-                                    created_at: Tanx.Core.SystemTime.get(nil) }}
+                                    created_at: Tanx.SystemTime.get(nil) }}
   end
 
   def handle_cast({:update, _last_time, _time, updater}, state) do
-    updater |> Tanx.Core.ArenaUpdater.send_update_reply(%Tanx.Core.Updates.PowerUp{powerup: self(),
+    updater |> Tanx.ArenaUpdater.send_update_reply(%Tanx.Updates.PowerUp{powerup: self(),
                                                         pos: {state.x, state.y},
                                                         radius: state.radius,
                                                         type: state.type,
@@ -64,8 +64,8 @@ defmodule Tanx.Core.PowerUp do
 
   def pick_power_up_type(powerups \\ nil) do
     list_of_types = [
-      %Tanx.Core.PowerUpTypes.BouncingMissile{},
-      %Tanx.Core.PowerUpTypes.HealthKit{}
+      %Tanx.PowerUpTypes.BouncingMissile{},
+      %Tanx.PowerUpTypes.HealthKit{}
     ]
     Enum.at(powerups || list_of_types,
             :rand.uniform(length(powerups || list_of_types)) - 1)

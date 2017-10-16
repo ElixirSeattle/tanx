@@ -1,4 +1,4 @@
-defmodule Tanx.Core.View do
+defmodule Tanx.View do
 
   # This is a collection of structs that represent views returned from Game and Player
   # view calls.

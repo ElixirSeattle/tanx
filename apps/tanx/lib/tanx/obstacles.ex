@@ -1,4 +1,4 @@
-defmodule Tanx.Core.Obstacles do
+defmodule Tanx.Obstacles do
 
   @moduledoc """
   The Obstacles module computes force on tanks due to obstacles.

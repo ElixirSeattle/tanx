@@ -4,7 +4,7 @@ defmodule TanxWeb.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    Tanx.Core.Game.add_player_change_listener(:game_core, fn
+    Tanx.Game.add_player_change_listener(:game_core, fn
       {:player_views, player_views} ->
         TanxWeb.Endpoint.broadcast!("game", "view_players", %{players: player_views})
       end)
