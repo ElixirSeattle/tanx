@@ -1,18 +1,13 @@
 # This file is responsible for configuring your application
 # and its dependencies with the aid of the Mix.Config module.
-#
-# This configuration file is loaded before any dependency and
-# is restricted to this project.
 use Mix.Config
 
-# Configures the endpoint
-config :tanx, Tanx.Endpoint,
-  url: [host: "localhost"],
-  root: Path.dirname(__DIR__),
-  secret_key_base: "n+PePs+8u01mPsUbGY5W9CZAG+E1ylukC6fJOBiQ0fNe50EMXrGZphTwcN/WfOdp",
-  render_errors: [accepts: ["html"]],
-  pubsub: [name: Tanx.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+# By default, the umbrella project as well as each child
+# application will require this configuration file, ensuring
+# they all use the same configuration. While one could
+# configure all applications here, we prefer to delegate
+# back to each application for organization purposes.
+import_config "../apps/*/config/config.exs"
 
 # Configures Elixir's Logger
 config :logger, :console,
