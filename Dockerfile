@@ -1,28 +1,48 @@
-FROM trenpixster/elixir
+FROM bitwalker/alpine-elixir:latest
 
-RUN mkdir /nodejs && curl https://nodejs.org/dist/v6.3.0/node-v6.3.0-linux-x64.tar.gz | tar xvzf - -C /nodejs --strip-components=1
+ENV TERM=xterm
 
-ENV PATH $PATH:/nodejs/bin:/elixir/bin
-ENV HOME /tanx
-ENV MIX_ENV prod
-WORKDIR ${HOME}
+RUN mkdir -p /opt/app \
+    && chmod -R 777 /opt/app \
+    && apk update \
+    && apk --no-cache --update add \
+      git make g++ wget curl inotify-tools nodejs nodejs-current-npm \
+    && npm install npm -g --no-progress \
+    && update-ca-certificates --fresh \
+    && rm -rf /var/cache/apk/*
 
-COPY mix.* ${HOME}/
-RUN /elixir/bin/mix local.hex --force && \
-    /elixir/bin/mix local.rebar --force && \
-    /elixir/bin/mix deps.get && \
-    /elixir/bin/mix deps.compile
+ENV PATH=./node_modules/.bin:$PATH \
+    HOME=/opt/app
 
-COPY package.json ${HOME}/
-RUN /nodejs/bin/npm install
+RUN mix local.hex --force \
+    && mix local.rebar --force
 
-COPY . ${HOME}
-RUN /elixir/bin/mix compile && \
-    ./node_modules/brunch/bin/brunch build --production && \
-    /elixir/bin/mix phoenix.digest
+WORKDIR /opt/app
+
+ENV MIX_ENV=prod \
+    REPLACE_OS_VARS=true
+
+COPY . .
+
+RUN mix do deps.get, compile \
+    && cd apps/tanx_web/assets \
+    && npm install \
+    && ./node_modules/brunch/bin/brunch build -p \
+    && cd .. \
+    && mix phx.digest \
+    && cd ../.. \
+    && mix release --env=prod --verbose
+
+
+FROM bitwalker/alpine-erlang:latest
 
 EXPOSE 8080
-ENTRYPOINT /elixir/bin/mix phoenix.server
+ENV PORT=8080 MIX_ENV=prod REPLACE_OS_VARS=true SHELL=/bin/sh
 
-ARG TANX_BUILD_ID=unknown
-ENV TANX_BUILD_ID ${TANX_BUILD_ID:-unknown}
+COPY --from=0 /opt/app/_build/prod/rel/tanx .
+RUN chown -R default .
+
+USER default
+
+ENTRYPOINT ["/opt/app/bin/tanx"]
+CMD ["foreground"]
