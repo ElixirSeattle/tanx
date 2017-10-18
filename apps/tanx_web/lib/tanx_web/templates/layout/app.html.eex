@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Elixir Tanx</title>
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-3.3.5.min.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-theme-3.3.5.min.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-slider-5.1.1.min.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+  </head>
+
+  <body>
+    <%= render @view_module, @view_template, assigns %>
+
+    <script src="<%= static_path(@conn, "/js/jquery-2.1.4.min.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/bootstrap-3.3.5.min.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/bootstrap-slider-5.1.1.min.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+
+    <script>require("js/app")</script>
+
+  </body>
+</html>
