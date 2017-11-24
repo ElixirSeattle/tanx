@@ -6,3 +6,4 @@ apps/tanx_web/assets/node_modules/
 apps/tanx_web/priv/static/
 apps/tanx_web/test/
 test/
+_tmp/
