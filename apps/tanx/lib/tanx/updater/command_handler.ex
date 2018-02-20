@@ -2,6 +2,12 @@ defprotocol Tanx.Updater.CommandHandler do
   def handle(command, arena, internal_data, time)
 end
 
+defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.Defer do
+  def handle(command, arena, internal_data, _time) do
+    {arena, internal_data, [command.event]}
+  end
+end
+
 defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.CreateTank do
   def handle(command, arena, internal_data, _time) do
     entry_point_name = command.entry_point_name
@@ -64,18 +70,18 @@ defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.ExplodeTank do
     tank_id = command.id
     tank = Map.get(tanks, tank_id)
     if tank != nil do
+      chain_data = command.chain_data
       new_tanks = Map.delete(tanks, tank_id)
       explosion = %Tanx.Arena.Explosion{
         pos: tank.pos,
         intensity: command.explosion_intensity,
         radius: command.explosion_radius,
         length: command.explosion_length,
-        data: command.chain_data
+        data: chain_data
       }
       explosion_id = Tanx.Util.ID.create(explosions)
       new_explosions = Map.put(explosions, explosion_id, explosion)
       new_arena = %Tanx.Arena{arena | tanks: new_tanks, explosions: new_explosions}
-      chain_data = command.chain_data
       events =
         if chain_data == nil do
           []

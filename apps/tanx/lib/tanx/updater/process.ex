@@ -85,15 +85,16 @@ defmodule Tanx.Updater.Process do
   end
 
   defp tick(arena, internal, elapsed) do
-    moved_tanks = move_tanks(arena.tanks, arena.size, internal.decomposed_walls, elapsed)
-    updated_explosions = update_explosions(arena.explosions, elapsed)
-    updated_entry_points = update_entry_points(arena.entry_points, moved_tanks)
+    tanks = move_tanks(arena.tanks, arena.size, internal.decomposed_walls, elapsed)
+    {explosions, chains} = update_explosions(arena.explosions, elapsed)
+    {tanks, explosions, events} = resolve_explosion_damage(tanks, explosions, chains)
+    entry_points = update_entry_points(arena.entry_points, tanks)
     updated_arena = %Tanx.Arena{arena |
-      tanks: moved_tanks,
-      explosions: updated_explosions,
-      entry_points: updated_entry_points
+      tanks: tanks,
+      explosions: explosions,
+      entry_points: entry_points
     }
-    {updated_arena, internal, []}
+    {updated_arena, internal, events}
   end
 
   defp move_tanks(tanks, size, decomposed_walls, elapsed) do
@@ -159,12 +160,64 @@ defmodule Tanx.Updater.Process do
   end
 
   defp update_explosions(explosions, elapsed) do
-    Enum.reduce(explosions, %{}, fn {id, explosion}, acc ->
-      progress = explosion.progress + elapsed / explosion.length
-      if progress >= 1.0 do
-        acc
-      else
-        Map.put(acc, id, %Tanx.Arena.Explosion{explosion | progress: progress})
+    Enum.reduce(explosions, {%{}, []}, fn {id, explosion}, {acc, chains} ->
+      old_progress = explosion.progress
+      new_progress = old_progress + elapsed / explosion.length
+      {new_explosion, acc} =
+        if new_progress >= 1.0 do
+          {explosion, acc}
+        else
+          exp = %Tanx.Arena.Explosion{explosion | progress: new_progress}
+          {exp, Map.put(acc, id, exp)}
+        end
+      chains =
+        if old_progress < 0.5 and new_progress >= 0.5 do
+          [new_explosion | chains]
+        else
+          chains
+        end
+      {acc, chains}
+    end)
+  end
+
+  defp resolve_explosion_damage(tanks, explosions, chains) do
+    Enum.reduce(tanks, {%{}, explosions, []}, fn {id, tank}, {tnks, expls, evts} ->
+      chains
+      |> Enum.reduce(tank, fn
+        _chain, {t, e} ->
+          {t, e}
+        chain, t ->
+          chain_radius = chain.radius + t.radius
+          dist = vdist(t.pos, chain.pos)
+          damage = (1.0 - dist / chain_radius) * chain.intensity
+          if damage > 0.0 do
+            new_armor = t.armor - damage
+            if new_armor > 0.0 do
+              %Tanx.Arena.Tank{t | armor: new_armor}
+            else
+              expl = %Tanx.Arena.Explosion{
+                pos: t.pos,
+                intensity: 1.0,
+                radius: 1.0,
+                length: 0.6,
+                data: chain.data
+              }
+              {t, expl}
+            end
+          else
+            t
+          end
+      end)
+      |> case do
+        {t, e} ->
+          expl_id = Tanx.Util.ID.create(expls)
+          expls = Map.put(expls, expl_id, e)
+          tnks = Map.delete(tnks, id)
+          evt = %Tanx.Updater.TankDeleted{id: id, tank: t, event_data: e.data}
+          {tnks, expls, [evt | evts]}
+        t ->
+          tnks = Map.put(tnks, id, t)
+          {tnks, expls, evts}
       end
     end)
   end
@@ -187,5 +240,11 @@ defmodule Tanx.Updater.Process do
   end
 
   defp vadd({x0, y0}, {x1, y1}), do: {x0 + x1, y0 + y1}
+
+  defp vdist({x0, y0}, {x1, y1}) do
+    xd = x1 - x0
+    yd = y1 - y0
+    :math.sqrt(xd * xd + yd * yd)
+  end
 
 end

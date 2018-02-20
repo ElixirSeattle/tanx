@@ -152,7 +152,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       player_private = Map.fetch!(player_handles, player_handle)
       tank_id = player_private.tank_id
       if tank_id == nil || tank_id == true do
-        {{:error, :tank_not_found, [player_handle: player_handle]}, data, []}
+        {{:error, :tank_not_found, [player_handle: player_handle]}, data, [], []}
       else
         new_player_private = Map.put(player_private, button, is_down)
         velocity = calc_velocity(new_player_private.forward, new_player_private.backward,
@@ -176,7 +176,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       player_private = Map.fetch!(player_handles, player_handle)
       tank_id = player_private.tank_id
       if tank_id == nil || tank_id == true do
-        {{:error, :tank_not_found, [player_handle: player_handle]}, data, []}
+        {{:error, :tank_not_found, [player_handle: player_handle]}, data, [], []}
       else
         command = %Tanx.Updater.ExplodeTank{
           id: tank_id,

@@ -1,3 +1,9 @@
+defmodule Tanx.Updater.Defer do
+  defstruct(
+    event: nil
+  )
+end
+
 defmodule Tanx.Updater.CreateTank do
   defstruct(
     entry_point_name: nil,
