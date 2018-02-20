@@ -30,7 +30,7 @@ class PlayerList {
       this._gameChannel.push("view_players", {});
 
       this._gameChannel.on("view_players", players => {
-        this._renderPlayersTable(players.players);
+        this._renderPlayersTable(players.p);
       });
     });
   }
@@ -71,11 +71,12 @@ class PlayerList {
     } else {
       players.forEach(player => {
         let row = $('<tr>');
-        if (player.is_me) {
+        if (player.me) {
           row.addClass('info');
         }
-        row.html('<td>' + player.name + '</td><td>' + player.kills +
-          '</td><td>' + player.deaths + '</td>');
+        let name = player.n || "(Anonymous coward)";
+        row.html('<td>' + name + '</td><td>' + player.k +
+          '</td><td>' + player.d + '</td>');
         playerTable.append(row);
       });
     }

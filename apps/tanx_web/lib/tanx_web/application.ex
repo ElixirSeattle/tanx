@@ -4,10 +4,9 @@ defmodule TanxWeb.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    Tanx.Game.add_player_change_listener(:game_core, fn
-      {:player_views, player_views} ->
-        TanxWeb.Endpoint.broadcast!("game", "view_players", %{players: player_views})
-      end)
+    Tanx.Game.add_listener(:game_core, Tanx.ContinuousGame.PlayersChanged, fn event ->
+      TanxWeb.Endpoint.broadcast!("game", "view_players", event)
+    end)
 
     # Define workers and child supervisors to be supervised
     children = [

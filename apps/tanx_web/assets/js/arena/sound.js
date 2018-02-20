@@ -67,7 +67,7 @@ class ArenaSound {
 
 
   play(objects) {
-    objects.explosions.forEach(explosion => {
+    objects.e.forEach(explosion => {
       if (explosion.sound != null) {
         this._explosions.startPlaying();
       }

@@ -97,7 +97,7 @@ class ArenaControls {
     if (this._arenaStructure != null) {
       let entryPoint = this._arenaStructure.findEntryPoint(x, y);
       if (entryPoint) {
-        this._gameChannel.push("launch_tank", {entry_point: entryPoint.name});
+        this._gameChannel.push("launch_tank", {entry_point: entryPoint.n});
       }
     }
   }

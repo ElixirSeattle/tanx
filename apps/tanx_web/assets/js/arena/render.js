@@ -17,7 +17,7 @@ class ArenaRender {
 
 
   render(objects) {
-    let hasTank = objects.tanks.some(tank => tank.is_me);
+    let hasTank = objects.t.some(tank => tank.me);
     let context = this._canvas.get(0).getContext("2d");
 
     // Clear the canvas
@@ -30,26 +30,26 @@ class ArenaRender {
 
     // Draw entry points
     this._arenaStructure.entryPoints().forEach(ep => {
-      this._renderEntryPoint(context, ep, objects.entry_points_available[ep.name],
+      this._renderEntryPoint(context, ep, objects.epa[ep.n],
           this._arenaStructure.entryPointRadius());
     });
 
     // Draw tanks
-    objects.tanks.forEach(tank => {
+    objects.t.forEach(tank => {
       this._renderTank(context, tank);
     });
 
     // Draw missiles
-    objects.missiles.forEach(missile => {
+    objects.m.forEach(missile => {
       this._renderMissile(context, missile);
     });
 
-    objects.powerups.forEach(powerup => {
+    objects.p.forEach(powerup => {
       this._renderPowerUp(context, powerup);
     });
 
     // Draw explosions
-    objects.explosions.forEach(explosion => {
+    objects.e.forEach(explosion => {
       this._renderExplosion(context, explosion);
     });
   }
@@ -95,19 +95,20 @@ class ArenaRender {
   _renderTank(context, tank) {
     context.save();
 
-    let tankRect = this._arenaStructure.onScreenRect(tank.x, tank.y, tank.radius*2, tank.radius*2);
+    let tankRect = this._arenaStructure.onScreenRect(tank.x, tank.y, tank.r*2, tank.r*2);
     context.translate(tankRect.x, tankRect.y);
     let screenRadius = Math.ceil(this._arenaStructure.scaleFactor() * 0.5);
 
     // Add names above enemies
-    if (!tank.is_me) {
+    if (!tank.me) {
       context.textAlign = "center";
       context.font = '12px sans-serif';
-      context.fillText(tank.name, 0, -this._arenaStructure.scaleFactor() * 0.7);
+      let name = tank.n || "(Anonymous coward)";
+      context.fillText(name, 0, -this._arenaStructure.scaleFactor() * 0.7);
     }
 
     // Add armor indicator below all tanks
-    let ratio = tank.armor / tank.max_armor;
+    let ratio = tank.a / tank.ma;
     let red = 255;
     let green = 255;
     if (ratio < 0.5) {
@@ -122,13 +123,13 @@ class ArenaRender {
 
 
     let rotateTankImage90Degrees = 90 * Math.PI/180;
-    context.rotate(-tank.heading + rotateTankImage90Degrees);
+    context.rotate(-tank.h + rotateTankImage90Degrees);
 
     let rowOffset = 1;
     let rowOne = rowOffset;
     let rowTwo = rowOffset+(84*1);
     let rowThree = rowOffset+(84*2);
-    
+
     let columnOffset = 8;
     let columnOne = columnOffset;
     let columnTwo = columnOffset+(84*1);
@@ -139,42 +140,42 @@ class ArenaRender {
     let columnSeven = columnOffset+(84*6);
     let columnEight = columnOffset+(84*7);
 
-    if (tank.is_me === true) {
-      var spriteSheetY = rowOne; 
-      if (tank.tread < 0.125) {
+    if (tank.me === true) {
+      var spriteSheetY = rowOne;
+      if (tank.t < 0.125) {
         var spriteSheetX = columnTwo;
-      } else if (tank.tread < 0.250) {
+      } else if (tank.t < 0.250) {
         spriteSheetY = rowTwo;
         var spriteSheetX = columnOne;
-      } else if (tank.tread < 0.375) {
+      } else if (tank.t < 0.375) {
         var spriteSheetX = columnEight;
-      } else if (tank.tread < 0.5) {
+      } else if (tank.t < 0.5) {
         var spriteSheetX = columnSeven;
-      } else if (tank.tread < 0.625) {
+      } else if (tank.t < 0.625) {
         var spriteSheetX = columnSix;
-      } else if (tank.tread < 0.750) {
+      } else if (tank.t < 0.750) {
         var spriteSheetX = columnFive;
-      } else if (tank.tread < 0.875) {
+      } else if (tank.t < 0.875) {
         var spriteSheetX = columnFour;
       } else {
         var spriteSheetX = columnThree;
       }
     } else {
-      var spriteSheetY = rowTwo; 
-      if (tank.tread < 0.125) {
+      var spriteSheetY = rowTwo;
+      if (tank.t < 0.125) {
         var spriteSheetX = columnTwo;
-      } else if (tank.tread < 0.250) {
+      } else if (tank.t < 0.250) {
         spriteSheetY = rowThree;
         var spriteSheetX = columnOne;
-      } else if (tank.tread < 0.375) {
+      } else if (tank.t < 0.375) {
         var spriteSheetX = columnEight;
-      } else if (tank.tread < 0.5) {
+      } else if (tank.t < 0.5) {
         var spriteSheetX = columnSeven;
-      } else if (tank.tread < 0.625) {
+      } else if (tank.t < 0.625) {
         var spriteSheetX = columnSix;
-      } else if (tank.tread < 0.750) {
+      } else if (tank.t < 0.750) {
         var spriteSheetX = columnFive;
-      } else if (tank.tread < 0.875) {
+      } else if (tank.t < 0.875) {
         var spriteSheetX = columnFour;
       } else {
         var spriteSheetX = columnThree;
@@ -191,19 +192,19 @@ class ArenaRender {
 
     let powerupRect = this._arenaStructure.onScreenRect(powerup.x,
                                                         powerup.y,
-                                                        powerup.radius * 2,
-                                                        powerup.radius * 2);
+                                                        powerup.r * 2,
+                                                        powerup.r * 2);
     context.translate(powerupRect.x, powerupRect.y);
 
-    switch(powerup.type.name) {
-      case 'Bouncing Missile':
+    switch(powerup.t) {
+      case 'bounce':
         var spriteSheetX = 590;
         var spriteSheetY = 177;
         context.drawImage(this._tankSprite, spriteSheetX, spriteSheetY, 79, 67,
           -powerupRect.width/2, -powerupRect.height/2, powerupRect.width, powerupRect.height);
         break;
-      case 'Health Kit':
-        context.drawImage(this._heartImage, -powerupRect.width/2, -powerupRect.height/2, 
+      case 'health':
+        context.drawImage(this._heartImage, -powerupRect.width/2, -powerupRect.height/2,
             powerupRect.width, powerupRect.height);
         break;
     }
@@ -216,7 +217,7 @@ class ArenaRender {
     let missileRect = this._arenaStructure.onScreenRect(missile.x, missile.y, 0.3, 0.3);
     context.translate(missileRect.x, missileRect.y);
 
-    context.rotate(-missile.heading);
+    context.rotate(-missile.h);
 
     let spriteSheetX = 454;
     let spriteSheetY = 201;
@@ -231,16 +232,16 @@ class ArenaRender {
     context.save();
 
     let point = this._arenaStructure.onScreenPoint(explosion.x, explosion.y);
-    let radius = explosion.radius * this._arenaStructure.scaleFactor();
-    if (explosion.age < 0.5) {
-      radius = radius * explosion.age * 2.0;
+    let radius = explosion.r * this._arenaStructure.scaleFactor();
+    if (explosion.a < 0.5) {
+      radius = radius * explosion.a * 2.0;
     }
     context.beginPath();
     context.fillStyle = "#fa4";
     context.arc(point.x, point.y, radius, 0, Math.PI*2, false);
     context.fill();
-    if (explosion.age > 0.5) {
-      radius = explosion.radius * this._arenaStructure.scaleFactor() * (explosion.age - 0.5) * 2.0;
+    if (explosion.a > 0.5) {
+      radius = explosion.r * this._arenaStructure.scaleFactor() * (explosion.a - 0.5) * 2.0;
       context.beginPath();
       context.fillStyle = "#fff";
       context.arc(point.x, point.y, radius, 0, Math.PI*2, false);

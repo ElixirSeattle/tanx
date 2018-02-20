@@ -11,9 +11,8 @@ defmodule Tanx.Application do
 
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
-    impl = Tanx.ContinuousGame.create(maze: :standard)
     Supervisor.start_link([
-      worker(Tanx.Game, [impl, [name: :game_core]])
+      worker(Tanx.Game, [[name: :game_core, structure: 0]])
     ], strategy: :one_for_one, name: Tanx.Supervisor)
   end
 end

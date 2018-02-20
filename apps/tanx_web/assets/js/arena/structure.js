@@ -15,11 +15,11 @@ class ArenaStructure {
   recomputeScale() {
     let maxWidth = $('#tanx-arena-container').innerWidth();
     let maxHeight = $(window).innerHeight() - WINDOW_HEIGHT_ADJUST;
-    let xScale = maxWidth / this._structure.width;
-    let yScale = maxHeight / this._structure.height;
+    let xScale = maxWidth / this._structure.w;
+    let yScale = maxHeight / this._structure.h;
     let scale = xScale < yScale ? xScale : yScale;
-    this._width = scale * this._structure.width;
-    this._height = scale * this._structure.height;
+    this._width = scale * this._structure.w;
+    this._height = scale * this._structure.h;
     this._scaleFactor = scale * 0.99;
     $('#tanx-canvas')
       .css({width: this._width + 'px', height: this._height + 'px'})
@@ -43,17 +43,17 @@ class ArenaStructure {
 
 
   walls() {
-    return this._structure.walls;
+    return this._structure.wa;
   }
 
 
   entryPoints() {
-    return this._structure.entry_points;
+    return this._structure.ep;
   }
 
 
   entryPointRadius() {
-    return this._structure.entry_point_radius;
+    return this._structure.epr;
   }
 
 

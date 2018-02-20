@@ -1,174 +1,112 @@
 defmodule Tanx.Game do
 
-  @moduledoc """
-  The Game process forms the main entry point into the game core.
-  Using this module you can view the current player list and connect as a new player.
-  """
-
-  require Logger
-
-
-  #### Public API
-
-
-  defmodule PlayerInfo do
-    defstruct name: "",
-              kills: 0,
-              deaths: 0
+  def start(data, opts \\ []) do
+    {params, process_opts} = get_start_params(data, opts)
+    GenServer.start(__MODULE__, params, process_opts)
   end
 
-  defmodule State do
-    defstruct structure: nil,
-              player_manager: nil,
-              arena_objects: nil,
-              arena_view: nil,
-              clock: nil,
-              time_config: nil
+  def start_link(data, opts \\ []) do
+    {params, process_opts} = get_start_params(data, opts)
+    GenServer.start_link(__MODULE__, params, process_opts)
   end
 
-
-  @doc """
-  Start a new game and return a process reference for it.
-
-  Supported options include:
-
-  - **:structure** A Tanx.Structure representing the arena size, shape, and walls.
-  - **:clock_interval** The interval between clock ticks in milliseconds. Defaults to 20.
-    Set to nil to disable automatic clock ticks (useful for unit testing).
-  """
-  def start_link(opts \\ []) do
-    Logger.info("Starting game core")
-    genserver_opts = if opts |> Keyword.has_key?(:name) do
-      [name: opts[:name]]
-    else
-      []
-    end
-    GenServer.start_link(__MODULE__, opts, genserver_opts)
+  def get_view(game, view_context) do
+    GenServer.call(game, {:view, view_context})
   end
 
-
-  @doc """
-  Connect as a player, and return a player reference that can be passed to
-  functions in the Tanx.Player module.
-
-  Supported options include:
-
-  - **:name** The player name.
-  """
-  def connect(game, opts \\ []) do
-    GenServer.call(game, {:connect, opts[:name]})
+  def control(game, params) do
+    GenServer.call(game, {:control, params})
   end
 
-
-  @doc """
-  Returns a view of the connected players, as a list of Tanx.View.Player structs.
-  """
-  def view_players(game) do
-    GenServer.call(game, :view_players)
+  def add_listener(game, type, listener) do
+    GenServer.call(game, {:add_listener, type, listener})
   end
 
-
-  @doc """
-  Terminates the game and disconnects all players.
-  """
-  def terminate(game) do
-    GenServer.call(game, :terminate)
+  defp get_start_params(data, opts) do
+    {game_opts, process_opts} = Keyword.split(opts, [:interval, :time_config])
+    {{data, game_opts}, process_opts}
   end
 
-  def get_state(game) do
-    GenServer.call(game, :get_state)
-  end
-
-
-  def add_player_change_listener(game, listener) do
-    %State{player_manager: player_manager} = GenServer.call(game, :get_state)
-    GenServer.call(player_manager, {:add_listener, listener})
-  end
-
-
-  @doc """
-  Immediately ticks the clock with the given time value, and waits for all updates to
-  complete. This is generally used in unit tests.
-
-  See Tanx.Clock.manual_tick() for return values.
-  """
-  def manual_clock_tick(game, time) do
-    GenServer.call(game, :get_clock) |> Tanx.Clock.manual_tick(time)
-  end
-
-
-  #### GenServer callbacks
 
   use GenServer
 
+  defmodule State do
+    defstruct(
+      data: nil,
+      arena: nil,
+      updater: nil,
+      commands: [],
+      listeners: %{},
+      time: 0
+    )
+  end
 
-  def init(opts) do
-    structure = opts
-    |> Keyword.get(:structure, nil)
-    |> choose_structure
-    clock_interval = Keyword.get(opts, :clock_interval, 20)
-    time_config = Keyword.get(opts, :time_config, nil)
-
-    arena_objects = Tanx.ArenaObjects.start_link(structure)
-    arena_view = Tanx.ArenaView.start_link(structure)
-    player_manager = Tanx.PlayerManager.start_link(
-        arena_objects, arena_view, time_config)
-    clock = Tanx.Clock.start_link(self(), clock_interval, time_config)
-
+  def init({data, game_opts}) do
+    time_config = Keyword.get(game_opts, :time_config, nil)
+    time = Tanx.Util.SystemTime.get(time_config)
+    arena = Tanx.Game.Variant.init_arena(data, time)
+    updater = Tanx.Updater.Process.start_link(self(), arena, game_opts)
     state = %State{
-      structure: structure,
-      player_manager: player_manager,
-      arena_objects: arena_objects,
-      arena_view: arena_view,
-      clock: clock,
-      time_config: time_config
+      data: data,
+      arena: arena,
+      updater: updater,
+      time: time
     }
     {:ok, state}
   end
 
-
-  def handle_call({:connect, name}, _from, state) do
-    response = state.player_manager |> Tanx.PlayerManager.create_player(name)
-    {:reply, response, state}
+  def handle_call(:get_commands, _from, state) do
+    {:reply, state.commands, %State{state | commands: []}}
   end
 
-
-  def handle_call(:view_players, _from, state) do
-    views = state.player_manager |> Tanx.PlayerManager.view_all_players
-    {:reply, views, state}
+  def handle_call({:view, view_context}, _from, state) do
+    view = Tanx.Game.Variant.view(state.data, state.time, state.arena, view_context)
+    {:reply, view, state}
   end
 
-
-  def handle_call(:terminate, _from, state) do
-    {:stop, :normal, :ok, state}
+  def handle_call({:control, control_params}, _from, state) do
+    {result, new_data, new_commands, notifications} =
+      Tanx.Game.Variant.control(state.data, state.time, state.arena, control_params)
+    send_notifications(notifications, state.listeners)
+    new_state = %State{state | data: new_data, commands: state.commands ++ new_commands}
+    {:reply, result, new_state}
   end
 
-
-  def handle_call(:get_clock, _from, state) do
-    {:reply, state.clock, state}
+  def handle_call({:add_listener, type, listener}, _from, state) do
+    type_listeners = Map.get(state.listeners, type, [])
+    type_listeners = [listener | type_listeners]
+    listeners = Map.put(state.listeners, type, type_listeners)
+    new_state = %State{state | listeners: listeners}
+    {:reply, :ok, new_state}
   end
 
+  def handle_call({:update, time, arena, events}, _from, state) do
+    new_data = Enum.reduce(events, state.data, fn event, data ->
+      {d, n} = Tanx.Game.Variant.event(data, time, arena, event)
+      send_notifications(n, state.listeners)
+      d
+    end)
 
-  def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
+    new_state = %State{state | arena: arena, data: new_data, time: time}
+    {:reply, :ok, new_state}
   end
 
-
-  # Whenever a clock tick is received, we spawn an updater process. That updater performs
-  # all the update computation, including getting information from arena object processes
-  # such as tanks, and then updates the ArenaView state.
-  def handle_cast({:clock_tick, _clock, last_time, time}, state) do
-    Tanx.ArenaUpdater.start(
-        state.structure.entry_points, state.arena_objects, state.arena_view,
-        state.player_manager, state.clock, last_time, time)
-    {:noreply, state}
+  defp send_notifications(notifications, listeners) do
+    Enum.each(notifications, fn notification ->
+      listeners
+      |> Map.get(notification.__struct__, [])
+      |> Enum.each(fn listener ->
+        listener.(notification)
+      end)
+    end)
   end
 
+end
 
-  defp choose_structure(nil), do: %Tanx.Structure{}
-  defp choose_structure(structure = %Tanx.Structure{}), do: structure
-  defp choose_structure(index) when is_integer(index) do
-    Enum.at(%Tanx.Structure.MapDetails{}.maps, index)
-  end
 
+defprotocol Tanx.Game.Variant do
+  def init_arena(data, time)
+  def view(data, time, arena, view_context)
+  def control(data, time, arena, params)
+  def event(data, time, arena, event)
 end
