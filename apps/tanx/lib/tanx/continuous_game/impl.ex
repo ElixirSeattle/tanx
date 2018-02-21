@@ -146,6 +146,34 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     end
   end
 
+  def control(data, _time, _arena, {:control_tank, player_handle, :fire, true}) do
+    player_handles = data.player_handles
+    if Map.has_key?(player_handles, player_handle) do
+      player_private = Map.fetch!(player_handles, player_handle)
+      tank_id = player_private.tank_id
+      if tank_id == nil || tank_id == true do
+        {{:error, :tank_not_found, [player_handle: player_handle]}, data, [], []}
+      else
+        command = %Tanx.Updater.FireMissile{
+          tank_id: tank_id,
+          velocity: 10.0,
+          impact_intensity: 1.0,
+          explosion_intensity: 0.25,
+          explosion_radius: 0.5,
+          explosion_length: 0.4,
+          chain_data: %{originator_id: player_private.player_id}
+        }
+        {:ok, data, [command], []}
+      end
+    else
+      {{:error, :player_not_found, [player_handle: player_handle]}, data, [], []}
+    end
+  end
+
+  def control(data, _time, _arena, {:control_tank, _player_handle, :fire, false}) do
+    {:ok, data, [], []}
+  end
+
   def control(data, _time, _arena, {:control_tank, player_handle, button, is_down}) do
     player_handles = data.player_handles
     if Map.has_key?(player_handles, player_handle) do
@@ -232,9 +260,9 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
         if originator_id == owner_id do
           new_players
         else
-          originator = Map.fetch!(players, originator_id)
+          originator = Map.fetch!(new_players, originator_id)
           new_originator = %Player{originator | kills: originator.kills + 1}
-          Map.put(players, originator_id, new_originator)
+          Map.put(new_players, originator_id, new_originator)
         end
       notification = %PlayersChanged{players: new_players}
       {%Impl{data | player_handles: new_player_handles, players: new_players}, [notification]}

@@ -92,8 +92,7 @@ defmodule TanxWeb.GameChannel do
 
 
   def handle_in("control_tank", %{"button" => button, "down" => down}, socket)
-      when button == "left" or button == "right" or button == "forward" or
-           button == "backward" or button == "fire" do
+      when button == "left" or button == "right" or button == "backward" or button == "forward" or button == "fire" do
     player = socket.assigns[:player]
     if player do
       Tanx.ContinuousGame.control_tank(:game_core, player, String.to_atom(button), down)

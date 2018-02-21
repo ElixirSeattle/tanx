@@ -63,8 +63,7 @@ defmodule TanxWeb.JsonData do
       me: false,
       x: 0.0,
       y: 0.0,
-      hx: 0.0,
-      hy: 0.0
+      h: 0.0
     )
   end
 
@@ -135,21 +134,33 @@ defmodule TanxWeb.JsonData do
   end
 
   def format_arena(arena_view) do
+    cur_player_tank_id =
+      case arena_view.cur_player do
+        nil -> nil
+        player_private -> player_private.tank_id
+      end
+    tanks = format_tanks(arena_view.tanks, arena_view.players, cur_player_tank_id)
+    explosions = format_explosions(arena_view.explosions)
+    missiles = format_missiles(arena_view.missiles)
     epa = Enum.reduce(arena_view.entry_points, %{}, fn {n, ep}, acc ->
       Map.put(acc, n, ep.available)
     end)
-    cur_player_id =
-      case arena_view.cur_player do
-        nil -> nil
-        player_private -> player_private.player_id
-      end
-    tanks = Enum.map(arena_view.tanks, fn {id, t} ->
+    %TanxWeb.JsonData.Arena{
+      t: tanks,
+      e: explosions,
+      m: missiles,
+      epa: epa
+    }
+  end
+
+  defp format_tanks(tanks, players, cur_player_tank_id) do
+    Enum.map(tanks, fn {id, t} ->
       player_id = t.data[:player_id]
-      player_name = arena_view.players[player_id].name
+      player_name = players[player_id].name
       {x, y} = t.pos
       tread = t.dist / 2
       %TanxWeb.JsonData.Tank{
-        me: id == cur_player_id,
+        me: id == cur_player_tank_id,
         n: player_name,
         x: x,
         y: y,
@@ -160,7 +171,10 @@ defmodule TanxWeb.JsonData do
         t: tread - Float.floor(tread)
       }
     end)
-    explosions = Enum.map(arena_view.explosions, fn {_id, e} ->
+  end
+
+  defp format_explosions(explosions) do
+    Enum.map(explosions, fn {_id, e} ->
       {x, y} = e.pos
       %TanxWeb.JsonData.Explosion{
         x: x,
@@ -169,11 +183,17 @@ defmodule TanxWeb.JsonData do
         a: e.progress
       }
     end)
-    %TanxWeb.JsonData.Arena{
-      t: tanks,
-      e: explosions,
-      epa: epa
-    }
+  end
+
+  defp format_missiles(missiles) do
+    Enum.map(missiles, fn {_id, m} ->
+      {x, y} = m.pos
+      %TanxWeb.JsonData.Missile{
+        x: x,
+        y: y,
+        h: m.heading
+      }
+    end)
   end
 
 end

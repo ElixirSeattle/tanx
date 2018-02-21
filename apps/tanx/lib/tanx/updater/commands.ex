@@ -24,6 +24,14 @@ defmodule Tanx.Updater.DeleteTank do
   )
 end
 
+defmodule Tanx.Updater.SetTankVelocity do
+  defstruct(
+    id: nil,
+    velocity: 0.0,
+    angular_velocity: 0.0
+  )
+end
+
 defmodule Tanx.Updater.ExplodeTank do
   defstruct(
     id: nil,
@@ -34,10 +42,16 @@ defmodule Tanx.Updater.ExplodeTank do
   )
 end
 
-defmodule Tanx.Updater.SetTankVelocity do
+defmodule Tanx.Updater.FireMissile do
   defstruct(
-    id: nil,
+    tank_id: nil,
+    heading: nil,
     velocity: 0.0,
-    angular_velocity: 0.0
+    bounce: 0,
+    impact_intensity: 0.0,
+    explosion_intensity: 0.0,
+    explosion_radius: 0.0,
+    explosion_length: 0.0,
+    chain_data: nil
   )
 end

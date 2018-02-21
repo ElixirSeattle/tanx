@@ -43,8 +43,10 @@ defmodule Tanx.Arena do
       heading: 0.0,
       velocity: 0.0,
       bounce: 0,
+      impact_intensity: 0.0,
       explosion_intensity: 0.0,
       explosion_radius: 0.0,
+      explosion_length: 0.0,
       age: 0.0,
       data: nil
     )

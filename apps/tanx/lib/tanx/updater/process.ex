@@ -3,7 +3,7 @@ defmodule Tanx.Updater.Process do
   #### Public API
 
   def start_link(game, arena, opts \\ []) do
-    interval = Keyword.get(opts, :interval, 0.05)
+    interval = Keyword.get(opts, :interval, 0.02)
     time_config = Keyword.get(opts, :time_config, nil)
     GenServer.start_link(__MODULE__, {game, arena, interval, time_config})
   end
@@ -61,6 +61,7 @@ defmodule Tanx.Updater.Process do
   #### Logic
 
   @pi :math.pi()
+  @epsilon 0.000001
 
   defp perform_update(state) do
     commands = GenServer.call(state.game, :get_commands)
@@ -88,13 +89,16 @@ defmodule Tanx.Updater.Process do
     tanks = move_tanks(arena.tanks, arena.size, internal.decomposed_walls, elapsed)
     {explosions, chains} = update_explosions(arena.explosions, elapsed)
     {tanks, explosions, events} = resolve_explosion_damage(tanks, explosions, chains)
+    {missiles, explosions} = move_missiles(arena.missiles, explosions, arena.size, internal.decomposed_walls, elapsed)
+    {tanks, missiles, explosions, events2} = resolve_missile_hits(tanks, missiles, explosions)
     entry_points = update_entry_points(arena.entry_points, tanks)
     updated_arena = %Tanx.Arena{arena |
       tanks: tanks,
       explosions: explosions,
+      missiles: missiles,
       entry_points: entry_points
     }
-    {updated_arena, internal, events}
+    {updated_arena, internal, events ++ events2}
   end
 
   defp move_tanks(tanks, size, decomposed_walls, elapsed) do
@@ -155,6 +159,43 @@ defmodule Tanx.Updater.Process do
         tank2_force = Tanx.Updater.Walls.force_from_point(
           tank2.pos, tank.pos, tank.collision_radius + tank2.collision_radius)
         vadd(cur_force, tank2_force)
+      end
+    end)
+  end
+
+  defp move_missiles(missiles, explosions, _size, decomposed_walls, elapsed) do
+    Enum.reduce(missiles, {%{}, explosions}, fn {id, missile}, {miss_acc, expl_acc} ->
+      old_pos = missile.pos
+      old_v = vh2v(missile.heading, missile.velocity)
+      new_pos = vadd(old_pos, vscale(old_v, elapsed))
+      decomposed_walls
+      |> Tanx.Updater.Walls.collision_with_decomposed_walls(old_pos, new_pos)
+      |> case do
+        nil ->
+          %Tanx.Arena.Missile{missile | pos: new_pos}
+        {impact_pos, normal} ->
+          bounce = missile.bounce
+          if bounce > 0 do
+            {new_vx, new_vy} = new_v = vdiff(vscale(normal, vdot(old_v, normal) * 2), old_v)
+            new_heading = :math.atan2(new_vy, new_vx)
+            new_pos = vadd(impact_pos, vscale(new_v, @epsilon))
+            %Tanx.Arena.Missile{missile | heading: new_heading, pos: new_pos, bounce: bounce - 1}
+          else
+            %Tanx.Arena.Explosion{
+              pos: impact_pos,
+              intensity: missile.explosion_intensity,
+              radius: missile.explosion_radius,
+              length: missile.explosion_length,
+              data: missile.data
+            }
+          end
+      end
+      |> case do
+        %Tanx.Arena.Missile{} = missile ->
+          {Map.put(miss_acc, id, missile), expl_acc}
+        %Tanx.Arena.Explosion{} = explosion ->
+          expl_id = Tanx.Util.ID.create(expl_acc)
+          {miss_acc, Map.put(expl_acc, expl_id, explosion)}
       end
     end)
   end
@@ -222,6 +263,55 @@ defmodule Tanx.Updater.Process do
     end)
   end
 
+  defp resolve_missile_hits(tanks, missiles, explosions) do
+    Enum.reduce(missiles, {tanks, missiles, explosions, []}, fn {missile_id, missile}, {tnks, miss, expls, evts} ->
+      Enum.find_value(tnks, {tnks, miss, expls, evts}, fn {tnk_id, tnk} ->
+        collision_radius = tnk.collision_radius
+        hit_vec = vdiff(tnk.pos, missile.pos)
+        if vnorm(hit_vec) <= collision_radius * collision_radius do
+          mvec = vh2v(missile.heading)
+          dot = vdot(hit_vec, mvec)
+          if dot > 0.0 do
+            new_miss = Map.delete(miss, missile_id)
+            expl = %Tanx.Arena.Explosion{
+              pos: missile.pos,
+              intensity: 0.25,
+              radius: 0.5,
+              length: 0.4,
+              data: missile.data
+            }
+            expl_id = Tanx.Util.ID.create(expls)
+            expls = Map.put(expls, expl_id, expl)
+            damage = dot / collision_radius * missile.impact_intensity
+            new_armor = tnk.armor - damage
+            if new_armor > 0.0 do
+              new_tnk = %Tanx.Arena.Tank{tnk | armor: new_armor}
+              new_tnks = Map.put(tnks, tnk_id, new_tnk)
+              {new_tnks, new_miss, expls, evts}
+            else
+              new_tnks = Map.delete(tnks, tnk_id)
+              expl = %Tanx.Arena.Explosion{
+                pos: tnk.pos,
+                intensity: 1.0,
+                radius: 1.0,
+                length: 0.6,
+                data: missile.data
+              }
+              expl_id = Tanx.Util.ID.create(expls)
+              expls = Map.put(expls, expl_id, expl)
+              evt = %Tanx.Updater.TankDeleted{id: tnk_id, tank: tnk, event_data: expl.data}
+              {new_tnks, new_miss, expls, [evt | evts]}
+            end
+          else
+            nil
+          end
+        else
+          nil
+        end
+      end)
+    end)
+  end
+
   defp update_entry_points(entry_points, tanks) do
     Enum.reduce(entry_points, %{}, fn {name, ep}, acc ->
       {epx, epy} = ep.pos
@@ -241,10 +331,22 @@ defmodule Tanx.Updater.Process do
 
   defp vadd({x0, y0}, {x1, y1}), do: {x0 + x1, y0 + y1}
 
+  defp vdiff({x0, y0}, {x1, y1}), do: {x0 - x1, y0 - y1}
+
+  defp vdot({x0, y0}, {x1, y1}), do: x0 * x1 + y0 * y1
+
+  defp vscale({x, y}, r), do: {x * r, y * r}
+
+  defp vnorm({x, y}), do: x * x + y * y
+
   defp vdist({x0, y0}, {x1, y1}) do
     xd = x1 - x0
     yd = y1 - y0
     :math.sqrt(xd * xd + yd * yd)
+  end
+
+  defp vh2v(heading, scale \\ 1) do
+    {scale * :math.cos(heading), scale * :math.sin(heading)}
   end
 
 end

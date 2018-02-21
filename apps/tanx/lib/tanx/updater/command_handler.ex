@@ -63,6 +63,25 @@ defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.DeleteTank do
   end
 end
 
+defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.SetTankVelocity do
+  def handle(command, arena, internal_data, _time) do
+    tanks = arena.tanks
+    id = command.id
+    tank = Map.get(tanks, id)
+    arena =
+      if tank != nil do
+        tank = %Tanx.Arena.Tank{tank |
+          velocity: command.velocity,
+          angular_velocity: command.angular_velocity
+        }
+        %Tanx.Arena{arena | tanks: Map.put(tanks, id, tank)}
+      else
+        arena
+      end
+    {arena, internal_data, []}
+  end
+end
+
 defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.ExplodeTank do
   def handle(command, arena, internal_data, _time) do
     tanks = arena.tanks
@@ -95,21 +114,34 @@ defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.ExplodeTank do
   end
 end
 
-defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.SetTankVelocity do
+defimpl Tanx.Updater.CommandHandler, for: Tanx.Updater.FireMissile do
+  @epsilon 0.00001
+
   def handle(command, arena, internal_data, _time) do
-    tanks = arena.tanks
-    id = command.id
-    tank = Map.get(tanks, id)
-    arena =
-      if tank != nil do
-        tank = %Tanx.Arena.Tank{tank |
-          velocity: command.velocity,
-          angular_velocity: command.angular_velocity
-        }
-        %Tanx.Arena{arena | tanks: Map.put(tanks, id, tank)}
-      else
+    tank = Map.get(arena.tanks, command.tank_id)
+    new_arena =
+      if tank == nil do
         arena
+      else
+        {x, y} = tank.pos
+        heading = command.heading || tank.heading
+        dist = tank.radius + @epsilon
+        pos = {x + dist * :math.cos(heading), y + dist * :math.sin(heading)}
+        missile = %Tanx.Arena.Missile{
+          pos: pos,
+          heading: heading,
+          velocity: command.velocity,
+          impact_intensity: command.impact_intensity,
+          explosion_intensity: command.explosion_intensity,
+          explosion_radius: command.explosion_radius,
+          explosion_length: command.explosion_length,
+          data: command.chain_data
+        }
+        missiles = arena.missiles
+        missile_id = Tanx.Util.ID.create(missiles)
+        new_missiles = Map.put(missiles, missile_id, missile)
+        %Tanx.Arena{arena | missiles: new_missiles}
       end
-    {arena, internal_data, []}
+    {new_arena, internal_data, []}
   end
 end
