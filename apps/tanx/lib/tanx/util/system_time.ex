@@ -11,7 +11,8 @@ defmodule Tanx.Util.SystemTime do
 
   @doc """
     Returns the system time given a time configuration.
-    If nil is passed as the time configuration, the actual system time in milliseconds is returned.
+    If nil is passed as the time configuration, the actual system time in
+    seconds is returned as a float, in millisecond precision.
     Otherwise, the last time set in the configuration is returned.
   """
   def get(nil) do

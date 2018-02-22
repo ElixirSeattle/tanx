@@ -33,7 +33,8 @@ defmodule Tanx.Game do
   end
 
   defp get_start_params(data, opts) do
-    {game_opts, process_opts} = Keyword.split(opts, [:interval, :time_config])
+    {game_opts, process_opts} =
+      Keyword.split(opts, [:interval, :time_config, :rand_seed, :id_strategy])
     {{data, game_opts}, process_opts}
   end
 
@@ -41,13 +42,6 @@ defmodule Tanx.Game do
   #### GenServer callbacks
 
   use GenServer
-
-  defprotocol Variant do
-    def init_arena(data, time)
-    def view(data, arena, time, view_context)
-    def control(data, params)
-    def event(data, event)
-  end
 
   defmodule State do
     defstruct(
@@ -60,12 +54,20 @@ defmodule Tanx.Game do
     )
   end
 
-  def init({data, game_opts}) do
-    time_config = Keyword.get(game_opts, :time_config, nil)
+  alias Tanx.Game.Variant
+
+  def init({data, opts}) do
+    time_config = Keyword.get(opts, :time_config, nil)
+    rand_seed = Keyword.get(opts, :rand_seed, nil)
+    if rand_seed != nil do
+      :rand.seed(:exrop, rand_seed)
+    end
+    id_strategy = Keyword.get(opts, :id_strategy, :random)
+    Tanx.Util.ID.set_strategy(id_strategy)
     time = Tanx.Util.SystemTime.get(time_config)
     arena = Variant.init_arena(data, time)
     start_event = %Tanx.Game.Events.ArenaUpdated{time: time, arena: arena}
-    updater = Tanx.Game.Updater.start_link(self(), arena, game_opts)
+    updater = Tanx.Game.Updater.start_link(self(), arena, opts)
     {data, commands, _notifications} = Variant.event(data, start_event)
     state = %State{
       data: data,

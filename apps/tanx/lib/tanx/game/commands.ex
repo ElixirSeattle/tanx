@@ -11,6 +11,9 @@ defmodule Tanx.Game.Commands.CreateTank do
     collision_radius: 0.6,
     armor: 1.0,
     max_armor: 1.0,
+    explosion_intensity: 0.0,
+    explosion_radius: 0.0,
+    explosion_length: 0.0,
     data: nil,
     event_data: nil
   )

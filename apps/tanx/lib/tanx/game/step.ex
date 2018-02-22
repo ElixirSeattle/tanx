@@ -1,4 +1,4 @@
-defmodule Tanx.Game.Periodic do
+defmodule Tanx.Game.Step do
 
   def update(arena, internal, elapsed) do
     tanks = move_tanks(arena.tanks, arena.size, internal.decomposed_walls, elapsed)
@@ -163,9 +163,9 @@ defmodule Tanx.Game.Periodic do
             else
               expl = %Tanx.Game.Arena.Explosion{
                 pos: t.pos,
-                intensity: 1.0,
-                radius: 1.0,
-                length: 0.6,
+                intensity: t.explosion_intensity,
+                radius: t.explosion_radius,
+                length: t.explosion_length,
                 data: chain.data
               }
               {t, expl}
@@ -200,9 +200,9 @@ defmodule Tanx.Game.Periodic do
             new_miss = Map.delete(miss, missile_id)
             expl = %Tanx.Game.Arena.Explosion{
               pos: missile.pos,
-              intensity: 0.25,
-              radius: 0.5,
-              length: 0.4,
+              intensity: missile.explosion_intensity,
+              radius: missile.explosion_radius,
+              length: missile.explosion_length,
               data: missile.data
             }
             expl_id = Tanx.Util.ID.create("E", expls)
@@ -217,9 +217,9 @@ defmodule Tanx.Game.Periodic do
               new_tnks = Map.delete(tnks, tnk_id)
               expl = %Tanx.Game.Arena.Explosion{
                 pos: tnk.pos,
-                intensity: 1.0,
-                radius: 1.0,
-                length: 0.6,
+                intensity: tnk.explosion_intensity,
+                radius: tnk.explosion_radius,
+                length: tnk.explosion_length,
                 data: missile.data
               }
               expl_id = Tanx.Util.ID.create("E", expls)

@@ -20,6 +20,9 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.CreateTank do
           collision_radius: command.collision_radius,
           armor: command.armor,
           max_armor: command.max_armor,
+          explosion_intensity: command.explosion_intensity,
+          explosion_radius: command.explosion_radius,
+          explosion_length: command.explosion_length,
           data: command.data
         }
         id = Tanx.Util.ID.create("T", arena.tanks)
@@ -33,7 +36,7 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.CreateTank do
           if event_data == nil do
             []
           else
-            [%Tanx.Game.Events.TankCreated{id: id, event_data: event_data}]
+            [%Tanx.Game.Events.TankCreated{id: id, tank: tank, event_data: event_data}]
           end
         {new_arena, internal_data, events}
       _ ->

@@ -3,9 +3,7 @@ defmodule Tanx.Game.Updater do
   #### Public API
 
   def start_link(game, arena, opts \\ []) do
-    interval = Keyword.get(opts, :interval, 0.02)
-    time_config = Keyword.get(opts, :time_config, nil)
-    GenServer.start_link(__MODULE__, {game, arena, interval, time_config})
+    GenServer.start_link(__MODULE__, {game, arena, opts})
   end
 
 
@@ -30,7 +28,15 @@ defmodule Tanx.Game.Updater do
     )
   end
 
-  def init({game, arena, interval, time_config}) do
+  def init({game, arena, opts}) do
+    interval = Keyword.get(opts, :interval, 0.02)
+    time_config = Keyword.get(opts, :time_config, nil)
+    rand_seed = Keyword.get(opts, :rand_seed, nil)
+    id_strategy = Keyword.get(opts, :id_strategy, :random)
+    if rand_seed != nil do
+      :rand.seed(:exrop, rand_seed)
+    end
+    Tanx.Util.ID.set_strategy(id_strategy)
     internal = %InternalData{
       decomposed_walls: Enum.map(arena.walls, &Tanx.Game.Walls.decompose_wall/1)
     }
@@ -68,8 +74,7 @@ defmodule Tanx.Game.Updater do
         {a, p, de} = Tanx.Game.CommandHandler.handle(cmd, a, p, cur)
         {a, p, e ++ de}
       end)
-    {arena, internal, de} =
-      Tanx.Game.Periodic.update(arena, internal, cur - state.last)
+    {arena, internal, de} = Tanx.Game.Step.update(arena, internal, cur - state.last)
     GenServer.call(state.game, {:update, cur, arena, events ++ de})
     %State{state | arena: arena, internal: internal, last: cur}
   end

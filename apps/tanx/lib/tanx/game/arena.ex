@@ -33,6 +33,9 @@ defmodule Tanx.Game.Arena do
       armor: 1.0,
       max_armor: 1.0,
       dist: 0.0,
+      explosion_intensity: 0.0,
+      explosion_radius: 0.0,
+      explosion_length: 0.0,
       data: nil
     )
   end

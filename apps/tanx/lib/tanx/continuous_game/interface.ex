@@ -65,7 +65,9 @@ defmodule Tanx.ContinuousGame do
       forward_speed: 2.0,
       backward_speed: 1.0,
       angular_speed: 2.0,
-      bounce: 0
+      bounce: 0,
+      reload_length: 1.0,
+      reloaded_at: 0.0
     )
   end
 

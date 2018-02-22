@@ -1,21 +1,42 @@
 defmodule Tanx.Util.ID do
 
-  def create(prefix, map) when is_map(map), do: create(prefix, [map])
+  def set_strategy(strategy) do
+    :erlang.put(:id_strategy, strategy)
+    strategy
+  end
 
-  def create(prefix, maps) when is_list(maps) do
-    candidate = prefix <> create()
-    if Enum.any?(maps, fn map -> Map.has_key?(map, candidate) end) do
-      create(prefix, maps)
+  def create(prefix, map) do
+    create(prefix, map, :erlang.get(:id_strategy))
+  end
+
+  def create(prefix, map, :sequential) do
+    Stream.iterate(0, &(&1 + 1))
+    |> Enum.find_value(fn val ->
+      candidate = encode_value(val, prefix)
+      if Map.has_key?(map, candidate) do
+        nil
+      else
+        candidate
+      end
+    end)
+  end
+
+  def create(prefix, map, strategy) do
+    candidate = encode_value(:rand.uniform(0x100000000) - 1, prefix)
+    if Map.has_key?(map, candidate) do
+      create(prefix, map, strategy)
     else
       candidate
     end
   end
 
-  def create() do
-    (:rand.uniform(0x100000000) - 1)
-    |> Integer.to_string(16)
-    |> String.downcase
-    |> String.pad_leading(8, "0")
+  defp encode_value(value, prefix) do
+    id =
+      value
+      |> Integer.to_string(16)
+      |> String.downcase
+      |> String.pad_leading(8, "0")
+    prefix <> id
   end
 
 end

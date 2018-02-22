@@ -8,6 +8,7 @@ end
 defmodule Tanx.Game.Events.TankCreated do
   defstruct(
     id: nil,
+    tank: nil,
     event_data: nil
   )
 end

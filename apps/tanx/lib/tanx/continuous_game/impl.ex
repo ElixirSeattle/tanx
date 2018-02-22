@@ -11,6 +11,20 @@ end
 
 defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
 
+  @tank_starting_armor 2.0
+  @tank_explosion_intensity 1.0
+  @tank_explosion_radius 1.0
+  @tank_explosion_length 0.6
+  @missile_velocity 10.0
+  @missile_impact_intensity 1.0
+  @missile_explosion_intensity 0.25
+  @missile_explosion_radius 0.5
+  @missile_explosion_length 0.4
+  @self_destruct_explosion_intensity 4.0
+  @self_destruct_explosion_radius 2.5
+  @self_destruct_explosion_length 1.0
+  @power_up_lifetime 10.0
+
   alias Tanx.ContinuousGame.Impl
   alias Tanx.ContinuousGame.Player
   alias Tanx.ContinuousGame.PlayerPrivate
@@ -130,8 +144,11 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
           new_player_handles = Map.put(player_handles, player_handle, new_player_private)
           command = %Tanx.Game.Commands.CreateTank{
             entry_point_name: entry_point_name,
-            armor: 2.0,
-            max_armor: 2.0,
+            armor: @tank_starting_armor,
+            max_armor: @tank_starting_armor,
+            explosion_intensity: @tank_explosion_intensity,
+            explosion_radius: @tank_explosion_radius,
+            explosion_length: @tank_explosion_length,
             data: %{player_id: player_id},
             event_data: %{player_handle: player_handle}
           }
@@ -152,20 +169,29 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     if Map.has_key?(player_handles, player_handle) do
       player_private = Map.fetch!(player_handles, player_handle)
       tank_id = player_private.tank_id
-      if tank_id == nil || tank_id == true do
-        {{:error, :tank_not_found, [player_handle: player_handle]}, data, [], []}
-      else
-        command = %Tanx.Game.Commands.FireMissile{
-          tank_id: tank_id,
-          velocity: 10.0,
-          bounce: player_private.bounce,
-          impact_intensity: 1.0,
-          explosion_intensity: 0.25,
-          explosion_radius: 0.5,
-          explosion_length: 0.4,
-          chain_data: %{originator_id: player_private.player_id}
-        }
-        {:ok, data, [command], []}
+      time = data.time
+      reloaded_at = player_private.reloaded_at
+      cond do
+        reloaded_at > time ->
+          {{:error, :tank_not_loaded, [time_needed: reloaded_at - time]},
+            data, [], []}
+        tank_id == nil || tank_id == true ->
+          {{:error, :tank_not_found, [player_handle: player_handle]}, data, [], []}
+        true ->
+          command = %Tanx.Game.Commands.FireMissile{
+            tank_id: tank_id,
+            velocity: @missile_velocity,
+            bounce: player_private.bounce,
+            impact_intensity: @missile_impact_intensity,
+            explosion_intensity: @missile_explosion_intensity,
+            explosion_radius: @missile_explosion_radius,
+            explosion_length: @missile_explosion_length,
+            chain_data: %{originator_id: player_private.player_id}
+          }
+          new_player_private = %PlayerPrivate{player_private |
+            reloaded_at: time + player_private.reload_length}
+          new_player_handles = Map.put(player_handles, player_handle, new_player_private)
+          {:ok, %Impl{data | player_handles: new_player_handles}, [command], []}
       end
     else
       {{:error, :player_not_found, [player_handle: player_handle]}, data, [], []}
@@ -210,9 +236,9 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       else
         command = %Tanx.Game.Commands.ExplodeTank{
           id: tank_id,
-          explosion_intensity: 4.0,
-          explosion_radius: 2.5,
-          explosion_length: 1.0,
+          explosion_intensity: @self_destruct_explosion_intensity,
+          explosion_radius: @self_destruct_explosion_radius,
+          explosion_length: @self_destruct_explosion_length,
           chain_data: %{originator_id: player_private.player_id}
         }
         {:ok, data, [command], []}
@@ -311,7 +337,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     end
     %Tanx.Game.Commands.CreatePowerUp{
       pos: pos,
-      expires_in: 10.0,
+      expires_in: @power_up_lifetime,
       tank_modifier: tank_modifier,
       data: %{type: :health}
     }
@@ -320,7 +346,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
   def create_bounce_powerup(pos) do
     %Tanx.Game.Commands.CreatePowerUp{
       pos: pos,
-      expires_in: 10.0,
+      expires_in: @power_up_lifetime,
       data: %{type: :bounce}
     }
   end

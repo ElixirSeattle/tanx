@@ -1,4 +1,4 @@
-defmodule Tanx.ObstaclesTest do
+defmodule Tanx.Game.WallsTest do
   use ExUnit.Case
 
 
@@ -21,7 +21,7 @@ defmodule Tanx.ObstaclesTest do
 
   test "decompose single segment wall" do
     wall = [{-1, 1}, {1, 2}]
-    decomposed = Tanx.Obstacles.decompose_wall(wall)
+    decomposed = Tanx.Game.Walls.decompose_wall(wall)
     expected = {
       [
         {{0, -1}, {-1, 1}, {-2, 3}},
@@ -40,7 +40,7 @@ defmodule Tanx.ObstaclesTest do
 
   test "decompose triangle wall" do
     wall = [{-1, 1}, {1, 2}, {3, 0}]
-    decomposed = Tanx.Obstacles.decompose_wall(wall)
+    decomposed = Tanx.Game.Walls.decompose_wall(wall)
     expected = {
       [
         {{-2, -3}, {-1, 1}, {-2, 3}},
@@ -63,7 +63,7 @@ defmodule Tanx.ObstaclesTest do
   test "decompose quadrilateral with a concave corner" do
     root2 = :math.sqrt(2)
     wall = [{-1, -1}, {0, 1}, {1, -1}, {0, 0}]
-    decomposed = Tanx.Obstacles.decompose_wall(wall)
+    decomposed = Tanx.Game.Walls.decompose_wall(wall)
     expected = {
       [
         {{0, 0}, {root2/2, -root2/2}, {0, -1}, {-root2/2, -root2/2}, 1, root2},
@@ -90,8 +90,8 @@ defmodule Tanx.ObstaclesTest do
   test "force from single segment wall, too far" do
     wall = [{-1, 0}, {1, 2}]
     force = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.force_from_decomposed_wall({-2, 1}, 1)
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.force_from_decomposed_wall({-2, 1}, 1)
     assert_structure_in_epsilon(force, {0.0, 0.0})
   end
 
@@ -99,8 +99,8 @@ defmodule Tanx.ObstaclesTest do
   test "force from single segment wall, first segment" do
     wall = [{-1, 0}, {1, 2}]
     force = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.force_from_decomposed_wall({-0.5, 1.5}, :math.sqrt(2))
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.force_from_decomposed_wall({-0.5, 1.5}, :math.sqrt(2))
     assert_structure_in_epsilon(force, {-0.5, 0.5})
   end
 
@@ -108,8 +108,8 @@ defmodule Tanx.ObstaclesTest do
   test "force from single segment wall, second segment" do
     wall = [{-1, 0}, {1, 2}]
     force = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.force_from_decomposed_wall({0.0, 0.0}, :math.sqrt(2))
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.force_from_decomposed_wall({0.0, 0.0}, :math.sqrt(2))
     assert_structure_in_epsilon(force, {0.5, -0.5})
   end
 
@@ -117,8 +117,8 @@ defmodule Tanx.ObstaclesTest do
   test "force from single segment wall, first corner" do
     wall = [{-1, 0}, {1, 2}]
     force = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.force_from_decomposed_wall({1.0, 2.5}, 1.0)
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.force_from_decomposed_wall({1.0, 2.5}, 1.0)
     assert_structure_in_epsilon(force, {0.0, 0.5})
   end
 
@@ -126,8 +126,8 @@ defmodule Tanx.ObstaclesTest do
   test "force from single segment wall, second corner" do
     wall = [{-1, 0}, {1, 2}]
     force = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.force_from_decomposed_wall({-1.5, -0.5}, :math.sqrt(2))
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.force_from_decomposed_wall({-1.5, -0.5}, :math.sqrt(2))
     assert_structure_in_epsilon(force, {-0.5, -0.5})
   end
 
@@ -135,8 +135,8 @@ defmodule Tanx.ObstaclesTest do
   test "force from single segment wall, both corner and segment" do
     wall = [{-1, 0}, {1, 2}]
     force = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.force_from_decomposed_wall({0.5, 2.5}, :math.sqrt(2))
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.force_from_decomposed_wall({0.5, 2.5}, :math.sqrt(2))
     assert_structure_in_epsilon(force, {-0.5, 0.5})
   end
 
@@ -144,8 +144,8 @@ defmodule Tanx.ObstaclesTest do
   test "force from a concave corner" do
     wall = [{-2, -2}, {0, 1}, {2, -2}, {0, 0}]
     force = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.force_from_decomposed_wall({0.5, -1.0}, :math.sqrt(2))
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.force_from_decomposed_wall({0.5, -1.0}, :math.sqrt(2))
     assert_structure_in_epsilon(force, {-0.5, -1.0})
   end
 
@@ -153,8 +153,8 @@ defmodule Tanx.ObstaclesTest do
   test "intersection with triangle, first segment" do
     wall = [{-1, 0}, {1, 2}, {1, -1}]
     {intersection, _normal} = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.collision_with_decomposed_wall({-2, 0.5}, {2, 0.5})
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.collision_with_decomposed_wall({-2, 0.5}, {2, 0.5})
     assert_structure_in_epsilon(intersection, {-0.5, 0.5})
   end
 
@@ -162,8 +162,8 @@ defmodule Tanx.ObstaclesTest do
   test "intersection with triangle, second segment" do
     wall = [{-1, 0}, {1, 2}, {1, -1}]
     {intersection, _normal} = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.collision_with_decomposed_wall({2, 0.5}, {-2, 0.5})
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.collision_with_decomposed_wall({2, 0.5}, {-2, 0.5})
     assert_structure_in_epsilon(intersection, {1, 0.5})
   end
 
@@ -171,8 +171,8 @@ defmodule Tanx.ObstaclesTest do
   test "intersection with triangle, miss" do
     wall = [{-1, 0}, {1, 2}, {1, -1}]
     intersection = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.collision_with_decomposed_wall({2, 0.5}, {0, -3})
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.collision_with_decomposed_wall({2, 0.5}, {0, -3})
     assert intersection == nil
   end
 
@@ -180,8 +180,8 @@ defmodule Tanx.ObstaclesTest do
   test "intersection with triangle, did not reach" do
     wall = [{-1, 0}, {1, 2}, {1, -1}]
     intersection = wall
-      |> Tanx.Obstacles.decompose_wall
-      |> Tanx.Obstacles.collision_with_decomposed_wall({2, 0.5}, {1.5, 0.5})
+      |> Tanx.Game.Walls.decompose_wall
+      |> Tanx.Game.Walls.collision_with_decomposed_wall({2, 0.5}, {1.5, 0.5})
     assert intersection == nil
   end
 
