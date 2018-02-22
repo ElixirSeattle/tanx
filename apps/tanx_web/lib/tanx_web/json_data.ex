@@ -84,7 +84,8 @@ defmodule TanxWeb.JsonData do
       x: 0.0,
       y: 0.0,
       r: 0.5,
-      t: nil
+      t: nil,
+      e: 0.0
     )
   end
 
@@ -142,6 +143,7 @@ defmodule TanxWeb.JsonData do
     tanks = format_tanks(arena_view.tanks, arena_view.players, cur_player_tank_id)
     explosions = format_explosions(arena_view.explosions)
     missiles = format_missiles(arena_view.missiles)
+    power_ups = format_power_ups(arena_view.power_ups)
     epa = Enum.reduce(arena_view.entry_points, %{}, fn {n, ep}, acc ->
       Map.put(acc, n, ep.available)
     end)
@@ -149,6 +151,7 @@ defmodule TanxWeb.JsonData do
       t: tanks,
       e: explosions,
       m: missiles,
+      p: power_ups,
       epa: epa
     }
   end
@@ -162,13 +165,13 @@ defmodule TanxWeb.JsonData do
       %TanxWeb.JsonData.Tank{
         me: id == cur_player_tank_id,
         n: player_name,
-        x: x,
-        y: y,
-        h: t.heading,
-        r: t.radius,
-        a: t.armor,
-        ma: t.max_armor,
-        t: tread - Float.floor(tread)
+        x: truncate(x),
+        y: truncate(y),
+        h: truncate(t.heading),
+        r: truncate(t.radius),
+        a: truncate(t.armor),
+        ma: truncate(t.max_armor),
+        t: truncate(tread - Float.floor(tread))
       }
     end)
   end
@@ -177,10 +180,10 @@ defmodule TanxWeb.JsonData do
     Enum.map(explosions, fn {_id, e} ->
       {x, y} = e.pos
       %TanxWeb.JsonData.Explosion{
-        x: x,
-        y: y,
-        r: e.radius,
-        a: e.progress
+        x: truncate(x),
+        y: truncate(y),
+        r: truncate(e.radius),
+        a: truncate(e.progress)
       }
     end)
   end
@@ -189,11 +192,28 @@ defmodule TanxWeb.JsonData do
     Enum.map(missiles, fn {_id, m} ->
       {x, y} = m.pos
       %TanxWeb.JsonData.Missile{
-        x: x,
-        y: y,
-        h: m.heading
+        x: truncate(x),
+        y: truncate(y),
+        h: truncate(m.heading)
       }
     end)
+  end
+
+  defp format_power_ups(power_ups) do
+    Enum.map(power_ups, fn {_id, p} ->
+      {x, y} = p.pos
+      %TanxWeb.JsonData.PowerUp{
+        x: truncate(x),
+        y: truncate(y),
+        r: truncate(p.radius),
+        t: p.data[:type],
+        e: truncate(p.expires_in)
+      }
+    end)
+  end
+
+  defp truncate(value) do
+    round(value * 100) / 100
   end
 
 end

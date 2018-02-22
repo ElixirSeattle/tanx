@@ -188,6 +188,14 @@ class ArenaRender {
   }
 
   _renderPowerUp(context, powerup) {
+    let life = powerup.e;
+    if (life < 1.0) {
+      if (Math.floor(life * 12) % 2 == 1) return;
+    }
+    else if (life < 3.0) {
+      if (Math.floor(life * 6) % 2 == 1) return;
+    }
+
     context.save();
 
     let powerupRect = this._arenaStructure.onScreenRect(powerup.x,

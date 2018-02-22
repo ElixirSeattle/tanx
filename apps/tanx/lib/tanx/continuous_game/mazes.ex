@@ -4,7 +4,7 @@ defmodule Tanx.ContinuousGame.Mazes do
 
   @mazes %{
     standard:
-      %Tanx.Arena{
+      %Tanx.Game.Arena{
         size: {20.0, 20.0},
 
         walls: [
@@ -44,19 +44,19 @@ defmodule Tanx.ContinuousGame.Mazes do
         ],
 
         entry_points: %{
-          "nw" => %Tanx.Arena.EntryPoint{
+          "nw" => %Tanx.Game.Arena.EntryPoint{
             pos: {-9.25, 9.25}, heading: -pi/2,
             buffer_left: 0.75, buffer_right: 1.25, buffer_up: 0.75, buffer_down: 4.25
           },
-          "ne" => %Tanx.Arena.EntryPoint{
+          "ne" => %Tanx.Game.Arena.EntryPoint{
             pos: {9.25, 9.25}, heading: pi,
             buffer_left: 4.25, buffer_right: 0.75, buffer_up: 0.75, buffer_down: 1.25
           },
-          "se" => %Tanx.Arena.EntryPoint{
+          "se" => %Tanx.Game.Arena.EntryPoint{
             pos: {9.25, -9.25}, heading: pi/2,
             buffer_left: 1.25, buffer_right: 0.75, buffer_up: 4.25, buffer_down: 0.75
           },
-          "sw" => %Tanx.Arena.EntryPoint{
+          "sw" => %Tanx.Game.Arena.EntryPoint{
             pos: {-9.25, -9.25}, heading: 0.0,
             buffer_left: 0.75, buffer_right: 4.25, buffer_up: 1.25, buffer_down: 0.75
           },

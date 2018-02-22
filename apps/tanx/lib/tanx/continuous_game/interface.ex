@@ -41,8 +41,8 @@ defmodule Tanx.ContinuousGame do
     Tanx.Game.control(game, {:destruct_tank, player_handle})
   end
 
-  def add_listener(game, type, listener) do
-    Tanx.Game.add_listener(game, type, listener)
+  def add_callback(game, type, name \\ nil, callback) do
+    Tanx.Game.add_callback(game, type, name, callback)
   end
 
   defmodule Player do
@@ -64,7 +64,8 @@ defmodule Tanx.ContinuousGame do
       backward: false,
       forward_speed: 2.0,
       backward_speed: 1.0,
-      angular_speed: 2.0
+      angular_speed: 2.0,
+      bounce: 0
     )
   end
 
@@ -89,7 +90,7 @@ defmodule Tanx.ContinuousGame do
       tanks: %{},
       missiles: %{},
       explosions: %{},
-      powerups: %{},
+      power_ups: %{},
       players: %{},
       cur_player: nil
     )

@@ -4,7 +4,7 @@ defmodule TanxWeb.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    Tanx.Game.add_listener(:game_core, Tanx.ContinuousGame.PlayersChanged, fn event ->
+    Tanx.Game.add_callback(:game_core, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
       TanxWeb.Endpoint.broadcast!("game", "view_players", event)
     end)
 

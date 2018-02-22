@@ -1,4 +1,4 @@
-defmodule Tanx.Arena do
+defmodule Tanx.Game.Arena do
 
   defstruct(
     size: {20.0, 20.0},
@@ -7,7 +7,7 @@ defmodule Tanx.Arena do
     tanks: %{},
     missiles: %{},
     explosions: %{},
-    powerups: %{}
+    power_ups: %{}
   )
 
   defmodule EntryPoint do
@@ -68,6 +68,7 @@ defmodule Tanx.Arena do
       pos: {0.0, 0.0},
       radius: 0.4,
       expires_in: 0.0,
+      tank_modifier: nil,
       data: nil
     )
   end

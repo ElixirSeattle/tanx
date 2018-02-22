@@ -1,10 +1,10 @@
-defmodule Tanx.Updater.Defer do
+defmodule Tanx.Game.Commands.Defer do
   defstruct(
     event: nil
   )
 end
 
-defmodule Tanx.Updater.CreateTank do
+defmodule Tanx.Game.Commands.CreateTank do
   defstruct(
     entry_point_name: nil,
     radius: 0.5,
@@ -16,7 +16,7 @@ defmodule Tanx.Updater.CreateTank do
   )
 end
 
-defmodule Tanx.Updater.DeleteTank do
+defmodule Tanx.Game.Commands.DeleteTank do
   defstruct(
     id: nil,
     query: nil,
@@ -24,7 +24,7 @@ defmodule Tanx.Updater.DeleteTank do
   )
 end
 
-defmodule Tanx.Updater.SetTankVelocity do
+defmodule Tanx.Game.Commands.SetTankVelocity do
   defstruct(
     id: nil,
     velocity: 0.0,
@@ -32,7 +32,7 @@ defmodule Tanx.Updater.SetTankVelocity do
   )
 end
 
-defmodule Tanx.Updater.ExplodeTank do
+defmodule Tanx.Game.Commands.ExplodeTank do
   defstruct(
     id: nil,
     explosion_intensity: 0.0,
@@ -42,7 +42,7 @@ defmodule Tanx.Updater.ExplodeTank do
   )
 end
 
-defmodule Tanx.Updater.FireMissile do
+defmodule Tanx.Game.Commands.FireMissile do
   defstruct(
     tank_id: nil,
     heading: nil,
@@ -53,5 +53,15 @@ defmodule Tanx.Updater.FireMissile do
     explosion_radius: 0.0,
     explosion_length: 0.0,
     chain_data: nil
+  )
+end
+
+defmodule Tanx.Game.Commands.CreatePowerUp do
+  defstruct(
+    pos: {0.0, 0.0},
+    radius: 0.4,
+    expires_in: 0.0,
+    tank_modifier: nil,
+    data: nil
   )
 end

@@ -1,7 +1,7 @@
-defmodule Tanx.Obstacles do
+defmodule Tanx.Game.Walls do
 
   @moduledoc """
-  The Obstacles module computes force on tanks due to obstacles.
+  Computes force on tanks due to walls.
   """
 
 
