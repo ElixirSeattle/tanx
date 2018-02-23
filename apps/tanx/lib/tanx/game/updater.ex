@@ -11,6 +11,8 @@ defmodule Tanx.Game.Updater do
 
   use GenServer
 
+  require Logger
+
   defmodule InternalData do
     defstruct(
       decomposed_walls: []
@@ -24,7 +26,7 @@ defmodule Tanx.Game.Updater do
       internal: nil,
       interval: nil,
       time_config: nil,
-      last: 0.0
+      time: 0.0
     )
   end
 
@@ -46,7 +48,7 @@ defmodule Tanx.Game.Updater do
       internal: internal,
       interval: interval,
       time_config: time_config,
-      last: Tanx.Util.SystemTime.get(time_config)
+      time: Tanx.Util.SystemTime.get(time_config)
     }
     {:ok, state, next_tick_timeout(state)}
   end
@@ -67,23 +69,24 @@ defmodule Tanx.Game.Updater do
   #### Logic
 
   defp perform_update(state) do
-    commands = GenServer.call(state.game, :get_commands)
     cur = Tanx.Util.SystemTime.get(state.time_config)
+    commands = GenServer.call(state.game, :get_commands)
     {arena, internal, events} =
       Enum.reduce(commands, {state.arena, state.internal, []}, fn cmd, {a, p, e} ->
-        {a, p, de} = Tanx.Game.CommandHandler.handle(cmd, a, p, cur)
-        {a, p, e ++ de}
+        {a, p, more_e} = Tanx.Game.CommandHandler.handle(cmd, a, p, cur)
+        {a, p, [more_e | e]}
       end)
-    {arena, internal, de} = Tanx.Game.Step.update(arena, internal, cur - state.last)
-    GenServer.call(state.game, {:update, cur, arena, events ++ de})
-    %State{state | arena: arena, internal: internal, last: cur}
+    {arena, internal, more_events} = Tanx.Game.Step.update(arena, internal, cur - state.time)
+    events = List.flatten([more_events | events])
+    GenServer.call(state.game, {:update, cur, arena, events})
+    %State{state | arena: arena, internal: internal, time: cur}
   end
 
   defp next_tick_timeout(state) do
     if state.interval == nil do
       :infinity
     else
-      timeout_secs = max(state.last + state.interval - Tanx.Util.SystemTime.get(state.time_config), 0.0)
+      timeout_secs = max(state.time + state.interval - Tanx.Util.SystemTime.get(state.time_config), 0.0)
       trunc(timeout_secs * 1000)
     end
   end

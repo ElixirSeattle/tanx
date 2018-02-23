@@ -56,7 +56,7 @@ defmodule Tanx.Game.CommandHandlerTest do
       expected_entry_point = %Tanx.Game.Arena.EntryPoint{entry_point | available: false}
       expected_arena = %Tanx.Game.Arena{
         entry_points: %{"epn" => expected_entry_point},
-        tanks: %{"T00000000" => expected_tank}
+        tanks: %{"T1" => expected_tank}
       }
 
       {:ok, [
@@ -76,7 +76,7 @@ defmodule Tanx.Game.CommandHandlerTest do
     test "create a tank with event data", context do
       command = %Tanx.Game.Commands.CreateTank{context[:command] | event_data: "ho"}
       expected_event = %Tanx.Game.Events.TankCreated{
-        id: "T00000000", tank: context[:expected_tank], event_data: "ho"}
+        id: "T1", tank: context[:expected_tank], event_data: "ho"}
 
       result = Tanx.Game.CommandHandler.handle(command, context[:initial_arena], :internal, nil)
       assert result == {context[:expected_arena], :internal, [expected_event]}
@@ -90,6 +90,91 @@ defmodule Tanx.Game.CommandHandlerTest do
       assert result == {initial_arena, :internal, []}
     end
 
+  end
+
+
+  describe "DeleteTank" do
+
+    setup do
+      tank1 = %Tanx.Game.Arena.Tank{
+        data: "tank1"
+      }
+      tank2 = %Tanx.Game.Arena.Tank{
+        data: "tank2"
+      }
+      initial_arena = %Tanx.Game.Arena{
+        tanks: %{"T1" => tank1, "T2" => tank2}
+      }
+
+      {:ok, [tank1: tank1, tank2: tank2, initial_arena: initial_arena]}
+    end
+
+    test "delete a tank by ID", context do
+      command = %Tanx.Game.Commands.DeleteTank{id: "T1"}
+      initial_arena = context[:initial_arena]
+      expected_arena = %Tanx.Game.Arena{initial_arena |
+        tanks: Map.delete(initial_arena.tanks, "T1")
+      }
+
+      result = Tanx.Game.CommandHandler.handle(command, initial_arena, :internal, nil)
+      assert result == {expected_arena, :internal, []}
+    end
+
+    test "delete a tank by ID with event", context do
+      command = %Tanx.Game.Commands.DeleteTank{id: "T1", event_data: "ho"}
+      initial_arena = context[:initial_arena]
+      expected_arena = %Tanx.Game.Arena{initial_arena |
+        tanks: Map.delete(initial_arena.tanks, "T1")
+      }
+      expected_event = %Tanx.Game.Events.TankDeleted{
+        id: "T1", tank: context[:tank1], event_data: "ho"}
+
+      result = Tanx.Game.CommandHandler.handle(command, initial_arena, :internal, nil)
+      assert result == {expected_arena, :internal, [expected_event]}
+    end
+
+    test "delete a tank by query term with event", context do
+      command = %Tanx.Game.Commands.DeleteTank{query: "tank2", event_data: "ho"}
+      initial_arena = context[:initial_arena]
+      expected_arena = %Tanx.Game.Arena{initial_arena |
+        tanks: Map.delete(initial_arena.tanks, "T2")
+      }
+      expected_event = %Tanx.Game.Events.TankDeleted{
+        id: "T2", tank: context[:tank2], event_data: "ho"}
+
+      result = Tanx.Game.CommandHandler.handle(command, initial_arena, :internal, nil)
+      assert result == {expected_arena, :internal, [expected_event]}
+    end
+
+    test "delete a tank by query function", context do
+      command = %Tanx.Game.Commands.DeleteTank{query: &(String.starts_with?(&1.data, "tank"))}
+      initial_arena = context[:initial_arena]
+      expected_arena = %Tanx.Game.Arena{}
+
+      result = Tanx.Game.CommandHandler.handle(command, initial_arena, :internal, nil)
+      assert result == {expected_arena, :internal, []}
+    end
+
+  end
+
+
+  describe "SetTankVelocity" do
+    # TODO
+  end
+
+
+  describe "ExplodeTank" do
+    # TODO
+  end
+
+
+  describe "FireMissile" do
+    # TODO
+  end
+
+
+  describe "CreatePowerUp" do
+    # TODO
   end
 
 end

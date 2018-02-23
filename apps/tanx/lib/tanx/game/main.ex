@@ -57,12 +57,13 @@ defmodule Tanx.Game do
   alias Tanx.Game.Variant
 
   def init({data, opts}) do
-    time_config = Keyword.get(opts, :time_config, nil)
+    time_config = Keyword.get(opts, :time_config, Tanx.Util.SystemTime.cur_offset())
     rand_seed = Keyword.get(opts, :rand_seed, nil)
+    id_strategy = Keyword.get(opts, :id_strategy, :random)
+    opts = Keyword.put(opts, :time_config, time_config)
     if rand_seed != nil do
       :rand.seed(:exrop, rand_seed)
     end
-    id_strategy = Keyword.get(opts, :id_strategy, :random)
     Tanx.Util.ID.set_strategy(id_strategy)
     time = Tanx.Util.SystemTime.get(time_config)
     arena = Variant.init_arena(data, time)
@@ -80,7 +81,7 @@ defmodule Tanx.Game do
   end
 
   def handle_call(:get_commands, _from, state) do
-    {:reply, state.commands, %State{state | commands: []}}
+    {:reply, List.flatten(state.commands), %State{state | commands: []}}
   end
 
   def handle_call({:view, view_context}, _from, state) do
@@ -92,7 +93,7 @@ defmodule Tanx.Game do
     {result, new_data, new_commands, notifications} =
       Variant.control(state.data, control_params)
     send_notifications(notifications, state.callbacks)
-    new_state = %State{state | data: new_data, commands: state.commands ++ new_commands}
+    new_state = %State{state | data: new_data, commands: [new_commands | state.commands]}
     {:reply, result, new_state}
   end
 
@@ -124,18 +125,19 @@ defmodule Tanx.Game do
     callbacks = state.callbacks
     update_event = %Tanx.Game.Events.ArenaUpdated{time: time, arena: arena}
     {data, commands, notifications} = Variant.event(state.data, update_event)
+    all_commands = [commands | state.commands]
     send_notifications(notifications, callbacks)
-    {data, commands} = Enum.reduce(events, {data, commands}, fn event, {td, tc} ->
-      {d, c, n} = Variant.event(td, event)
+    {data, all_commands} = Enum.reduce(events, {data, all_commands}, fn event, {d, c_acc} ->
+      {d, c, n} = Variant.event(d, event)
       send_notifications(n, callbacks)
-      {d, tc ++ c}
+      {d, [c | c_acc]}
     end)
 
     new_state = %State{state |
       arena: arena,
       data: data,
       time: time,
-      commands: state.commands ++ commands
+      commands: all_commands
     }
     {:reply, :ok, new_state}
   end

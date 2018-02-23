@@ -12,14 +12,20 @@ defmodule Tanx.Util.SystemTime do
   @doc """
     Returns the system time given a time configuration.
     If nil is passed as the time configuration, the actual system time in
-    seconds is returned as a float, in millisecond precision.
+    seconds is returned as a float, in microsecond precision.
     Otherwise, the last time set in the configuration is returned.
   """
-  def get(nil) do
-    :erlang.system_time(:milli_seconds) / 1000
+  def get(nil), do: get(0)
+  def get(offset) when is_integer(offset) do
+    (:erlang.monotonic_time(:microsecond) - offset) / 1000000
   end
-  def get(config) do
+  def get(config) when is_pid(config) do
     Agent.get(config, &(&1))
+  end
+
+
+  def cur_offset() do
+    :erlang.monotonic_time(:microsecond)
   end
 
 

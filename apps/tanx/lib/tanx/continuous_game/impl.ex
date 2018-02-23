@@ -65,7 +65,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
   def control(data, {:add_player, name}) do
     player_handles = data.player_handles
     players = data.players
-    player_handle = Tanx.Util.ID.create("H", player_handles)
+    player_handle = Tanx.Util.ID.create("H", player_handles, 8)
     player_id = Tanx.Util.ID.create("P", players)
     player = %Player{name: name, joined_at: data.time}
     player_private = %PlayerPrivate{player_id: player_id}

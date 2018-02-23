@@ -47,22 +47,57 @@ end
 
 defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.DeleteTank do
   def handle(command, arena, internal_data, _time) do
-    tanks = arena.tanks
     id = command.id
+    query = command.query
+    {arena, events} =
+      cond do
+        is_binary(id) ->
+          delete_by_id(id, arena, command.event_data)
+        is_function(query) ->
+          delete_by_query(query, arena, command.event_data)
+        query != nil ->
+          delete_by_query(&(&1.data == query), arena, command.event_data)
+        true ->
+          {arena, []}
+      end
+    {arena, internal_data, events}
+  end
+
+  defp delete_by_id(id, arena, event_data) do
+    tanks = arena.tanks
     tank = Map.get(tanks, id)
     if tank != nil do
       new_arena = %Tanx.Game.Arena{arena | tanks: Map.delete(tanks, id)}
-      event_data = command.event_data
       events =
         if event_data == nil do
           []
         else
-          [%Tanx.Game.Events.TankDeleted{id: id, event_data: event_data}]
+          [%Tanx.Game.Events.TankDeleted{id: id, tank: tank, event_data: event_data}]
         end
-      {new_arena, internal_data, events}
+      {new_arena, events}
     else
-      {arena, internal_data, []}
+      {arena, []}
     end
+  end
+
+  defp delete_by_query(query, arena, event_data) do
+    {tanks_result, events_result} =
+      Enum.reduce(arena.tanks, {arena.tanks, []}, fn {id, tank}, {tanks, events} ->
+        if query.(tank) do
+          next_tanks = Map.delete(tanks, id)
+          next_events =
+            if event_data == nil do
+              []
+            else
+              [%Tanx.Game.Events.TankDeleted{id: id, tank: tank, event_data: event_data} | events]
+            end
+          {next_tanks, next_events}
+        else
+          {tanks, events}
+        end
+      end)
+    new_arena = %Tanx.Game.Arena{arena | tanks: tanks_result}
+    {new_arena, events_result}
   end
 end
 
