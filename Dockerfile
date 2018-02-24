@@ -62,7 +62,7 @@ WORKDIR /opt/app
 # NodeJS is used for Brunch builds of Phoenix assets.
 # Hex and Rebar are needed to get and build dependencies.
 RUN apk update \
-    && apk --no-cache --update add nodejs nodejs-npm \
+    && apk --no-cache --update add build-base nodejs nodejs-npm python2 \
     && mix local.rebar --force \
     && mix local.hex --force
 
@@ -98,6 +98,8 @@ RUN mix release --env=prod --verbose \
 
 FROM alpine:latest
 
+ARG build_id=local
+
 # Install dependencies for ERTS.
 RUN apk update \
     && apk --no-cache --update add bash openssl-dev
@@ -106,7 +108,8 @@ RUN apk update \
 # It listens on port 8080, and runs in the prod environment.
 ENV PORT=8080 \
     MIX_ENV=prod \
-    REPLACE_OS_VARS=true
+    REPLACE_OS_VARS=true \
+    TANX_BUILD_ID=${build_id}
 
 # Set the install directory. The app will run from here.
 WORKDIR /opt/app
