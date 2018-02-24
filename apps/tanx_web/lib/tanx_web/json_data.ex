@@ -1,5 +1,4 @@
 defmodule TanxWeb.JsonData do
-
   defmodule Player do
     @derive [Poison.Encoder]
     defstruct(
@@ -114,17 +113,22 @@ defmodule TanxWeb.JsonData do
 
   def format_structure(static_view) do
     {w, h} = static_view.size
-    entry_points = Enum.map(static_view.entry_points, fn {name, ep} ->
-      {x, y} = ep.pos
-      %TanxWeb.JsonData.EntryPoint{
-        n: name,
-        x: x,
-        y: y
-      }
-    end)
-    walls = Enum.map(static_view.walls, fn wall ->
-      Enum.flat_map(wall, &Tuple.to_list/1)
-    end)
+
+    entry_points =
+      Enum.map(static_view.entry_points, fn {name, ep} ->
+        {x, y} = ep.pos
+
+        %TanxWeb.JsonData.EntryPoint{
+          n: name,
+          x: x,
+          y: y
+        }
+      end)
+
+    walls =
+      Enum.map(static_view.walls, fn wall ->
+        Enum.flat_map(wall, &Tuple.to_list/1)
+      end)
 
     %TanxWeb.JsonData.Structure{
       h: h,
@@ -140,13 +144,17 @@ defmodule TanxWeb.JsonData do
         nil -> nil
         player_private -> player_private.tank_id
       end
+
     tanks = format_tanks(arena_view.tanks, arena_view.players, cur_player_tank_id)
     explosions = format_explosions(arena_view.explosions)
     missiles = format_missiles(arena_view.missiles)
     power_ups = format_power_ups(arena_view.power_ups)
-    epa = Enum.reduce(arena_view.entry_points, %{}, fn {n, ep}, acc ->
-      Map.put(acc, n, ep.available)
-    end)
+
+    epa =
+      Enum.reduce(arena_view.entry_points, %{}, fn {n, ep}, acc ->
+        Map.put(acc, n, ep.available)
+      end)
+
     %TanxWeb.JsonData.Arena{
       t: tanks,
       e: explosions,
@@ -162,6 +170,7 @@ defmodule TanxWeb.JsonData do
       player_name = players[player_id].name
       {x, y} = t.pos
       tread = t.dist / 2
+
       %TanxWeb.JsonData.Tank{
         me: id == cur_player_tank_id,
         n: player_name,
@@ -179,6 +188,7 @@ defmodule TanxWeb.JsonData do
   defp format_explosions(explosions) do
     Enum.map(explosions, fn {_id, e} ->
       {x, y} = e.pos
+
       %TanxWeb.JsonData.Explosion{
         x: truncate(x),
         y: truncate(y),
@@ -191,6 +201,7 @@ defmodule TanxWeb.JsonData do
   defp format_missiles(missiles) do
     Enum.map(missiles, fn {_id, m} ->
       {x, y} = m.pos
+
       %TanxWeb.JsonData.Missile{
         x: truncate(x),
         y: truncate(y),
@@ -202,6 +213,7 @@ defmodule TanxWeb.JsonData do
   defp format_power_ups(power_ups) do
     Enum.map(power_ups, fn {_id, p} ->
       {x, y} = p.pos
+
       %TanxWeb.JsonData.PowerUp{
         x: truncate(x),
         y: truncate(y),
@@ -215,5 +227,4 @@ defmodule TanxWeb.JsonData do
   defp truncate(value) do
     round(value * 100) / 100
   end
-
 end

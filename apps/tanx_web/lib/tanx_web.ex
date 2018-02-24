@@ -28,8 +28,9 @@ defmodule TanxWeb do
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/tanx_web/templates",
-                        namespace: TanxWeb
+      use Phoenix.View,
+        root: "lib/tanx_web/templates",
+        namespace: TanxWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]

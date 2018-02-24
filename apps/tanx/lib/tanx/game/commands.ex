@@ -1,7 +1,5 @@
 defmodule Tanx.Game.Commands.Defer do
-  defstruct(
-    event: nil
-  )
+  defstruct(event: nil)
 end
 
 defmodule Tanx.Game.Commands.CreateTank do

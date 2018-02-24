@@ -1,5 +1,4 @@
 defmodule Tanx.Util.ID do
-
   def set_strategy(strategy) do
     :erlang.put(:id_strategy, strategy)
     strategy
@@ -13,6 +12,7 @@ defmodule Tanx.Util.ID do
     Stream.iterate(1, &(&1 + 1))
     |> Enum.find_value(fn val ->
       candidate = prefix <> Integer.to_string(val)
+
       if Map.has_key?(map, candidate) do
         nil
       else
@@ -23,6 +23,7 @@ defmodule Tanx.Util.ID do
 
   def create(prefix, map, size, strategy) do
     candidate = random_value(prefix, size)
+
     if Map.has_key?(map, candidate) do
       create(prefix, map, strategy)
     else
@@ -34,14 +35,14 @@ defmodule Tanx.Util.ID do
     id =
       size
       |> random_max
-      |> :rand.uniform
+      |> :rand.uniform()
       |> Integer.to_string(36)
-      |> String.downcase
+      |> String.downcase()
       |> String.pad_leading(size, "0")
+
     prefix <> id
   end
 
   defp random_max(3), do: 46655
-  defp random_max(8), do: 2821109907455
-
+  defp random_max(8), do: 2_821_109_907_455
 end

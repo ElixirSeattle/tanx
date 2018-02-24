@@ -10,7 +10,7 @@ defmodule TanxDeploy.Utils do
   end
 
   def sh(cmd = [binary | args]) do
-    cmd |> Enum.join(" ") |> IO.puts
+    cmd |> Enum.join(" ") |> IO.puts()
     {_, 0} = System.cmd(binary, args, into: IO.stream(:stdio, :line), stderr_to_stdout: true)
   end
 end

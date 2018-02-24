@@ -1,9 +1,7 @@
 defmodule Tanx.Game.Walls do
-
   @moduledoc """
   Computes force on tanks due to walls.
   """
-
 
   @doc """
   Given a wall, returns a "decomposed" form of the wall that is preprocessed to
@@ -22,28 +20,31 @@ defmodule Tanx.Game.Walls do
   * each segment is {point0, point1}
   """
   def decompose_wall(points = [p0, p1 | _]) do
-    {concave, convex, segments} = (points ++ [p0, p1])
+    {concave, convex, segments} =
+      (points ++ [p0, p1])
       |> Enum.chunk(3, 1)
       |> Enum.reduce({[], [], []}, &decompose_wall_triplet/2)
+
     {concave ++ convex ++ segments, segments}
   end
-  def decompose_wall(_points), do: {[], []}
 
+  def decompose_wall(_points), do: {[], []}
 
   @doc """
   Given a decomposed wall, and an object represented by a point and radius,
   returns the force applied by the wall against the object.
   """
   def force_from_decomposed_wall({elements, _segments}, p, radius) do
-    force = elements
-      |> Enum.map(&(element_force(&1, p, radius)))
+    force =
+      elements
+      |> Enum.map(&element_force(&1, p, radius))
       |> Enum.max_by(fn
         nil -> 0.0
         {x, y} -> x * x + y * y
       end)
+
     if force == nil, do: {0.0, 0.0}, else: force
   end
-
 
   @doc """
   Given a list of decomposed walls, and an object represented by a point and radius,
@@ -51,11 +52,10 @@ defmodule Tanx.Game.Walls do
   """
   def force_from_decomposed_walls(decomposed_walls, p, radius) do
     decomposed_walls
-      |> Enum.reduce({0.0, 0.0}, fn (wall, acc) ->
-        force_from_decomposed_wall(wall, p, radius) |> vadd(acc)
-      end)
+    |> Enum.reduce({0.0, 0.0}, fn wall, acc ->
+      force_from_decomposed_wall(wall, p, radius) |> vadd(acc)
+    end)
   end
-
 
   @doc """
   Given a fixed point, and an object represented by a point and radius,
@@ -68,7 +68,6 @@ defmodule Tanx.Game.Walls do
     end
   end
 
-
   @doc """
   Given a single decomposed wall, and two points representing two locations of a
   point object, returns either a tuple of {point of impact on the wall, normal to
@@ -76,10 +75,9 @@ defmodule Tanx.Game.Walls do
   """
   def collision_with_decomposed_wall(decomposed_wall, from, to) do
     decomposed_wall
-      |> wall_collision_as_ratio_and_normal(from, to)
-      |> ratio_to_point(from, to)
+    |> wall_collision_as_ratio_and_normal(from, to)
+    |> ratio_to_point(from, to)
   end
-
 
   @doc """
   Given a list of decomposed walls, and two points representing two locations of a
@@ -88,38 +86,37 @@ defmodule Tanx.Game.Walls do
   """
   def collision_with_decomposed_walls(decomposed_walls, from, to) do
     decomposed_walls
-      |> Enum.map(&(wall_collision_as_ratio_and_normal(&1, from, to)))
-      |> min_ratio_or_nil
-      |> ratio_to_point(from, to)
+    |> Enum.map(&wall_collision_as_ratio_and_normal(&1, from, to))
+    |> min_ratio_or_nil
+    |> ratio_to_point(from, to)
   end
 
-
   defp ratio_to_point(nil, _from, _to), do: nil
+
   defp ratio_to_point({ratio, normal}, from, to) do
     {vdiff(to, from) |> vscale(ratio) |> vadd(from), normal}
   end
 
-
   defp min_ratio_or_nil(values) do
-    values |> Enum.min_by(fn
+    values
+    |> Enum.min_by(fn
       nil -> 2.0
       {ratio, _normal} -> ratio
     end)
   end
 
-
   defp wall_collision_as_ratio_and_normal({_elements, segments}, from, to) do
     segments
-      |> Enum.map(&(segment_intersection_as_ratio_and_normal(&1, from, to)))
-      |> min_ratio_or_nil
+    |> Enum.map(&segment_intersection_as_ratio_and_normal(&1, from, to))
+    |> min_ratio_or_nil
   end
-
 
   defp segment_intersection_as_ratio_and_normal({p0, p1}, from, to) do
     from_mag = cross_magnitude(p0, from, p1)
     to_mag = cross_magnitude(p0, to, p1)
-    if from_mag < 0 and to_mag >= 0 and
-        cross_magnitude(from, p0, to) >= 0 and cross_magnitude(from, p1, to) <= 0 do
+
+    if from_mag < 0 and to_mag >= 0 and cross_magnitude(from, p0, to) >= 0 and
+         cross_magnitude(from, p1, to) <= 0 do
       normal = vdiff(p1, p0) |> turn_left |> normalize
       {from_mag / (from_mag - to_mag), normal}
     else
@@ -127,9 +124,9 @@ defmodule Tanx.Game.Walls do
     end
   end
 
-
   defp decompose_wall_triplet([p0, p1, p2], {concave, convex, segments}) do
     segments = [{p0, p1} | segments]
+
     if cross_magnitude(p0, p1, p2) <= 0 do
       elem = {vdiff(p1, p0) |> turn_left |> vadd(p1), p1, vdiff(p1, p2) |> turn_right |> vadd(p1)}
       convex = [elem | convex]
@@ -149,10 +146,10 @@ defmodule Tanx.Game.Walls do
     end
   end
 
-
   defp force_from_point_internal(from, p, radius) do
     normal = vdiff(p, from)
     dist = vnorm(normal)
+
     if dist < radius do
       if dist == 0 do
         ang = :rand.uniform() * :math.pi() * 2
@@ -165,13 +162,13 @@ defmodule Tanx.Game.Walls do
     end
   end
 
-
   # Force for a wall segment
   defp element_force({p0, p1}, p, radius) do
     if cross_magnitude(p0, p, p1) < 0 do
       a = vdiff(p, p0)
       b = vdiff(p1, p0)
       factor = vdot(a, b) / norm_squared(b)
+
       if factor >= 0.0 and factor <= 1.0 do
         proj = vscale(b, factor) |> vadd(p0)
         force_from_point_internal(proj, p, radius)
@@ -197,14 +194,14 @@ defmodule Tanx.Game.Walls do
     p0 = vscale(dir0, radius * t_ratio) |> vadd(p1)
     p2 = vscale(dir2, radius * t_ratio) |> vadd(p1)
     p3 = vscale(dir1, radius * s_ratio) |> vadd(p1)
+
     if cross_magnitude(p, p0, p1) >= 0 and cross_magnitude(p, p1, p2) >= 0 and
-        cross_magnitude(p, p2, p3) >= 0 and cross_magnitude(p, p3, p0) >= 0 do
+         cross_magnitude(p, p2, p3) >= 0 and cross_magnitude(p, p3, p0) >= 0 do
       vdiff(p3, p)
     else
       nil
     end
   end
-
 
   defp vadd({x0, y0}, {x1, y1}), do: {x0 + x1, y0 + y1}
 
@@ -224,12 +221,11 @@ defmodule Tanx.Game.Walls do
 
   defp norm_squared({x, y}), do: x * x + y * y
 
-  defp vnorm(p), do: p |> norm_squared |> :math.sqrt
+  defp vnorm(p), do: p |> norm_squared |> :math.sqrt()
 
   defp dist_squared(p0, p1), do: vdiff(p0, p1) |> norm_squared
 
-  defp vdist(p0, p1), do: dist_squared(p0, p1) |> :math.sqrt
+  defp vdist(p0, p1), do: dist_squared(p0, p1) |> :math.sqrt()
 
   defp normalize(p), do: vscale(p, 1 / vnorm(p))
-
 end

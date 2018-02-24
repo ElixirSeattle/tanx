@@ -1,5 +1,4 @@
 defmodule Tanx.ContinuousGame do
-
   def create(opts) do
     maze_name = Keyword.get(opts, :maze, :standard)
     %Tanx.ContinuousGame.Impl{maze: maze_name}
@@ -99,9 +98,6 @@ defmodule Tanx.ContinuousGame do
   end
 
   defmodule PlayersChanged do
-    defstruct(
-      players: %{}
-    )
+    defstruct(players: %{})
   end
-
 end

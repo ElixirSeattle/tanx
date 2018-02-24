@@ -12,11 +12,15 @@ defmodule Mix.Tasks.BuildImage do
 
   def run(args) do
     {switches, []} =
-      OptionParser.parse!(args, strict: [
-        project: :string,
-        name: :string,
-        tag: :string
-      ])
+      OptionParser.parse!(
+        args,
+        strict: [
+          project: :string,
+          name: :string,
+          tag: :string
+        ]
+      )
+
     project = Keyword.get_lazy(switches, :project, &Utils.get_default_project/0)
     name = Keyword.get(switches, :name, @default_name)
     tag = Keyword.get_lazy(switches, :tag, &Utils.make_tag/0)
@@ -25,9 +29,18 @@ defmodule Mix.Tasks.BuildImage do
 
   defp execute(project, name, tag) do
     IO.puts("**** Building image...")
-    Utils.sh(["gcloud", "container", "builds", "submit", "--config=cloudbuild.yaml",
-      "--substitutions", "_APP_NAME=#{name},_TAG=#{tag}",
-      "."])
+
+    Utils.sh([
+      "gcloud",
+      "container",
+      "builds",
+      "submit",
+      "--config=cloudbuild.yaml",
+      "--substitutions",
+      "_APP_NAME=#{name},_TAG=#{tag}",
+      "."
+    ])
+
     IO.puts("**** Built image: gcr.io/#{project}/#{name}:#{tag}")
   end
 end

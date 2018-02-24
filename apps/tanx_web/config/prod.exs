@@ -15,12 +15,18 @@ use Mix.Config
 # which you typically run after static files are built.
 config :tanx_web, TanxWeb.Endpoint,
   load_from_system_env: true,
-  url: [host: "${HOST}", port: "${PORT}"],  # Changed
-  http: [port: "${PORT}"],  # Added
-  check_origin: false,  # Added
-  secret_key_base: "${SECRET_KEY_BASE}",  # Added
-  server: true,  # Added
-  root: ".",  # Added
+  # Changed
+  url: [host: "${HOST}", port: "${PORT}"],
+  # Added
+  http: [port: "${PORT}"],
+  # Added
+  check_origin: false,
+  # Added
+  secret_key_base: "${SECRET_KEY_BASE}",
+  # Added
+  server: true,
+  # Added
+  root: ".",
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # ## SSL Support

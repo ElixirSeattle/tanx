@@ -1,5 +1,4 @@
 defmodule Tanx.Game.Arena do
-
   defstruct(
     size: {20.0, 20.0},
     walls: [],
@@ -75,5 +74,4 @@ defmodule Tanx.Game.Arena do
       data: nil
     )
   end
-
 end

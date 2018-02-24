@@ -8,9 +8,7 @@ defmodule Tanx.ContinuousGame.Impl do
   )
 end
 
-
 defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
-
   @tank_starting_armor 2.0
   @tank_explosion_intensity 1.0
   @tank_explosion_radius 1.0
@@ -72,43 +70,61 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     new_players = Map.put(players, player_id, player)
     new_player_handles = Map.put(player_handles, player_handle, player_private)
     new_player_id_map = Map.put(data.player_id_map, player_id, player_handle)
-    data = %Impl{data |
-      player_handles: new_player_handles,
-      players: new_players,
-      player_id_map: new_player_id_map
+
+    data = %Impl{
+      data
+      | player_handles: new_player_handles,
+        players: new_players,
+        player_id_map: new_player_id_map
     }
+
     notification = %PlayersChanged{players: new_players}
     {{:ok, player_handle}, data, [], [notification]}
   end
 
   def control(data, {:remove_player, player_handle}) do
     player_handles = data.player_handles
+
     if Map.has_key?(player_handles, player_handle) do
       player_private = Map.fetch!(player_handles, player_handle)
       tank_id = player_private.tank_id
       player_id = player_private.player_id
       new_player_handles = Map.delete(player_handles, player_handle)
       players = data.players
+
       {new_players, commands, notifications} =
         case tank_id do
           nil ->
             new_players = Map.delete(players, player_id)
             notification = %PlayersChanged{players: new_players}
             {new_players, [], [notification]}
+
           false ->
-            cmd = %Tanx.Game.Commands.DeleteTank{query: %{player_id: player_id},
-              event_data: %{deleting_player_id: player_id}}
+            cmd = %Tanx.Game.Commands.DeleteTank{
+              query: %{player_id: player_id},
+              event_data: %{deleting_player_id: player_id}
+            }
+
             {players, [cmd], []}
+
           id ->
-            cmd = %Tanx.Game.Commands.DeleteTank{id: id, event_data: %{deleting_player_id: player_id}}
+            cmd = %Tanx.Game.Commands.DeleteTank{
+              id: id,
+              event_data: %{deleting_player_id: player_id}
+            }
+
             {players, [cmd], []}
         end
+
       new_player_id_map = Map.delete(data.player_id_map, player_id)
-      new_data = %Impl{data |
-        players: new_players,
-        player_handles: new_player_handles,
-        player_id_map: new_player_id_map
+
+      new_data = %Impl{
+        data
+        | players: new_players,
+          player_handles: new_player_handles,
+          player_id_map: new_player_id_map
       }
+
       {{:ok, player_handle}, new_data, commands, notifications}
     else
       {{:error, :player_not_found, [player_handle: player_handle]}, data, [], []}
@@ -118,6 +134,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
   def control(data, {:rename_player, player_handle, name}) do
     player_handles = data.player_handles
     players = data.players
+
     if Map.has_key?(player_handles, player_handle) do
       player_private = Map.fetch!(player_handles, player_handle)
       player_id = player_private.player_id
@@ -134,14 +151,17 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
 
   def control(data, {:start_tank, player_handle, entry_point_name}) do
     player_handles = data.player_handles
+
     if Map.has_key?(player_handles, player_handle) do
       player_private = Map.fetch!(player_handles, player_handle)
       tank_id = player_private.tank_id
       player_id = player_private.player_id
+
       case tank_id do
         nil ->
           new_player_private = %PlayerPrivate{player_private | tank_id: true}
           new_player_handles = Map.put(player_handles, player_handle, new_player_private)
+
           command = %Tanx.Game.Commands.CreateTank{
             entry_point_name: entry_point_name,
             armor: @tank_starting_armor,
@@ -152,12 +172,15 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
             data: %{player_id: player_id},
             event_data: %{player_handle: player_handle}
           }
+
           {:ok, %Impl{data | player_handles: new_player_handles}, [command], []}
+
         true ->
           {{:error, :tank_being_created, [player_handle: player_handle]}, data, [], []}
+
         id ->
-          {{:error, :tank_already_present, [player_handle: player_handle, tank_id: id]},
-            data, [], []}
+          {{:error, :tank_already_present, [player_handle: player_handle, tank_id: id]}, data, [],
+           []}
       end
     else
       {{:error, :player_not_found, [player_handle: player_handle]}, data, [], []}
@@ -166,17 +189,20 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
 
   def control(data, {:control_tank, player_handle, :fire, true}) do
     player_handles = data.player_handles
+
     if Map.has_key?(player_handles, player_handle) do
       player_private = Map.fetch!(player_handles, player_handle)
       tank_id = player_private.tank_id
       time = data.time
       reloaded_at = player_private.reloaded_at
+
       cond do
         reloaded_at > time ->
-          {{:error, :tank_not_loaded, [time_needed: reloaded_at - time]},
-            data, [], []}
+          {{:error, :tank_not_loaded, [time_needed: reloaded_at - time]}, data, [], []}
+
         tank_id == nil || tank_id == true ->
           {{:error, :tank_not_found, [player_handle: player_handle]}, data, [], []}
+
         true ->
           command = %Tanx.Game.Commands.FireMissile{
             tank_id: tank_id,
@@ -188,8 +214,12 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
             explosion_length: @missile_explosion_length,
             chain_data: %{originator_id: player_private.player_id}
           }
-          new_player_private = %PlayerPrivate{player_private |
-            reloaded_at: time + player_private.reload_length}
+
+          new_player_private = %PlayerPrivate{
+            player_private
+            | reloaded_at: time + player_private.reload_length
+          }
+
           new_player_handles = Map.put(player_handles, player_handle, new_player_private)
           {:ok, %Impl{data | player_handles: new_player_handles}, [command], []}
       end
@@ -204,20 +234,37 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
 
   def control(data, {:control_tank, player_handle, button, is_down}) do
     player_handles = data.player_handles
+
     if Map.has_key?(player_handles, player_handle) do
       player_private = Map.fetch!(player_handles, player_handle)
       tank_id = player_private.tank_id
+
       if tank_id == nil || tank_id == true do
         {{:error, :tank_not_found, [player_handle: player_handle]}, data, [], []}
       else
         new_player_private = Map.put(player_private, button, is_down)
-        velocity = calc_velocity(new_player_private.forward, new_player_private.backward,
-          new_player_private.forward_speed, new_player_private.backward_speed)
-        angular_velocity = calc_angular_velocity(
-          new_player_private.left, new_player_private.right, new_player_private.angular_speed)
+
+        velocity =
+          calc_velocity(
+            new_player_private.forward,
+            new_player_private.backward,
+            new_player_private.forward_speed,
+            new_player_private.backward_speed
+          )
+
+        angular_velocity =
+          calc_angular_velocity(
+            new_player_private.left,
+            new_player_private.right,
+            new_player_private.angular_speed
+          )
+
         command = %Tanx.Game.Commands.SetTankVelocity{
-          id: tank_id, velocity: velocity, angular_velocity: angular_velocity
+          id: tank_id,
+          velocity: velocity,
+          angular_velocity: angular_velocity
         }
+
         new_player_handles = Map.put(player_handles, player_handle, new_player_private)
         {:ok, %Impl{data | player_handles: new_player_handles}, [command], []}
       end
@@ -228,9 +275,11 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
 
   def control(data, {:destruct_tank, player_handle}) do
     player_handles = data.player_handles
+
     if Map.has_key?(player_handles, player_handle) do
       player_private = Map.fetch!(player_handles, player_handle)
       tank_id = player_private.tank_id
+
       if tank_id == nil || tank_id == true do
         {{:error, :tank_not_found, [player_handle: player_handle]}, data, [], []}
       else
@@ -241,6 +290,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
           explosion_length: @self_destruct_explosion_length,
           chain_data: %{originator_id: player_private.player_id}
         }
+
         {:ok, data, [command], []}
       end
     else
@@ -252,7 +302,10 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     {%Impl{data | time: time}, [], []}
   end
 
-  def event(data, %Tanx.Game.Events.TankCreated{id: tank_id, event_data: %{player_handle: player_handle}}) do
+  def event(data, %Tanx.Game.Events.TankCreated{
+        id: tank_id,
+        event_data: %{player_handle: player_handle}
+      }) do
     player_handles = data.player_handles
     player_private = Map.fetch!(player_handles, player_handle)
     new_player_private = %PlayerPrivate{player_private | tank_id: tank_id}
@@ -266,11 +319,15 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     {%Impl{data | players: new_players}, [], [notification]}
   end
 
-  def event(data, %Tanx.Game.Events.TankDeleted{tank: tank, event_data: %{originator_id: originator_id}}) do
+  def event(data, %Tanx.Game.Events.TankDeleted{
+        tank: tank,
+        event_data: %{originator_id: originator_id}
+      }) do
     owner_id = tank.data[:player_id]
     players = data.players
     player_id_map = data.player_id_map
     player_handles = data.player_handles
+
     if Map.has_key?(player_id_map, owner_id) do
       owner_handle = Map.fetch!(player_id_map, owner_id)
       owner_private = Map.fetch!(player_handles, owner_handle)
@@ -279,6 +336,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       owner = Map.fetch!(players, owner_id)
       new_owner = %Player{owner | deaths: owner.deaths + 1}
       new_players = Map.put(players, owner_id, new_owner)
+
       new_players =
         if originator_id == owner_id do
           new_players
@@ -287,6 +345,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
           new_originator = %Player{originator | kills: originator.kills + 1}
           Map.put(new_players, originator_id, new_originator)
         end
+
       new_data = %Impl{data | player_handles: new_player_handles, players: new_players}
       cmd = create_random_powerup(tank.pos)
       notification = %PlayersChanged{players: new_players}
@@ -296,10 +355,14 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     end
   end
 
-  def event(data, %Tanx.Game.Events.PowerUpCollected{tank: tank, power_up: %Tanx.Game.Arena.PowerUp{data: %{type: :bounce}}}) do
+  def event(data, %Tanx.Game.Events.PowerUpCollected{
+        tank: tank,
+        power_up: %Tanx.Game.Arena.PowerUp{data: %{type: :bounce}}
+      }) do
     owner_id = tank.data[:player_id]
     player_id_map = data.player_id_map
     player_handles = data.player_handles
+
     if Map.has_key?(player_id_map, owner_id) do
       owner_handle = Map.fetch!(player_id_map, owner_id)
       owner_private = Map.fetch!(player_handles, owner_handle)
@@ -332,9 +395,10 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
   end
 
   def create_health_powerup(pos) do
-    tank_modifier = fn (t, _p) ->
+    tank_modifier = fn t, _p ->
       %Tanx.Game.Arena.Tank{t | armor: min(t.max_armor, t.armor + 1.0)}
     end
+
     %Tanx.Game.Commands.CreatePowerUp{
       pos: pos,
       expires_in: @power_up_lifetime,
@@ -350,5 +414,4 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       data: %{type: :bounce}
     }
   end
-
 end

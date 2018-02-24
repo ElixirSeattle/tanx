@@ -11,6 +11,7 @@ end
 defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.CreateTank do
   def handle(command, arena, internal_data, _time) do
     entry_point_name = command.entry_point_name
+
     case Map.get(arena.entry_points, entry_point_name) do
       %Tanx.Game.Arena.EntryPoint{available: true} = entry_point ->
         tank = %Tanx.Game.Arena.Tank{
@@ -25,23 +26,30 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.CreateTank do
           explosion_length: command.explosion_length,
           data: command.data
         }
+
         id = Tanx.Util.ID.create("T", arena.tanks)
         entry_point = %Tanx.Game.Arena.EntryPoint{entry_point | available: false}
-        new_arena = %Tanx.Game.Arena{arena |
-          tanks: Map.put(arena.tanks, id, tank),
-          entry_points: Map.put(arena.entry_points, entry_point_name, entry_point)
+
+        new_arena = %Tanx.Game.Arena{
+          arena
+          | tanks: Map.put(arena.tanks, id, tank),
+            entry_points: Map.put(arena.entry_points, entry_point_name, entry_point)
         }
+
         event_data = command.event_data
+
         events =
           if event_data == nil do
             []
           else
             [%Tanx.Game.Events.TankCreated{id: id, tank: tank, event_data: event_data}]
           end
+
         {new_arena, internal_data, events}
+
       _ ->
         {arena, internal_data, []}
-      end
+    end
   end
 end
 
@@ -49,31 +57,39 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.DeleteTank do
   def handle(command, arena, internal_data, _time) do
     id = command.id
     query = command.query
+
     {arena, events} =
       cond do
         is_binary(id) ->
           delete_by_id(id, arena, command.event_data)
+
         is_function(query) ->
           delete_by_query(query, arena, command.event_data)
+
         query != nil ->
           delete_by_query(&(&1.data == query), arena, command.event_data)
+
         true ->
           {arena, []}
       end
+
     {arena, internal_data, events}
   end
 
   defp delete_by_id(id, arena, event_data) do
     tanks = arena.tanks
     tank = Map.get(tanks, id)
+
     if tank != nil do
       new_arena = %Tanx.Game.Arena{arena | tanks: Map.delete(tanks, id)}
+
       events =
         if event_data == nil do
           []
         else
           [%Tanx.Game.Events.TankDeleted{id: id, tank: tank, event_data: event_data}]
         end
+
       {new_arena, events}
     else
       {arena, []}
@@ -85,17 +101,20 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.DeleteTank do
       Enum.reduce(arena.tanks, {arena.tanks, []}, fn {id, tank}, {tanks, events} ->
         if query.(tank) do
           next_tanks = Map.delete(tanks, id)
+
           next_events =
             if event_data == nil do
               []
             else
               [%Tanx.Game.Events.TankDeleted{id: id, tank: tank, event_data: event_data} | events]
             end
+
           {next_tanks, next_events}
         else
           {tanks, events}
         end
       end)
+
     new_arena = %Tanx.Game.Arena{arena | tanks: tanks_result}
     {new_arena, events_result}
   end
@@ -106,16 +125,20 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.SetTankVelocity do
     tanks = arena.tanks
     id = command.id
     tank = Map.get(tanks, id)
+
     arena =
       if tank != nil do
-        tank = %Tanx.Game.Arena.Tank{tank |
-          velocity: command.velocity,
-          angular_velocity: command.angular_velocity
+        tank = %Tanx.Game.Arena.Tank{
+          tank
+          | velocity: command.velocity,
+            angular_velocity: command.angular_velocity
         }
+
         %Tanx.Game.Arena{arena | tanks: Map.put(tanks, id, tank)}
       else
         arena
       end
+
     {arena, internal_data, []}
   end
 end
@@ -126,9 +149,11 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.ExplodeTank do
     explosions = arena.explosions
     tank_id = command.id
     tank = Map.get(tanks, tank_id)
+
     if tank != nil do
       chain_data = command.chain_data
       new_tanks = Map.delete(tanks, tank_id)
+
       explosion = %Tanx.Game.Arena.Explosion{
         pos: tank.pos,
         intensity: command.explosion_intensity,
@@ -136,15 +161,18 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.ExplodeTank do
         length: command.explosion_length,
         data: chain_data
       }
+
       explosion_id = Tanx.Util.ID.create("E", explosions)
       new_explosions = Map.put(explosions, explosion_id, explosion)
       new_arena = %Tanx.Game.Arena{arena | tanks: new_tanks, explosions: new_explosions}
+
       events =
         if chain_data == nil do
           []
         else
           [%Tanx.Game.Events.TankDeleted{id: tank_id, tank: tank, event_data: chain_data}]
         end
+
       {new_arena, internal_data, events}
     else
       {arena, internal_data, []}
@@ -157,6 +185,7 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.FireMissile do
 
   def handle(command, arena, internal_data, _time) do
     tank = Map.get(arena.tanks, command.tank_id)
+
     new_arena =
       if tank == nil do
         arena
@@ -165,6 +194,7 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.FireMissile do
         heading = command.heading || tank.heading
         dist = tank.radius + @epsilon
         pos = {x + dist * :math.cos(heading), y + dist * :math.sin(heading)}
+
         missile = %Tanx.Game.Arena.Missile{
           pos: pos,
           heading: heading,
@@ -176,11 +206,13 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.FireMissile do
           explosion_length: command.explosion_length,
           data: command.chain_data
         }
+
         missiles = arena.missiles
         missile_id = Tanx.Util.ID.create("M", missiles)
         new_missiles = Map.put(missiles, missile_id, missile)
         %Tanx.Game.Arena{arena | missiles: new_missiles}
       end
+
     {new_arena, internal_data, []}
   end
 end
@@ -194,6 +226,7 @@ defimpl Tanx.Game.CommandHandler, for: Tanx.Game.Commands.CreatePowerUp do
       tank_modifier: command.tank_modifier,
       data: command.data
     }
+
     power_ups = arena.power_ups
     power_up_id = Tanx.Util.ID.create("U", power_ups)
     new_power_ups = Map.put(power_ups, power_up_id, power_up)
