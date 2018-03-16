@@ -4,8 +4,11 @@ defmodule TanxWeb.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    Tanx.Game.add_callback(:game_core, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
-      TanxWeb.Endpoint.broadcast!("game", "view_players", event)
+    game_spec = Tanx.ContinuousGame.create(maze: :standard)
+    Tanx.start_game(game_spec, "game1")
+
+    Tanx.Game.add_callback("game1", Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
+      TanxWeb.Endpoint.broadcast!("game:game1", "view_players", event)
     end)
 
     # Define workers and child supervisors to be supervised

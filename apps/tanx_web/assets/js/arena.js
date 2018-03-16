@@ -5,22 +5,19 @@ import ArenaControls from "js/arena/controls"
 
 class Arena {
 
-  constructor(gameChannel, arenaSound) {
-    this._gameChannel = gameChannel;
-
-    this._arenaControls = new ArenaControls(gameChannel);
-    this._arenaAnimate = new ArenaAnimate(gameChannel, arenaSound);
-
-    this._gameChannel.on("view_structure", structure => {
-      let arenaStructure = new ArenaStructure(structure);
-      this._arenaControls.start(arenaStructure);
-      this._arenaAnimate.start(arenaStructure);
-    });
+  constructor(arenaSound) {
+    this._arenaControls = new ArenaControls();
+    this._arenaAnimate = new ArenaAnimate(arenaSound);
   }
 
 
-  start() {
-    this._gameChannel.push("view_structure", {});
+  start(gameChannel) {
+    gameChannel.push("view_structure", {});
+    gameChannel.on("view_structure", structure => {
+      let arenaStructure = new ArenaStructure(structure);
+      this._arenaControls.start(gameChannel, arenaStructure);
+      this._arenaAnimate.start(gameChannel, arenaStructure);
+    });
   }
 
 

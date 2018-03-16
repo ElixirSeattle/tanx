@@ -12,8 +12,7 @@ const MEASUREMENT_INTERVAL = 2000;
 
 class ArenaAnimate {
 
-  constructor(gameChannel, arenaSound) {
-    this._gameChannel = gameChannel;
+  constructor(arenaSound) {
     this._arenaSound = arenaSound;
     this._arenaRender = null;
     this._frameBufferLength = INITIAL_BUFFER_LEN;
@@ -23,6 +22,12 @@ class ArenaAnimate {
     this._fpsSum = 0;
     this._fpsCount = 0;
     this._fpsMeasurer = null;
+  }
+
+
+  start(gameChannel, arenaStructure) {
+    this._gameChannel = gameChannel;
+    this._arenaRender = new ArenaRender(arenaStructure);
 
     this._gameChannel.on("view_arena", arena => {
       this._receivedArenaCount++;
@@ -34,11 +39,7 @@ class ArenaAnimate {
         }
       }
     });
-  }
 
-
-  start(arenaStructure) {
-    this._arenaRender = new ArenaRender(arenaStructure);
     this._timestamps = [];
     this._runAnimation();
 

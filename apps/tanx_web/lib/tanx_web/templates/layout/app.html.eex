@@ -16,13 +16,5 @@
 
   <body>
     <%= render @view_module, @view_template, assigns %>
-
-    <script src="<%= static_path(@conn, "/js/jquery-2.1.4.min.js") %>"></script>
-    <script src="<%= static_path(@conn, "/js/bootstrap-3.3.5.min.js") %>"></script>
-    <script src="<%= static_path(@conn, "/js/bootstrap-slider-5.1.1.min.js") %>"></script>
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-
-    <script>require("js/app")</script>
-
   </body>
 </html>

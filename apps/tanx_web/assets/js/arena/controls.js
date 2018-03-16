@@ -1,8 +1,7 @@
 
 class ArenaControls {
 
-  constructor(gameChannel) {
-    this._gameChannel = gameChannel;
+  constructor() {
     this._arenaStructure = null;
     this._upKey = false;
     this._downKey = false;
@@ -23,7 +22,8 @@ class ArenaControls {
   }
 
 
-  start(arenaStructure) {
+  start(gameChannel, arenaStructure) {
+    this._gameChannel = gameChannel;
     this._arenaStructure = arenaStructure;
     this._upKey = false;
     this._leftKey = false;
@@ -33,11 +33,12 @@ class ArenaControls {
 
   stop() {
     this._arenaStructure = null;
+    this._gameChannel = null;
   }
 
 
   _arenaKeyEvent(event, isDown) {
-    if (this._arenaStructure == null) {
+    if (this._arenaStructure == null || this._gameChannel == null) {
       return;
     }
     switch (event.which) {
@@ -94,11 +95,12 @@ class ArenaControls {
 
 
   _handleArenaClick(x, y) {
-    if (this._arenaStructure != null) {
-      let entryPoint = this._arenaStructure.findEntryPoint(x, y);
-      if (entryPoint) {
-        this._gameChannel.push("launch_tank", {entry_point: entryPoint.n});
-      }
+    if (this._arenaStructure == null || this._gameChannel == null) {
+      return;
+    }
+    let entryPoint = this._arenaStructure.findEntryPoint(x, y);
+    if (entryPoint) {
+      this._gameChannel.push("launch_tank", {entry_point: entryPoint.n});
     }
   }
 

@@ -10,15 +10,6 @@ defmodule Tanx.Application do
   use Application
 
   def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-    impl = Tanx.ContinuousGame.create(maze: :standard)
-
-    Supervisor.start_link(
-      [
-        worker(Tanx.Game, [impl, [name: :game_core]])
-      ],
-      strategy: :one_for_one,
-      name: Tanx.Supervisor
-    )
+    Tanx.Supervisor.start_link()
   end
 end

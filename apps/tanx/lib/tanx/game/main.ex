@@ -12,23 +12,23 @@ defmodule Tanx.Game do
   end
 
   def get_view(game, view_context) do
-    GenServer.call(game, {:view, view_context})
+    GenServer.call({:via, :swarm, game}, {:view, view_context})
   end
 
   def control(game, params) do
-    GenServer.call(game, {:control, params})
+    GenServer.call({:via, :swarm, game}, {:control, params})
   end
 
   def add_callback(game, type, name \\ nil, callback) do
-    GenServer.call(game, {:add_callback, type, name, callback})
+    GenServer.call({:via, :swarm, game}, {:add_callback, type, name, callback})
   end
 
   def remove_callback(game, type, name) do
-    GenServer.call(game, {:remove_callback, type, name})
+    GenServer.call({:via, :swarm, game}, {:remove_callback, type, name})
   end
 
   def terminate(game) do
-    GenServer.call(game, :terminate)
+    GenServer.call({:via, :swarm, game}, :terminate)
   end
 
   defp get_start_params(data, opts) do
