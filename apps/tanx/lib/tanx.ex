@@ -6,8 +6,4 @@ defmodule Tanx do
   Contexts are also responsible for managing your data, regardless
   if it comes from the database, an external API or others.
   """
-
-  def start_game(game_spec, name, opts \\ []) do
-    Swarm.register_name(name, Tanx.Supervisor, :start_game, [name, game_spec, opts])
-  end
 end

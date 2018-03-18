@@ -10,6 +10,8 @@ class Lobby {
     this._leaveCallbacks = [];
 
     this._setupControls();
+
+    this._setupGameList();
   }
 
 
@@ -24,22 +26,13 @@ class Lobby {
 
 
   _setupControls() {
-    $('#tanx-join-btn').on('click', () => {
-      this._join("game1");
-    });
     $('#tanx-leave-btn').on('click', () => {
       this._leave();
     });
 
     $('#tanx-name-field')
       .on('keyup', (event) => {
-        if (this._gameId != null) {
-          this._renamePlayer();
-        } else {
-          if (event.which == 13) {
-            this._join("game1");
-          }
-        }
+        this._renamePlayer();
         event.stopPropagation();
       })
       .on('keydown', (event) => {
@@ -47,6 +40,39 @@ class Lobby {
       });
 
     this._leave();
+  }
+
+
+  _setupGameList() {
+    this._lobbyChannel = this._socket.channel("lobby", {});
+    this._lobbyChannel.join();
+    this._lobbyChannel.on("update", update => {
+      this._updateGameTable(update.g)
+    });
+  }
+
+
+  _updateGameTable(games) {
+    let gameTable = $('#game-rows');
+    gameTable.empty();
+    if (games.length == 0) {
+      gameTable.html('<tr><td colspan="3">(No games)</td></tr>');
+    } else {
+      games.forEach(game => {
+        let row = $('<tr>');
+        let name = game.n || "(Untitled game)";
+        row.html('<td>' +
+          '<button class="btn btn-default btn-sm tanx-join-btn" data-game-id="' +
+            game.i + '">Join</button>' +
+          '<button class="btn btn-default btn-sm tanx-delete-btn" data-game-id="' +
+            game.i + '">Delete</button>' +
+          '<span style="padding-left: 10px;">' + name + '</span></td>');
+        gameTable.append(row);
+      });
+      $('.tanx-join-btn').on('click', (event) => {
+        this._join($(event.target).attr("data-game-id"));
+      });
+    }
   }
 
 
@@ -61,8 +87,7 @@ class Lobby {
       chatChannel.join().receive("ok", cchan => {
         if (this._gameId != null) return;
 
-        $('#tanx-join-btn').hide();
-        $('#tanx-rename-btn').show();
+        $('#tanx-game-list').hide();
         $('#tanx-leave-btn').show();
         $('#tanx-arena-container').show();
         $('#tanx-chat').show();
@@ -79,8 +104,7 @@ class Lobby {
 
 
   _leave() {
-    $('#tanx-join-btn').show();
-    $('#tanx-rename-btn').hide();
+    $('#tanx-game-list').show();
     $('#tanx-leave-btn').hide();
     $('#tanx-arena-container').hide();
     $('#tanx-chat').hide();

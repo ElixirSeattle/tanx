@@ -13,7 +13,7 @@ defmodule Tanx.Util.ID do
     |> Enum.find_value(fn val ->
       candidate = prefix <> Integer.to_string(val)
 
-      if Map.has_key?(map, candidate) do
+      if collision?(map, candidate) do
         nil
       else
         candidate
@@ -24,12 +24,16 @@ defmodule Tanx.Util.ID do
   def create(prefix, map, size, strategy) do
     candidate = random_value(prefix, size)
 
-    if Map.has_key?(map, candidate) do
+    if collision?(map, candidate) do
       create(prefix, map, strategy)
     else
       candidate
     end
   end
+
+  defp collision?(nil, _candidate), do: false
+  defp collision?(map, candidate) when is_map(map), do: Map.has_key?(map, candidate)
+  defp collision?(list, candidate) when is_list(list), do: Enum.member?(list, candidate)
 
   defp random_value(prefix, size) do
     id =

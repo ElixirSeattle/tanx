@@ -29,6 +29,7 @@ class ChatClient {
     this._channel = chatChannel;
 
     let messagesJq = $('#messages');
+    messagesJq.empty();
 
     chatChannel.on("entered", (message) => {
       messagesJq.append(

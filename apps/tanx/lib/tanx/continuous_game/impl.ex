@@ -379,22 +379,26 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     {data, [], []}
   end
 
-  def calc_velocity(true, false, forward_speed, _back_speed), do: forward_speed
-  def calc_velocity(false, true, _forward_speed, back_speed), do: -back_speed
-  def calc_velocity(_forward, _back, _forward_speed, _back_speed), do: 0.0
+  def stop(_data, _arena, _time) do
+    %{}
+  end
 
-  def calc_angular_velocity(true, false, angular_speed), do: angular_speed
-  def calc_angular_velocity(false, true, angular_speed), do: -angular_speed
-  def calc_angular_velocity(_left, _right, _angular_speed), do: 0.0
+  defp calc_velocity(true, false, forward_speed, _back_speed), do: forward_speed
+  defp calc_velocity(false, true, _forward_speed, back_speed), do: -back_speed
+  defp calc_velocity(_forward, _back, _forward_speed, _back_speed), do: 0.0
 
-  def create_random_powerup(pos) do
+  defp calc_angular_velocity(true, false, angular_speed), do: angular_speed
+  defp calc_angular_velocity(false, true, angular_speed), do: -angular_speed
+  defp calc_angular_velocity(_left, _right, _angular_speed), do: 0.0
+
+  defp create_random_powerup(pos) do
     case :rand.uniform(2) do
       1 -> create_health_powerup(pos)
       2 -> create_bounce_powerup(pos)
     end
   end
 
-  def create_health_powerup(pos) do
+  defp create_health_powerup(pos) do
     tank_modifier = fn t, _p ->
       %Tanx.Game.Arena.Tank{t | armor: min(t.max_armor, t.armor + 1.0)}
     end
@@ -407,7 +411,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
     }
   end
 
-  def create_bounce_powerup(pos) do
+  defp create_bounce_powerup(pos) do
     %Tanx.Game.Commands.CreatePowerUp{
       pos: pos,
       expires_in: @power_up_lifetime,

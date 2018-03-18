@@ -3,18 +3,18 @@ defmodule TanxWeb.GameChannel do
 
   require Logger
 
-  def join("game:" <> game_name, %{"name" => player_name}, socket) do
-    {:ok, player} = Tanx.ContinuousGame.add_player(game_name, player_name)
+  def join("game:" <> game, %{"name" => player_name}, socket) do
+    {:ok, player} = Tanx.ContinuousGame.add_player({:via, :swarm, game}, player_name)
     socket =
       socket
-      |> assign(:game, game_name)
+      |> assign(:game, game)
       |> assign(:player, player)
     {:ok, socket}
   end
 
   def handle_in("view_players", _msg, socket) do
     view =
-      socket.assigns[:game]
+      {:via, :swarm, socket.assigns[:game]}
       |> Tanx.ContinuousGame.view_players(socket.assigns[:player])
       |> TanxWeb.JsonData.format_players()
 
@@ -24,7 +24,7 @@ defmodule TanxWeb.GameChannel do
 
   def handle_in("view_structure", _msg, socket) do
     view =
-      socket.assigns[:game]
+      {:via, :swarm, socket.assigns[:game]}
       |> Tanx.ContinuousGame.view_static()
       |> TanxWeb.JsonData.format_structure()
 
@@ -34,7 +34,7 @@ defmodule TanxWeb.GameChannel do
 
   def handle_in("view_arena", _msg, socket) do
     view =
-      socket.assigns[:game]
+      {:via, :swarm, socket.assigns[:game]}
       |> Tanx.ContinuousGame.view_arena(socket.assigns[:player])
       |> TanxWeb.JsonData.format_arena()
 
@@ -46,7 +46,7 @@ defmodule TanxWeb.GameChannel do
     player = socket.assigns[:player]
 
     if player do
-      Tanx.ContinuousGame.rename_player(socket.assigns[:game], player, name)
+      Tanx.ContinuousGame.rename_player({:via, :swarm, socket.assigns[:game]}, player, name)
     end
 
     {:noreply, socket}
@@ -56,7 +56,7 @@ defmodule TanxWeb.GameChannel do
     player = socket.assigns[:player]
 
     if player do
-      Tanx.ContinuousGame.start_tank(socket.assigns[:game], player, entry_point)
+      Tanx.ContinuousGame.start_tank({:via, :swarm, socket.assigns[:game]}, player, entry_point)
     end
 
     {:noreply, socket}
@@ -66,7 +66,7 @@ defmodule TanxWeb.GameChannel do
     player = socket.assigns[:player]
 
     if player do
-      Tanx.ContinuousGame.destruct_tank(socket.assigns[:game], player)
+      Tanx.ContinuousGame.destruct_tank({:via, :swarm, socket.assigns[:game]}, player)
     end
 
     {:noreply, socket}
@@ -78,7 +78,7 @@ defmodule TanxWeb.GameChannel do
     player = socket.assigns[:player]
 
     if player do
-      Tanx.ContinuousGame.control_tank(socket.assigns[:game], player, String.to_atom(button), down)
+      Tanx.ContinuousGame.control_tank({:via, :swarm, socket.assigns[:game]}, player, String.to_atom(button), down)
     end
 
     {:noreply, socket}
@@ -97,7 +97,7 @@ defmodule TanxWeb.GameChannel do
 
   def handle_out("view_players", _event, socket) do
     view =
-      socket.assigns[:game]
+      {:via, :swarm, socket.assigns[:game]}
       |> Tanx.ContinuousGame.view_players(socket.assigns[:player])
       |> TanxWeb.JsonData.format_players()
 
@@ -119,7 +119,7 @@ defmodule TanxWeb.GameChannel do
           socket
 
         player ->
-          Tanx.ContinuousGame.remove_player(socket.assigns[:game], player)
+          Tanx.ContinuousGame.remove_player({:via, :swarm, socket.assigns[:game]}, player)
           assign(socket, :player, nil)
       end
 

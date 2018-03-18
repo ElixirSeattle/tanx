@@ -1,6 +1,8 @@
 defmodule Tanx.Game do
   #### Public API
 
+  @untitled_game_name "(Untitled Game)"
+
   def start(data, opts \\ []) do
     {params, process_opts} = get_start_params(data, opts)
     GenServer.start(__MODULE__, params, process_opts)
@@ -12,28 +14,41 @@ defmodule Tanx.Game do
   end
 
   def get_view(game, view_context) do
-    GenServer.call({:via, :swarm, game}, {:view, view_context})
+    GenServer.call(game, {:view, view_context})
+  end
+
+  def get_meta(game) do
+    GenServer.call(game, {:meta})
   end
 
   def control(game, params) do
-    GenServer.call({:via, :swarm, game}, {:control, params})
+    GenServer.call(game, {:control, params})
   end
 
   def add_callback(game, type, name \\ nil, callback) do
-    GenServer.call({:via, :swarm, game}, {:add_callback, type, name, callback})
+    GenServer.call(game, {:add_callback, type, name, callback})
   end
 
   def remove_callback(game, type, name) do
-    GenServer.call({:via, :swarm, game}, {:remove_callback, type, name})
+    GenServer.call(game, {:remove_callback, type, name})
   end
 
   def terminate(game) do
-    GenServer.call({:via, :swarm, game}, :terminate)
+    GenServer.call(game, :terminate)
+  end
+
+  defmodule Meta do
+    defstruct(
+      id: nil,
+      display_name: "",
+      start_time: 0.0,
+      data: nil
+    )
   end
 
   defp get_start_params(data, opts) do
     {game_opts, process_opts} =
-      Keyword.split(opts, [:interval, :time_config, :rand_seed, :id_strategy])
+      Keyword.split(opts, [:game_id, :display_name, :interval, :time_config, :rand_seed, :id_strategy])
 
     {{data, game_opts}, process_opts}
   end
@@ -44,6 +59,8 @@ defmodule Tanx.Game do
 
   defmodule State do
     defstruct(
+      time_config: nil,
+      meta: %Tanx.Game.Meta{},
       data: nil,
       arena: nil,
       updater: nil,
@@ -67,12 +84,19 @@ defmodule Tanx.Game do
 
     Tanx.Util.ID.set_strategy(id_strategy)
     time = Tanx.Util.SystemTime.get(time_config)
+
+    game_id = Keyword.get(opts, :game_id)
+    display_name = Keyword.get(opts, :display_name, @untitled_game_name)
+    meta = %Tanx.Game.Meta{id: game_id, display_name: display_name, start_time: time}
+
     arena = Variant.init_arena(data, time)
     start_event = %Tanx.Game.Events.ArenaUpdated{time: time, arena: arena}
     updater = Tanx.Game.Updater.start_link(self(), arena, opts)
     {data, commands, _notifications} = Variant.event(data, start_event)
 
     state = %State{
+      time_config: time_config,
+      meta: meta,
       data: data,
       arena: arena,
       updater: updater,
@@ -90,6 +114,10 @@ defmodule Tanx.Game do
   def handle_call({:view, view_context}, _from, state) do
     view = Variant.view(state.data, state.arena, state.time, view_context)
     {:reply, view, state}
+  end
+
+  def handle_call({:meta}, _from, state) do
+    {:reply, {:ok, state.meta}, state}
   end
 
   def handle_call({:control, control_params}, _from, state) do
@@ -145,6 +173,9 @@ defmodule Tanx.Game do
   end
 
   def handle_call(:terminate, _from, state) do
+    notification_data = Variant.stop(state.data, state.arena, state.time)
+    notification = %Tanx.Game.Notifications.Ended{time: state.time, data: notification_data}
+    send_notifications([notification], state.callbacks)
     {:stop, :normal, :ok, state}
   end
 

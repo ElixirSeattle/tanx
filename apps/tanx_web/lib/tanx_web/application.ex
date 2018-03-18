@@ -3,13 +3,7 @@ defmodule TanxWeb.Application do
 
   def start(_type, _args) do
     import Supervisor.Spec
-
-    game_spec = Tanx.ContinuousGame.create(maze: :standard)
-    Tanx.start_game(game_spec, "game1")
-
-    Tanx.Game.add_callback("game1", Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
-      TanxWeb.Endpoint.broadcast!("game:game1", "view_players", event)
-    end)
+    require Logger
 
     # Define workers and child supervisors to be supervised
     children = [
@@ -22,7 +16,33 @@ defmodule TanxWeb.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TanxWeb.Supervisor]
-    Supervisor.start_link(children, opts)
+    result = Supervisor.start_link(children, opts)
+
+    start_game("Game 1")
+    start_game("Game 2")
+    start_game("Game 3")
+    start_game("Game 4")
+
+    Logger.info("Games ready")
+
+    result
+  end
+
+  def start_game(display_name) do
+    game_spec = Tanx.ContinuousGame.create(maze: :standard)
+    {:ok, game_id} = Tanx.GameSwarm.start_game(game_spec, display_name: display_name)
+
+    {:ok, meta} = Tanx.Game.get_meta({:via, :swarm, game_id})
+
+    TanxWeb.Endpoint.broadcast!("lobby", "started", meta)
+    Tanx.Game.add_callback({:via, :swarm, game_id}, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
+      TanxWeb.Endpoint.broadcast!("game:" <> game_id, "view_players", event)
+    end)
+    Tanx.Game.add_callback({:via, :swarm, game_id}, Tanx.Game.Notifications.Ended, :tanxweb, fn _event ->
+      TanxWeb.Endpoint.broadcast!("lobby", "ended", {game_id})
+    end)
+
+    meta
   end
 
   # Tell Phoenix to update the endpoint configuration

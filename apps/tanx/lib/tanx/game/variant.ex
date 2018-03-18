@@ -3,4 +3,5 @@ defprotocol Tanx.Game.Variant do
   def view(data, arena, time, view_context)
   def control(data, params)
   def event(data, event)
+  def stop(data, arena, time)
 end
