@@ -41,7 +41,7 @@ defmodule Tanx.Game do
     defstruct(
       id: nil,
       display_name: "",
-      start_time: 0.0,
+      node: nil,
       data: nil
     )
   end
@@ -87,7 +87,7 @@ defmodule Tanx.Game do
 
     game_id = Keyword.get(opts, :game_id)
     display_name = Keyword.get(opts, :display_name, @untitled_game_name)
-    meta = %Tanx.Game.Meta{id: game_id, display_name: display_name, start_time: time}
+    meta = %Tanx.Game.Meta{id: game_id, display_name: display_name, node: Node.self()}
 
     arena = Variant.init_arena(data, time)
     start_event = %Tanx.Game.Events.ArenaUpdated{time: time, arena: arena}

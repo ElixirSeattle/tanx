@@ -3,7 +3,6 @@ defmodule TanxWeb.Application do
 
   def start(_type, _args) do
     import Supervisor.Spec
-    require Logger
 
     # Define workers and child supervisors to be supervised
     children = [
@@ -16,16 +15,7 @@ defmodule TanxWeb.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TanxWeb.Supervisor]
-    result = Supervisor.start_link(children, opts)
-
-    start_game("Game 1")
-    start_game("Game 2")
-    start_game("Game 3")
-    start_game("Game 4")
-
-    Logger.info("Games ready")
-
-    result
+    Supervisor.start_link(children, opts)
   end
 
   def start_game(display_name) do
@@ -37,12 +27,19 @@ defmodule TanxWeb.Application do
     TanxWeb.Endpoint.broadcast!("lobby", "started", meta)
     Tanx.Game.add_callback({:via, :swarm, game_id}, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
       TanxWeb.Endpoint.broadcast!("game:" <> game_id, "view_players", event)
+      if Enum.empty?(event.players) do
+        spawn(fn ->
+          Tanx.Game.terminate({:via, :swarm, game_id})
+        end)
+      else
+        nil
+      end
     end)
     Tanx.Game.add_callback({:via, :swarm, game_id}, Tanx.Game.Notifications.Ended, :tanxweb, fn _event ->
-      TanxWeb.Endpoint.broadcast!("lobby", "ended", {game_id})
+      TanxWeb.Endpoint.broadcast!("lobby", "ended", %{id: game_id})
     end)
 
-    meta
+    {:ok, meta}
   end
 
   # Tell Phoenix to update the endpoint configuration

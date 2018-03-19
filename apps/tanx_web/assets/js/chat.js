@@ -4,6 +4,8 @@ class ChatClient {
   constructor() {
     this._channel = null;
 
+    $('#tanx-chat').hide();
+
     let messageInputJq = $("#message-input");
     messageInputJq
       .off("keypress")
@@ -27,6 +29,8 @@ class ChatClient {
 
   start(chatChannel) {
     this._channel = chatChannel;
+
+    $('#tanx-chat').show();
 
     let messagesJq = $('#messages');
     messagesJq.empty();
@@ -60,6 +64,7 @@ class ChatClient {
 
 
   stop() {
+    $('#tanx-chat').hide();
     this.push("leave", {name: this._curPlayerName()});
     this._channel = null;
   }

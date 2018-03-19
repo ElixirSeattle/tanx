@@ -6,12 +6,14 @@ import ArenaControls from "js/arena/controls"
 class Arena {
 
   constructor(arenaSound) {
+    $('#tanx-arena-container').hide();
     this._arenaControls = new ArenaControls();
     this._arenaAnimate = new ArenaAnimate(arenaSound);
   }
 
 
   start(gameChannel) {
+    $('#tanx-arena-container').show();
     gameChannel.push("view_structure", {});
     gameChannel.on("view_structure", structure => {
       let arenaStructure = new ArenaStructure(structure);
@@ -22,6 +24,7 @@ class Arena {
 
 
   stop() {
+    $('#tanx-arena-container').hide();
     this._arenaControls.stop();
     this._arenaAnimate.stop();
   }

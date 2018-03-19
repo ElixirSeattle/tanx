@@ -7,7 +7,8 @@ defmodule TanxWeb.LobbyChannel do
   end
 
   def handle_in("create", %{"name" => display_name}, socket) do
-    TanxWeb.Application.start_game(display_name)
+    {:ok, meta} = TanxWeb.Application.start_game(display_name)
+    push(socket, "created", meta)
     {:noreply, socket}
   end
 
@@ -21,12 +22,12 @@ defmodule TanxWeb.LobbyChannel do
 
   def handle_out("started", meta, socket) do
     games = [meta | socket.assigns[:games]]
-    games = Enum.sort_by(games, &(&1.start_time))
+    games = Enum.sort_by(games, &(&1.display_name))
     send_update(socket, games)
     {:noreply, assign(socket, :games, games)}
   end
 
-  def handle_out("ended", {game_id}, socket) do
+  def handle_out("ended", %{id: game_id}, socket) do
     games = Enum.filter(socket.assigns[:games], &(&1.id != game_id))
     send_update(socket, games)
     {:noreply, assign(socket, :games, games)}
@@ -38,14 +39,14 @@ defmodule TanxWeb.LobbyChannel do
   end
 
   defp load_all_games(socket) do
-    games = Enum.sort_by(Tanx.GameSwarm.list_games(), &(&1.start_time))
+    games = Enum.sort_by(Tanx.GameSwarm.list_games(), &(&1.display_name))
     assign(socket, :games, games)
   end
 
   defp send_update(socket, games) do
     games = Enum.map(games, fn meta ->
-      %{i: meta.id, n: meta.display_name}
+      %{i: meta.id, n: meta.display_name, d: meta.node}
     end)
-    push(socket, "update", %{g: games})
+    push(socket, "update", %{g: games, d: Node.self()})
   end
 end

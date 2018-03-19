@@ -1,7 +1,12 @@
 
 class PlayerList {
 
+  constructor() {
+    $('#tanx-player-list').hide();
+  }
+
   start(gameChannel) {
+    $('#tanx-player-list').show();
     // Make sure we get an initial view. Subsequent changes will be broadcasted
     // from the server.
     gameChannel.push("view_players", {});
@@ -12,6 +17,7 @@ class PlayerList {
   }
 
   stop() {
+    $('#tanx-player-list').hide();
     this._clearPlayersTable();
   }
 

@@ -8,6 +8,7 @@ class Lobby {
     this._chatChannel = null;
     this._joinCallbacks = [];
     this._leaveCallbacks = [];
+    this._gameInfo = {};
 
     this._setupControls();
 
@@ -29,6 +30,9 @@ class Lobby {
     $('#tanx-leave-btn').on('click', () => {
       this._leave();
     });
+    $('#tanx-create-btn').on('click', () => {
+      this._create($('#tanx-game-name-field').val());
+    });
 
     $('#tanx-name-field')
       .on('keyup', (event) => {
@@ -48,6 +52,14 @@ class Lobby {
     this._lobbyChannel.join();
     this._lobbyChannel.on("update", update => {
       this._updateGameTable(update.g)
+      $('#client-node-name').text(update.d);
+      this._gameInfo = {};
+      update.g.forEach((game) => {
+        this._gameInfo[game.i] = game;
+      });
+    });
+    this._lobbyChannel.on("created", (meta) => {
+      this._join(meta.id);
     });
   }
 
@@ -56,23 +68,24 @@ class Lobby {
     let gameTable = $('#game-rows');
     gameTable.empty();
     if (games.length == 0) {
-      gameTable.html('<tr><td colspan="3">(No games)</td></tr>');
+      gameTable.html('<tr><td colspan="2">(No games)</td></tr>');
     } else {
       games.forEach(game => {
-        let row = $('<tr>');
-        let name = game.n || "(Untitled game)";
-        row.html('<td>' +
-          '<button class="btn btn-default btn-sm tanx-join-btn" data-game-id="' +
-            game.i + '">Join</button>' +
-          '<button class="btn btn-default btn-sm tanx-delete-btn" data-game-id="' +
-            game.i + '">Delete</button>' +
-          '<span style="padding-left: 10px;">' + name + '</span></td>');
-        gameTable.append(row);
-      });
-      $('.tanx-join-btn').on('click', (event) => {
-        this._join($(event.target).attr("data-game-id"));
+        gameTable.append(
+          $('<tr>').addClass("tanx-game-row")
+            .append($('<td>').text(game.n || "(Untitled game)"))
+            .append($('<td>').text(game.d))
+            .on('click', (event) => {
+              this._join(game.i);
+            }));
       });
     }
+  }
+
+
+  _create(gameName) {
+    if (this._gameId != null) return;
+    this._lobbyChannel.push("create", {name: gameName});
   }
 
 
@@ -87,10 +100,13 @@ class Lobby {
       chatChannel.join().receive("ok", cchan => {
         if (this._gameId != null) return;
 
+        let game = this._gameInfo[gameId];
+        $('#game-name-span').text(game.n);
+        $('#game-node-span').text(game.d);
+
         $('#tanx-game-list').hide();
-        $('#tanx-leave-btn').show();
-        $('#tanx-arena-container').show();
-        $('#tanx-chat').show();
+        $('#tanx-game-create').hide();
+        $('#tanx-game-info').show();
 
         this._gameId = gameId;
         this._gameChannel = gameChannel;
@@ -105,9 +121,8 @@ class Lobby {
 
   _leave() {
     $('#tanx-game-list').show();
-    $('#tanx-leave-btn').hide();
-    $('#tanx-arena-container').hide();
-    $('#tanx-chat').hide();
+    $('#tanx-game-create').show();
+    $('#tanx-game-info').hide();
 
     let backgroundMusic = $('#background-music')[0];
     backgroundMusic.pause();
