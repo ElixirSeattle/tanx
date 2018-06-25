@@ -39,11 +39,11 @@ defmodule TanxWeb.Mixfile do
     [
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
-      {:phoenix_html, "~> 2.10"},
-      {:phoenix_live_reload, "~> 1.0", only: :dev},
+      {:phoenix_html, "~> 2.11"},
+      {:phoenix_live_reload, "~> 1.1", only: :dev},
       {:gettext, "~> 0.11"},
       {:tanx, in_umbrella: true},
-      {:cowboy, "~> 1.0"}
+      {:cowboy, "~> 1.1"}
     ]
   end
 

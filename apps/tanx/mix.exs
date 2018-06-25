@@ -36,7 +36,8 @@ defmodule Tanx.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:poison, "~> 2.0"}
+      {:poison, "~> 3.1"},
+      {:swarm, "~> 3.3"}
     ]
   end
 
