@@ -43,6 +43,10 @@ class SoundPool {
     }
   }
 
+  getVolume() {
+    return this._volume;
+  }
+
   setMute(mute) {
     this._mute = mute;
     let volume = mute ? 0 : this._volume;
@@ -65,7 +69,6 @@ class ArenaSound {
     this._musicMute = false;
   }
 
-
   play(objects) {
     objects.e.forEach(explosion => {
       if (explosion.sound != null) {
@@ -76,6 +79,13 @@ class ArenaSound {
     this._backgroundMusic.play();
   }
 
+  getMusicVolume() {
+    return this._musicVolume;
+  }
+
+  getSoundVolume() {
+    return this._explosions.getVolume();
+  }
 
   setMusicVolume(percent) {
     this._musicVolume = percent;

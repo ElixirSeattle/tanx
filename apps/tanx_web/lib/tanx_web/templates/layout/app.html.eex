@@ -8,9 +8,7 @@
     <meta name="author" content="">
 
     <title>Elixir Tanx</title>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-3.3.5.min.css") %>">
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-theme-3.3.5.min.css") %>">
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-slider-5.1.1.min.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-4.1.1.min.css") %>">
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 

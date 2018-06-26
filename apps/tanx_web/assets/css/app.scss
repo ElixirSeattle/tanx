@@ -29,10 +29,10 @@ body {
   font-style: italic;
 }
 
-#tanx-player-list {
+#tanx-player-list table {
   background: #fff;
 }
-#tanx-game-list {
+#tanx-game-list table {
   background: #fff;
 }
 #tanx-canvas {
@@ -70,7 +70,7 @@ body {
   width: 100%;
 }
 
-#tanx-game-info {
+#tanx-player-info {
   margin-bottom: 20px;
 }
 

@@ -65,21 +65,17 @@ class Lobby {
 
 
   _updateGameTable(games) {
-    let gameTable = $('#game-rows');
-    gameTable.empty();
-    if (games.length == 0) {
-      gameTable.html('<tr><td colspan="2">(No games)</td></tr>');
-    } else {
-      games.forEach(game => {
-        gameTable.append(
-          $('<tr>').addClass("tanx-game-row")
-            .append($('<td>').text(game.n || "(Untitled game)"))
-            .append($('<td>').text(game.d))
-            .on('click', (event) => {
-              this._join(game.i);
-            }));
-      });
-    }
+    $('.tanx-game-row').remove();
+    let createGameRow = $('#create-game-row');
+    games.forEach(game => {
+      $('<tr>').addClass("tanx-game-row")
+        .append($('<td>').text(game.n || "(Untitled game)"))
+        .append($('<td>').text(game.d))
+        .on('click', (event) => {
+          this._join(game.i);
+        })
+        .insertBefore(createGameRow);
+    });
   }
 
 
@@ -105,7 +101,6 @@ class Lobby {
         $('#game-node-span').text(game.d);
 
         $('#tanx-game-list').hide();
-        $('#tanx-game-create').hide();
         $('#tanx-game-info').show();
 
         this._gameId = gameId;
@@ -121,8 +116,10 @@ class Lobby {
 
   _leave() {
     $('#tanx-game-list').show();
-    $('#tanx-game-create').show();
     $('#tanx-game-info').hide();
+
+    $('#game-name-span').text('');
+    $('#game-node-span').text('');
 
     let backgroundMusic = $('#background-music')[0];
     backgroundMusic.pause();
@@ -151,9 +148,11 @@ class Lobby {
     }
   }
 
+
   _escapedTankName(){
     return this._escapeHtml($('#tanx-name-field').val())
   }
+
 
   _escapeHtml(str) {
     var div = document.createElement('div');

@@ -25,34 +25,22 @@ class Settings {
       $('#tanx-arena-json').toggle($('#show-arena-json-checkbox').prop('checked'));
     });
 
-    let backgroundMusicSlider = new Slider('#background-music-slider', {
-      id: 'background-music-slider-elem',
-      min: 0,
-      max: 100,
-      step: 1,
-      value: 100,
-      tooltip: 'hide'
-    });
-    backgroundMusicSlider.on('slide', () => {
-      arenaSound.setMusicVolume(backgroundMusicSlider.getValue() / 100);
-    });
+    $('#background-music-slider')
+      .val(arenaSound.getMusicVolume())
+      .on('change', event => {
+        arenaSound.setMusicVolume($('#background-music-slider').val());
+      });
+
+    $('#fx-volume-slider')
+      .val(arenaSound.getSoundVolume())
+      .on('change', event => {
+        arenaSound.setSoundVolume($('#fx-volume-slider').val());
+      });
 
     $('#music-mute-checkbox').prop('checked', MUTE_MUSIC_INITIALLY);
     arenaSound.setMusicMute(MUTE_MUSIC_INITIALLY);
     $('#music-mute-checkbox').on('change', event => {
       arenaSound.setMusicMute($('#music-mute-checkbox').prop('checked'));
-    });
-
-    let soundFxSlider = new Slider('#fx-volume-slider', {
-      id: 'fx-slider-elem',
-      min: 0,
-      max: 100,
-      step: 1,
-      value: 100,
-      tooltip: 'hide'
-    });
-    soundFxSlider.on('slide', () => {
-      arenaSound.setSoundVolume(soundFxSlider.getValue() / 100);
     });
 
     $('#fx-mute-checkbox').prop('checked', MUTE_SOUND_INITIALLY);
