@@ -34,6 +34,8 @@ defmodule Tanx.Game do
   end
 
   def terminate(game) do
+    updater = GenServer.call(game, :get_updater_pid)
+    GenServer.call(updater, :terminate)
     GenServer.call(game, :terminate)
   end
 
@@ -91,7 +93,7 @@ defmodule Tanx.Game do
 
     arena = Variant.init_arena(data, time)
     start_event = %Tanx.Game.Events.ArenaUpdated{time: time, arena: arena}
-    updater = Tanx.Game.Updater.start_link(self(), arena, opts)
+    {:ok, updater} = Tanx.Game.Updater.start_link(self(), arena, opts)
     {data, commands, _notifications} = Variant.event(data, start_event)
 
     state = %State{
@@ -170,6 +172,10 @@ defmodule Tanx.Game do
 
     new_state = %State{state | arena: arena, data: data, time: time, commands: all_commands}
     {:reply, :ok, new_state}
+  end
+
+  def handle_call(:get_updater_pid, _from, state) do
+    {:reply, state.updater, state}
   end
 
   def handle_call(:terminate, _from, state) do

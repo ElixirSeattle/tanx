@@ -9,8 +9,6 @@ defmodule Tanx.Game.Updater do
 
   use GenServer
 
-  require Logger
-
   defmodule InternalData do
     defstruct(decomposed_walls: [])
   end
@@ -52,6 +50,10 @@ defmodule Tanx.Game.Updater do
     }
 
     {:ok, state, next_tick_timeout(state)}
+  end
+
+  def handle_call(:terminate, _from, state) do
+    {:stop, :normal, :ok, state}
   end
 
   def handle_cast(:update, state) do
