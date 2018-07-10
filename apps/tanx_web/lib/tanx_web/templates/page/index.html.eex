@@ -82,7 +82,7 @@
       </div>
 
       <div class="row" id="tanx-chat">
-        <div class="col-12">
+        <div class="col-12 mt-3">
           <div id="messages"></div>
           <input id="message-input" type="text" placeholder="Chat!">
         </div>

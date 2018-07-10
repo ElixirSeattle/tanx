@@ -26,35 +26,48 @@ Generally, you should know how to run Phoenix applications. See the
 
 Now you can visit `localhost:4000` from your browser.
 
-## Production deployment with Google Container Engine
+## Production deployment with Google Kubernetes Engine
 
 This procedure will guide you through building the tanx server as an OTP
 release in a Docker image, and deploying that image to Kubernetes via
-Google Container Engine.
+Google Kubernetes Engine.
 
 ### Prerequisites
 
 1.  Set up a project on [Google Cloud Console](http://cloud.google.com/console)
     if you don't have one, and enable billing.
 
-2.  Enable the Google Container Engine API and Container Builder API. In the
-    cloud console, pull down the left nav and go to "APIs and services".
-
-3.  Install the [Google Cloud SDK](https://cloud.google.com/sdk/) on your
+2.  Install the [Google Cloud SDK](https://cloud.google.com/sdk/) on your
     workstation if you don't have it. This includes:
 
     1.  Install gcloud. See the
         [quickstarts](https://cloud.google.com/sdk/docs/quickstarts) if you
         need instructions.
+
     2.  Install kubectl, the command line for controlling Kubernetes:
-        `gcloud components install kubectl`
-    3.  Log in: `gcloud auth login`
 
-4.  Configure gcloud for your project.
+            gcloud components install kubectl
 
-    1.  Make sure gcloud points to your project: `gcloud config set project <your-project-id>`
+    3.  Log in using gcloud so it can access your cloud account and resources.
+
+            gcloud auth login
+
+3.  Configure gcloud for your project.
+
+    1.  Set the default project:
+
+            gcloud config set project *<your-project-id>*
+
     2.  Set a default zone (i.e. data center location). I think "us-central1-c"
-        is a good one. `gcloud config set compute/zone us-central1-c`
+        is a good one.
+
+            gcloud config set compute/zone us-central1-c
+
+4.  Enable the Kubernetes Engine API and Container Builder API, using the
+    following commands:
+
+        gcloud services enable container.googleapis.com
+        gcloud services enable cloudbuild.googleapis.com
 
 5.  Optional: if you want to do local builds,
     [install Docker](https://docs.docker.com/installation/). This is not
@@ -63,7 +76,7 @@ Google Container Engine.
 ### Building
 
 We will use Google's [Container Builder](https://cloud.google.com/container-builder/)
-service to build the tanx application in a Docker image. Notice that there is
+service to build the Tanx application in a Docker image. Notice that there is
 a Dockerfile provided. It uses Distillery to produce an OTP release, and
 installs it in a Docker image based on bitwalker's Alpine-Erlang image. We
 will just hand this to Container Builder to build an image and upload it to

@@ -1,8 +1,6 @@
 steps:
   - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "gcr.io/$PROJECT_ID/$_APP_NAME:$_TAG",
-           "--build-arg", "build_id=$_TAG",
-           "."]
+    args: ["build", "-t", "$_IMAGE", "--build-arg", "build_id=$_BUILD_ID", "."]
 
 images:
-  - "gcr.io/$PROJECT_ID/$_APP_NAME:$_TAG"
+  - "$_IMAGE"
