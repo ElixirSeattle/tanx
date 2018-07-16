@@ -60,7 +60,7 @@ defmodule TanxWeb.GameChannel do
     if player do
       socket.assigns[:game]
       |> Tanx.GameSwarm.game_process
-      |> Tanx.ContinuousGame.rename_player(game, player, name)
+      |> Tanx.ContinuousGame.rename_player(player, name)
     end
 
     {:noreply, socket}
@@ -72,7 +72,7 @@ defmodule TanxWeb.GameChannel do
     if player do
       socket.assigns[:game]
       |> Tanx.GameSwarm.game_process
-      |> Tanx.ContinuousGame.start_tank(game, player, entry_point)
+      |> Tanx.ContinuousGame.start_tank(player, entry_point)
     end
 
     {:noreply, socket}
@@ -84,7 +84,7 @@ defmodule TanxWeb.GameChannel do
     if player do
       socket.assigns[:game]
       |> Tanx.GameSwarm.game_process
-      |> Tanx.ContinuousGame.destruct_tank(game, player)
+      |> Tanx.ContinuousGame.destruct_tank(player)
     end
 
     {:noreply, socket}
