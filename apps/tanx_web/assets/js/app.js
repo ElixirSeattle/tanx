@@ -14,8 +14,12 @@ import About from "js/about"
 class TanxApp {
 
   constructor() {
-    let socket = new Socket("/ws");
-    socket.connect()
+    let socket = new Socket("/ws", {
+      reconnectAfterMs: function(tries) {
+        return [1, 100, 200, 400, 800][tries - 1] || 1000;
+      }
+    });
+    socket.connect();
 
     let arenaSound = new ArenaSound();
 
@@ -35,6 +39,10 @@ class TanxApp {
       this._playerList.stop();
       this._chatClient.stop();
       this._arena.stop();
+    });
+    this._lobby.onRejoin((gameId, gameChannel, chatChannel) => {
+      this._playerList.restart(gameChannel);
+      this._arena.restart(gameChannel);
     });
   }
 

@@ -14,14 +14,7 @@ class ArenaAnimate {
 
   constructor(arenaSound) {
     this._arenaSound = arenaSound;
-    this._arenaRender = null;
-    this._frameBufferLength = INITIAL_BUFFER_LEN;
-    this._receivedArena = null;
-    this._receivedArenaCount = this._frameBufferLength;
-    this._receivedFrame = false;
-    this._fpsSum = 0;
-    this._fpsCount = 0;
-    this._fpsMeasurer = null;
+    this.stop();
   }
 
 
@@ -65,14 +58,30 @@ class ArenaAnimate {
   }
 
 
+  restart(gameChannel) {
+    this._frameBufferLength = INITIAL_BUFFER_LEN;
+    this._receivedArenaCount = this._frameBufferLength;
+    this._timestamps = [];
+    this._runAnimation();
+  }
+
+
   stop() {
-    this._arenaRender = null;
+    if (this._gameChannel != null) {
+      this._gameChannel.off("view_arena");
+    }
     if (this._fpsMeasurer != null) {
       window.clearInterval(this._fpsMeasurer);
-      this._fpsMeasurer = null;
-      this._fpsCount = 0;
-      this._fpsSum = 0;
     }
+    this._gameChannel = null;
+    this._arenaRender = null;
+    this._frameBufferLength = INITIAL_BUFFER_LEN;
+    this._receivedArena = null;
+    this._receivedArenaCount = this._frameBufferLength;
+    this._receivedFrame = false;
+    this._fpsMeasurer = null;
+    this._fpsCount = 0;
+    this._fpsSum = 0;
   }
 
 

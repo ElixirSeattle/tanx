@@ -24,7 +24,7 @@ defmodule TanxWeb.Mixfile do
   def application do
     [
       mod: {TanxWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :tanx]
     ]
   end
 

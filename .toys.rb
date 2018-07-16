@@ -1,9 +1,96 @@
-tool "startn" do
-  flag :count, accept: Integer, default: 2
+tool "launch" do
+  flag :base_port, accept: Integer, default: 4000
 
   include :exec, exit_on_nonzero_status: true
   include :gems
   include :terminal
+
+  def nodename(port)
+    "tanxport-#{port}@localhost"
+  end
+
+  def start(port = nil)
+    unless port
+      port = base_port
+      port += 1 while @controllers.key?(port)
+    end
+    if @controllers.key?(port)
+      puts("Port #{port} is already running.", :bold, :red)
+    else
+      start!(port)
+    end
+  end
+
+  def start!(port)
+    cmd = ["elixir", "--sname", nodename(port), "-S", "mix", "phx.server"]
+    env = {"PORT" => port.to_s}
+    unless @controllers.empty?
+      env["TANX_CONNECT_NODE"] = nodename(@controllers.keys.first)
+    end
+    controller = exec(cmd, env: env, background: true, out: :controller)
+    spinner(leading_text: "Starting port #{port} with pid #{controller.pid} ...",
+            final_text: "Done\n") do
+      loop do
+        if controller.out.gets =~ /Running TanxWeb\.Endpoint/
+          controller.redirect_out("tmp/#{port}.log", "a")
+          break
+        end
+      end
+    end
+    @controllers[port] = controller
+  end
+
+  def kill(port)
+    if @controllers.key?(port)
+      controller = @controllers[port]
+      spinner(leading_text: "Killing port #{port} with pid #{controller.pid} ...",
+              final_text: "Done\n") do
+        controller.kill("SIGTERM")
+        begin
+          loop do
+            controller.kill(0)
+            sleep(0.2)
+          end
+        rescue ::Errno::ESRCH
+          # Done
+        end
+      end
+      @controllers.delete(port)
+    else
+      puts("Port #{port} is not running.", :bold, :red)
+    end
+  end
+
+  def killall
+    if @controllers.empty?
+      puts("No ports are running.", :bold, :red)
+    else
+      @controllers.each do |port, controller|
+        puts("Killing port #{port} with pid #{controller.pid} ...")
+        controller.kill("SIGTERM")
+      end
+      spinner(leading_text: "Waiting for completion ...",
+              final_text: "Done\n") do
+        @controllers.each do |port, controller|
+          begin
+            loop do
+              controller.kill(0)
+              sleep(0.2)
+            end
+          rescue ::Errno::ESRCH
+            # Done
+          end
+        end
+      end
+      @controllers = {}
+    end
+  end
+
+  def quit
+    killall
+    puts("EXITING", :bold)
+    exit
+  end
 
   def run
     gem "tty-prompt", "~> 0.16"
@@ -11,39 +98,28 @@ tool "startn" do
     prompt = TTY::Prompt.new
 
     exec(["mix", "compile"])
-    controllers = {}
-    count.times do |i|
-      port = 4000 + i
-      cmd = ["elixir", "--sname", "n#{i}@localhost"]
-      cmd += ["-e", 'Node.connect :"n0@localhost"'] if i > 0
-      cmd += ["-S", "mix", "phx.server"]
-      controller = exec(cmd, env: {"PORT" => "#{port}"}, background: true,
-                        out: :controller, err: :null)
-      spinner(leading_text: "Starting port #{port} with pid #{controller.pid}...",
-              final_text: "Done\n") do
-        loop do
-          if controller.out.gets =~ /compiled\s\d+\sfiles/
-            controller.out.close
-            break
-          end
-        end
-      end
-      controllers[port] = controller
-    end
+    @controllers = {}
 
-    until controllers.empty?
-      puts("\nPorts still alive: #{controllers.keys.inspect}", :bold, :cyan)
-      port = prompt.select("Kill which port?", controllers.keys.map(&:to_s) + ["all"])
-      if port == "all"
-        controllers.each_value{ |c| c.kill("SIGTERM") }
-        controllers = {}
+    start
+    loop do
+      puts("\nCurrent ports: #{@controllers.keys.sort.inspect}", :bold)
+      choices = ["Start port"] +
+                @controllers.keys.sort.map{ |p| "Kill port #{p}" } +
+                ["Kill all", "Quit"]
+      choice = prompt.select("What now?", choices)
+      case choice
+      when /Kill port (\d+)/
+        kill($1.to_i)
+      when /Kill all/
+        killall
+      when /Start port/
+        start
+      when /Quit/
+        quit
       else
-        port = port.to_i
-        controllers[port].kill("SIGTERM")
-        controllers.delete(port)
+        puts("Unrecognized choice: #{choice.inspect}", :bold, :red)
       end
     end
-    puts("All ports killed", :bold)
   end
 end
 

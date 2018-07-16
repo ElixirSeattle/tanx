@@ -16,6 +16,11 @@ class PlayerList {
     });
   }
 
+  restart(gameChannel) {
+    // Re-get a view in case something changed.
+    gameChannel.push("view_players", {});
+  }
+
   stop() {
     $('#tanx-player-list').hide();
     this._clearPlayersTable();

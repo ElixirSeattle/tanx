@@ -15,27 +15,32 @@ defmodule TanxWeb.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TanxWeb.Supervisor]
-    Supervisor.start_link(children, opts)
+    result = Supervisor.start_link(children, opts)
+    Tanx.GameSwarm.add_callback(fn _ ->
+      TanxWeb.Endpoint.broadcast!("lobby", "refresh", %{})
+    end)
+    result
   end
 
   def start_game(display_name) do
     game_spec = Tanx.ContinuousGame.create(maze: :standard)
     {:ok, game_id} = Tanx.GameSwarm.start_game(game_spec, display_name: display_name)
 
-    {:ok, meta} = Tanx.Game.get_meta({:via, :swarm, game_id})
+    game_proc = Tanx.GameSwarm.game_process(game_id)
+    {:ok, meta} = Tanx.Game.get_meta(game_proc)
 
     TanxWeb.Endpoint.broadcast!("lobby", "started", meta)
-    Tanx.Game.add_callback({:via, :swarm, game_id}, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
+    Tanx.Game.add_callback(game_proc, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
       TanxWeb.Endpoint.broadcast!("game:" <> game_id, "view_players", event)
       if Enum.empty?(event.players) do
         spawn(fn ->
-          Tanx.Game.terminate({:via, :swarm, game_id})
+          Tanx.Game.terminate(game_proc)
         end)
       else
         nil
       end
     end)
-    Tanx.Game.add_callback({:via, :swarm, game_id}, Tanx.Game.Notifications.Ended, :tanxweb, fn _event ->
+    Tanx.Game.add_callback(game_proc, Tanx.Game.Notifications.Ended, :tanxweb, fn _event ->
       TanxWeb.Endpoint.broadcast!("lobby", "ended", %{id: game_id})
     end)
 

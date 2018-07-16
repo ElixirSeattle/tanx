@@ -23,6 +23,11 @@ class Arena {
   }
 
 
+  restart(gameChannel) {
+    this._arenaAnimate.restart(gameChannel);
+  }
+
+
   stop() {
     $('#tanx-arena-container').hide();
     this._arenaControls.stop();

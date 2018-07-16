@@ -8,6 +8,7 @@ class Lobby {
     this._chatChannel = null;
     this._joinCallbacks = [];
     this._leaveCallbacks = [];
+    this._rejoinCallbacks = [];
     this._gameInfo = {};
 
     this._setupControls();
@@ -18,6 +19,11 @@ class Lobby {
 
   onJoin(callback) {
     this._joinCallbacks.push(callback);
+  }
+
+
+  onRejoin(callback) {
+    this._rejoinCallbacks.push(callback);
   }
 
 
@@ -49,7 +55,9 @@ class Lobby {
 
   _setupGameList() {
     this._lobbyChannel = this._socket.channel("lobby", {});
-    this._lobbyChannel.join();
+
+    let lobbyJoiner = this._lobbyChannel.join();
+
     this._lobbyChannel.on("update", update => {
       this._updateGameTable(update.g)
       $('#client-node-name').text(update.d);
@@ -92,24 +100,62 @@ class Lobby {
     let gameChannel = this._socket.channel("game:" + gameId, {name: playerName});
     let chatChannel = this._socket.channel("chat:" + gameId, {});
 
-    gameChannel.join().receive("ok", chan => {
-      chatChannel.join().receive("ok", cchan => {
-        if (this._gameId != null) return;
+    gameChannel.onError(reason => {
+      this._gameChannel = null;
+    });
+    chatChannel.onError(reason => {
+      this._chatChannel = null;
+    });
 
-        let game = this._gameInfo[gameId];
-        $('#game-name-span').text(game.n);
-        $('#game-node-span').text(game.d);
+    let gameJoiner = gameChannel.join();
+    gameJoiner.receive("ok", reply => {
+      this._gameChannel = gameChannel;
+      if (this._gameId == null) {
+        gameJoiner.payload.id = reply.i;
+        if (this._chatChannel) {
+          this._finishJoin(gameId);
+        }
+      } else {
+        if (this._chatChannel) {
+          this._finishRejoin();
+        }
+      }
+    });
 
-        $('#tanx-game-list').hide();
-        $('#tanx-game-info').show();
+    let chatJoiner = chatChannel.join();
+    chatJoiner.receive("ok", reply => {
+      this._chatChannel = chatChannel;
+      if (this._gameId == null) {
+        if (this._gameChannel) {
+          this._finishJoin(gameId);
+        }
+      } else {
+        if (this._gameChannel) {
+          this._finishRejoin();
+        }
+      }
+    });
+  }
 
-        this._gameId = gameId;
-        this._gameChannel = gameChannel;
-        this._chatChannel = chatChannel;
-        this._joinCallbacks.forEach(callback => {
-          callback(gameId, gameChannel, chatChannel);
-        });
-      });
+
+  _finishJoin(gameId) {
+    let game = this._gameInfo[gameId];
+    $('#game-name-span').text(game.n);
+    $('#game-node-span').text(game.d);
+
+    $('#tanx-game-list').hide();
+    $('#tanx-game-info').show();
+
+    this._gameId = gameId;
+    this._joinCallbacks.forEach(callback => {
+      callback(gameId, this._gameChannel, this._chatChannel);
+    });
+  }
+
+
+  _finishRejoin() {
+    this._rejoinCallbacks.forEach(callback => {
+      callback(this._gameId, this._gameChannel, this._chatChannel);
     });
   }
 
@@ -139,6 +185,7 @@ class Lobby {
       callback(gameId, gameChannel, chatChannel);
     });
     gameChannel.leave();
+    chatChannel.leave();
   }
 
 

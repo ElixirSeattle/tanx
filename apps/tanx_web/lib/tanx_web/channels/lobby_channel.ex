@@ -1,9 +1,12 @@
 defmodule TanxWeb.LobbyChannel do
   use Phoenix.Channel
 
+  require Logger
+
   def join("lobby", _message, socket) do
     send(self(), :after_join)
-    {:ok, load_all_games(socket)}
+    games = load_all_games()
+    {:ok, assign(socket, :games, games)}
   end
 
   def handle_in("create", %{"name" => display_name}, socket) do
@@ -18,7 +21,7 @@ defmodule TanxWeb.LobbyChannel do
     {:noreply, socket}
   end
 
-  intercept(["started", "ended"])
+  intercept(["started", "ended", "refresh"])
 
   def handle_out("started", meta, socket) do
     games = [meta | socket.assigns[:games]]
@@ -33,14 +36,19 @@ defmodule TanxWeb.LobbyChannel do
     {:noreply, assign(socket, :games, games)}
   end
 
+  def handle_out("refresh", _, socket) do
+    games = load_all_games()
+    send_update(socket, games)
+    {:noreply, assign(socket, :games, games)}
+  end
+
   def handle_info(:after_join, socket) do
     send_update(socket, socket.assigns[:games])
     {:noreply, socket}
   end
 
-  defp load_all_games(socket) do
-    games = Enum.sort_by(Tanx.GameSwarm.list_games(), &(&1.display_name))
-    assign(socket, :games, games)
+  defp load_all_games() do
+    Enum.sort_by(Tanx.GameSwarm.list_games(), &(&1.display_name))
   end
 
   defp send_update(socket, games) do

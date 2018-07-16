@@ -18,7 +18,7 @@ config :tanx_web, TanxWeb.Endpoint,
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
-  level: :warn,
+  level: :info,
   metadata: [:request_id]
 
 config :tanx_web, :generators, context_app: :tanx
