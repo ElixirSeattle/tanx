@@ -42,8 +42,9 @@ class PlayerList {
           row.addClass('info');
         }
         let name = player.n || "(Anonymous coward)";
-        row.html('<td>' + name + '</td><td>' + player.k +
-          '</td><td>' + player.d + '</td>');
+        row.append($('<td>').text(name));
+        row.append($('<td>').text(player.k));
+        row.append($('<td>').text(player.d));
         playerTable.append(row);
       });
     }

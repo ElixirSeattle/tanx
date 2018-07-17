@@ -6,6 +6,7 @@ class Lobby {
     this._gameId = null;
     this._gameChannel = null;
     this._chatChannel = null;
+    this._joinPayload = null;
     this._joinCallbacks = [];
     this._leaveCallbacks = [];
     this._rejoinCallbacks = [];
@@ -96,7 +97,7 @@ class Lobby {
   _join(gameId) {
     if (this._gameId != null) return;
 
-    let playerName = this._escapedTankName();
+    let playerName = $('#tanx-name-field').val();
     let gameChannel = this._socket.channel("game:" + gameId, {name: playerName});
     let chatChannel = this._socket.channel("chat:" + gameId, {});
 
@@ -109,6 +110,7 @@ class Lobby {
 
     let gameJoiner = gameChannel.join();
     gameJoiner.receive("ok", reply => {
+      this._joinPayload = gameJoiner.payload;
       this._gameChannel = gameChannel;
       if (this._gameId == null) {
         gameJoiner.payload.id = reply.i;
@@ -181,6 +183,7 @@ class Lobby {
     this._gameChannel = null;
     this._chatChannel = null;
     this._gameId = null;
+    this._joinPayload = null;
     this._leaveCallbacks.forEach(callback => {
       callback(gameId, gameChannel, chatChannel);
     });
@@ -190,21 +193,14 @@ class Lobby {
 
 
   _renamePlayer() {
+    let name = $('#tanx-name-field').val();
+
     if (this._gameId != null) {
-      this._gameChannel.push("rename", {name: this._escapedTankName()});
+      this._gameChannel.push("rename", {name: name});
     }
-  }
-
-
-  _escapedTankName(){
-    return this._escapeHtml($('#tanx-name-field').val())
-  }
-
-
-  _escapeHtml(str) {
-    var div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML
+    if (this._joinPayload != null) {
+      this._joinPayload.name = name;
+    }
   }
 
 }

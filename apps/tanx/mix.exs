@@ -37,7 +37,7 @@ defmodule Tanx.Mixfile do
   defp deps do
     [
       {:poison, "~> 3.1"},
-      {:swarm, "~> 3.3"}
+      {:swarm, git: "https://github.com/dazuma/swarm.git", branch: "tanx-fixes"}
     ]
   end
 

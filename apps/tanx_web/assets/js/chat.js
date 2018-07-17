@@ -37,14 +37,14 @@ class ChatClient {
 
     chatChannel.on("entered", (message) => {
       messagesJq.append(
-        '<div class="row"><span class="col-xs-9 col-xs-offset-3 event">' +
+        '<div class="row"><span class="col-xs-9 offset-xs-3 event">' +
         this._sanitize(message.username) +
         ' entered</span></div>')
     });
 
     chatChannel.on("left", (message) => {
       messagesJq.append(
-        '<div class="row"><span class="col-xs-9 col-xs-offset-3 event">' +
+        '<div class="row"><span class="col-xs-9 offset-xs-3 event">' +
         this._sanitize(message.username) +
         ' left</span></div>')
     });
