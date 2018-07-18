@@ -26,6 +26,10 @@ defmodule Tanx.Util.SystemTime do
     :erlang.monotonic_time(:microsecond)
   end
 
+  def updated_offset(time) do
+    :erlang.monotonic_time(:microsecond) - trunc(time * 1_000_000)
+  end
+
   @doc """
     Creates a new configuration object
   """

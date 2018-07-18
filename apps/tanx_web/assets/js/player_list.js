@@ -11,8 +11,10 @@ class PlayerList {
     // from the server.
     gameChannel.push("view_players", {});
     gameChannel.on("view_players", players => {
-      this._clearPlayersTable();
-      this._renderPlayersTable(players.p);
+      if (players.p != null) {
+        this._clearPlayersTable();
+        this._renderPlayersTable(players.p);
+      }
     });
   }
 

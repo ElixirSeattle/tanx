@@ -16,9 +16,11 @@ class Arena {
     $('#tanx-arena-container').show();
     gameChannel.push("view_structure", {});
     gameChannel.on("view_structure", structure => {
-      let arenaStructure = new ArenaStructure(structure);
-      this._arenaControls.start(gameChannel, arenaStructure);
-      this._arenaAnimate.start(gameChannel, arenaStructure);
+      if (structure.h != null) {
+        let arenaStructure = new ArenaStructure(structure);
+        this._arenaControls.start(gameChannel, arenaStructure);
+        this._arenaAnimate.start(gameChannel, arenaStructure);
+      }
     });
   }
 

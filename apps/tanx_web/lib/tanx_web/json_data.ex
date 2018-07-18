@@ -88,7 +88,11 @@ defmodule TanxWeb.JsonData do
     )
   end
 
-  def format_players(player_list_view) do
+  def format_players({:error, _}) do
+    %{}
+  end
+
+  def format_players({:ok, player_list_view}) do
     cur_player_id =
       case player_list_view.cur_player do
         nil -> nil
@@ -111,7 +115,11 @@ defmodule TanxWeb.JsonData do
     %{p: players_json}
   end
 
-  def format_structure(static_view) do
+  def format_structure({:error, _}) do
+    %{}
+  end
+
+  def format_structure({:ok, static_view}) do
     {w, h} = static_view.size
 
     entry_points =
@@ -138,7 +146,11 @@ defmodule TanxWeb.JsonData do
     }
   end
 
-  def format_arena(arena_view) do
+  def format_arena({:error, _}) do
+    %{}
+  end
+
+  def format_arena({:ok, arena_view}) do
     cur_player_tank_id =
       case arena_view.cur_player do
         nil -> nil

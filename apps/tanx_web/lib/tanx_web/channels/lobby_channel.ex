@@ -21,7 +21,7 @@ defmodule TanxWeb.LobbyChannel do
     {:noreply, socket}
   end
 
-  intercept(["started", "ended", "refresh"])
+  intercept(["started", "ended", "moved", "refresh"])
 
   def handle_out("started", meta, socket) do
     games = [meta | socket.assigns[:games]]
@@ -32,6 +32,15 @@ defmodule TanxWeb.LobbyChannel do
 
   def handle_out("ended", %{id: game_id}, socket) do
     games = Enum.filter(socket.assigns[:games], &(&1.id != game_id))
+    send_update(socket, games)
+    {:noreply, assign(socket, :games, games)}
+  end
+
+  def handle_out("moved", %{id: game_id, to: to_node}, socket) do
+    games = Enum.map(socket.assigns[:games], fn
+      %{id: ^game_id} = game -> %Tanx.Game.Meta{game | node: to_node}
+      game -> game
+    end)
     send_update(socket, games)
     {:noreply, assign(socket, :games, games)}
   end

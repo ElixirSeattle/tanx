@@ -7,6 +7,8 @@ defmodule Tanx.Game.Updater do
 
   #### GenServer callbacks
 
+  require Logger
+
   use GenServer
 
   defmodule InternalData do
@@ -64,6 +66,10 @@ defmodule Tanx.Game.Updater do
   def handle_info(:timeout, state) do
     state = perform_update(state)
     {:noreply, state, next_tick_timeout(state)}
+  end
+
+  def handle_info({:swarm, :die}, state) do
+    {:stop, :shutdown, state}
   end
 
   def handle_info(request, state), do: super(request, state)

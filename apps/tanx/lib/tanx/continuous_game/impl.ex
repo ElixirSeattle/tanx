@@ -34,22 +34,24 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
   end
 
   def view(data, _arena, _time, {:players, player_handle}) do
-    %Tanx.ContinuousGame.PlayerListView{
+    view = %Tanx.ContinuousGame.PlayerListView{
       players: data.players,
       cur_player: Map.get(data.player_handles, player_handle)
     }
+    {:ok, view}
   end
 
   def view(_data, arena, _time, :static) do
-    %Tanx.ContinuousGame.StaticView{
+    view = %Tanx.ContinuousGame.StaticView{
       size: arena.size,
       walls: arena.walls,
       entry_points: arena.entry_points
     }
+    {:ok, view}
   end
 
   def view(data, arena, _time, {:arena, player_handle}) do
-    %Tanx.ContinuousGame.ArenaView{
+    view = %Tanx.ContinuousGame.ArenaView{
       entry_points: arena.entry_points,
       tanks: arena.tanks,
       missiles: arena.missiles,
@@ -58,6 +60,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       players: data.players,
       cur_player: Map.get(data.player_handles, player_handle)
     }
+    {:ok, view}
   end
 
   def control(data, {:add_player, name}) do

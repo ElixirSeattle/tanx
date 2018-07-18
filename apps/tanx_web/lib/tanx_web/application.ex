@@ -43,6 +43,9 @@ defmodule TanxWeb.Application do
     Tanx.Game.add_callback(game_proc, Tanx.Game.Notifications.Ended, :tanxweb, fn _event ->
       TanxWeb.Endpoint.broadcast!("lobby", "ended", %{id: game_id})
     end)
+    Tanx.Game.add_callback(game_proc, Tanx.Game.Notifications.Moved, :tanxweb, fn event ->
+      TanxWeb.Endpoint.broadcast!("lobby", "moved", %{id: game_id, from: event.from_node, to: event.to_node})
+    end)
 
     {:ok, meta}
   end

@@ -65,6 +65,10 @@ class Lobby {
       this._gameInfo = {};
       update.g.forEach((game) => {
         this._gameInfo[game.i] = game;
+        if (game.i == this._gameId) {
+          $('#game-name-span').text(game.n);
+          $('#game-node-span').text(game.d);
+        }
       });
     });
     this._lobbyChannel.on("created", (meta) => {
