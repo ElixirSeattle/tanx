@@ -38,6 +38,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       players: data.players,
       cur_player: Map.get(data.player_handles, player_handle)
     }
+
     {:ok, view}
   end
 
@@ -47,6 +48,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       walls: arena.walls,
       entry_points: arena.entry_points
     }
+
     {:ok, view}
   end
 
@@ -60,6 +62,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       players: data.players,
       cur_player: Map.get(data.player_handles, player_handle)
     }
+
     {:ok, view}
   end
 

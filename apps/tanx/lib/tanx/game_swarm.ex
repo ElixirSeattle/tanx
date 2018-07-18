@@ -9,8 +9,9 @@ defmodule Tanx.GameSwarm do
   def start_link(opts \\ []) do
     connect = String.split(System.get_env(@connect_env) || "", ",")
     connect = Keyword.get(opts, :connect, connect)
+
     Enum.each(connect, fn node ->
-      node |> String.to_atom |> Node.connect
+      node |> String.to_atom() |> Node.connect()
     end)
 
     {:ok, pid} = GenServer.start_link(__MODULE__, {}, name: __MODULE__)
@@ -23,11 +24,14 @@ defmodule Tanx.GameSwarm do
     registered = Swarm.registered() |> Enum.map(fn {id, _pid} -> id end)
     game_id = Tanx.Util.ID.create("G", registered, 8)
     opts_with_game_id = Keyword.put(opts, :game_id, game_id)
+
     case Swarm.register_name(game_id, Tanx.Game, :create, [opts_with_game_id]) do
       {:error, {:already_registered, _pid}} ->
         start_game(game_spec, opts)
+
       {:error, other_reason} ->
         {:error, other_reason}
+
       {:ok, pid} ->
         Tanx.Game.startup(pid, game_spec)
         Swarm.join(@games_group, pid)
@@ -46,7 +50,7 @@ defmodule Tanx.GameSwarm do
   end
 
   def list_nodes() do
-    Swarm.members(@nodes_group) |> Enum.sort
+    Swarm.members(@nodes_group) |> Enum.sort()
   end
 
   def game_process(game_id), do: {:via, :swarm, game_id}
@@ -100,12 +104,14 @@ defmodule Tanx.GameSwarm do
 
   defp check_node_changes(state) do
     nodes = list_nodes()
+
     if nodes == state.nodes do
       state
     else
       Enum.each(state.callbacks, fn callback ->
         callback.(nodes)
       end)
+
       %State{state | nodes: nodes}
     end
   end

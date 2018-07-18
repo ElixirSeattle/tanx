@@ -61,7 +61,14 @@ defmodule Tanx.Game do
   end
 
   defp split_opts(opts) do
-    Keyword.split(opts, [:game_id, :display_name, :interval, :time_config, :rand_seed, :id_strategy])
+    Keyword.split(opts, [
+      :game_id,
+      :display_name,
+      :interval,
+      :time_config,
+      :rand_seed,
+      :id_strategy
+    ])
   end
 
   #### GenServer callbacks
@@ -179,7 +186,13 @@ defmodule Tanx.Game do
 
   def handle_call(:terminate, _from, state) do
     notification_data = Variant.stop(state.data, state.arena, state.time)
-    notification = %Tanx.Game.Notifications.Ended{id: state.meta.id, time: state.time, data: notification_data}
+
+    notification = %Tanx.Game.Notifications.Ended{
+      id: state.meta.id,
+      time: state.time,
+      data: notification_data
+    }
+
     send_notifications([notification], state.callbacks)
     {:stop, :normal, :ok, state}
   end
@@ -188,6 +201,7 @@ defmodule Tanx.Game do
     if on_node == Node.self() do
       Swarm.Tracker.handoff(state.meta.id, state)
     end
+
     {:reply, :ok, state}
   end
 
@@ -204,9 +218,11 @@ defmodule Tanx.Game do
 
   defp do_init(opts) do
     rand_seed = Keyword.get(opts, :rand_seed, nil)
+
     if rand_seed != nil do
       :rand.seed(:exrop, rand_seed)
     end
+
     id_strategy = Keyword.get(opts, :id_strategy, :random)
     Tanx.Util.ID.set_strategy(id_strategy)
 
@@ -232,27 +248,37 @@ defmodule Tanx.Game do
     {data, commands, _notifications} = Variant.event(data, start_event)
     meta = %Tanx.Game.Meta{base_state.meta | state: :running}
 
-    %State{base_state |
-      state: :running,
-      opts: opts,
-      meta: meta,
-      data: data,
-      arena: arena,
-      updater: updater,
-      commands: commands,
-      time: time
+    %State{
+      base_state
+      | state: :running,
+        opts: opts,
+        meta: meta,
+        data: data,
+        arena: arena,
+        updater: updater,
+        commands: commands,
+        time: time
     }
   end
 
   defp do_handoff(state) do
-    opts = Keyword.update!(state.opts, :time_config, fn
-      tc when is_integer(tc) -> Tanx.Util.SystemTime.updated_offset(state.time)
-      tc -> tc
-    end)
+    opts =
+      Keyword.update!(state.opts, :time_config, fn
+        tc when is_integer(tc) -> Tanx.Util.SystemTime.updated_offset(state.time)
+        tc -> tc
+      end)
+
     from_node = state.meta.node
     meta = %Tanx.Game.Meta{state.meta | node: Node.self()}
     {:ok, updater} = Tanx.Game.Updater.start_link(self(), state.arena, opts)
-    notification = %Tanx.Game.Notifications.Moved{id: meta.id, time: state.time, from_node: from_node, to_node: Node.self()}
+
+    notification = %Tanx.Game.Notifications.Moved{
+      id: meta.id,
+      time: state.time,
+      from_node: from_node,
+      to_node: Node.self()
+    }
+
     send_notifications([notification], state.callbacks)
     %State{state | updater: updater, opts: opts, meta: meta}
   end

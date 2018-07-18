@@ -37,12 +37,12 @@ config :tanx_web, TanxWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-#config :tanx_web, TanxWeb.Endpoint,
-#  live_reload: [
-#    patterns: [
-#      ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
-#      ~r{priv/gettext/.*(po)$},
-#      ~r{lib/tanx_web/views/.*(ex)$},
-#      ~r{lib/tanx_web/templates/.*(eex)$}
-#    ]
-#  ]
+# config :tanx_web, TanxWeb.Endpoint,
+#   live_reload: [
+#     patterns: [
+#       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
+#       ~r{priv/gettext/.*(po)$},
+#       ~r{lib/tanx_web/views/.*(ex)$},
+#       ~r{lib/tanx_web/templates/.*(eex)$}
+#     ]
+#   ]

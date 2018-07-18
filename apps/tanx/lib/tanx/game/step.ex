@@ -323,7 +323,8 @@ defmodule Tanx.Game.Step do
   end
 
   defp collect_power_ups(tanks, power_ups) do
-    Enum.reduce(power_ups, {tanks, power_ups, []}, fn {power_up_id, power_up}, {tnks, pups, evts} ->
+    Enum.reduce(power_ups, {tanks, power_ups, []}, fn {power_up_id, power_up},
+                                                      {tnks, pups, evts} ->
       Enum.find_value(tnks, {tnks, pups, evts}, fn {tnk_id, tnk} ->
         collision_radius = tnk.radius + power_up.radius
         hit_vec = vdiff(tnk.pos, power_up.pos)
