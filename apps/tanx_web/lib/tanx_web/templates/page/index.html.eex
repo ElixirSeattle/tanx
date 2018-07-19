@@ -55,10 +55,10 @@
         <div class="col-12">
           <h4>Player Info</h4>
           <div>Connected to node: <span id="client-node-name"></span></div>
-          <form class="form-inline">
+          <div class="form-inline">
             <span class="mr-2">as</span>
             <input type="text" id="tanx-name-field" class="form-control input-sm" size="30" maxlength="30" placeholder="(Player Name)">
-          </form>
+          </div>
         </div>
       </div>
 

@@ -7,17 +7,26 @@ defmodule TanxWeb.ChatChannel do
   end
 
   def handle_in("join", %{"name" => player_name}, socket) do
-    broadcast(socket, "entered", %{username: player_display_name(player_name)})
+    broadcast(socket, "entered", %{name: player_display_name(player_name)})
     {:noreply, socket}
   end
 
   def handle_in("leave", %{"name" => player_name}, socket) do
-    broadcast(socket, "left", %{username: player_display_name(player_name)})
+    broadcast(socket, "left", %{name: player_display_name(player_name)})
     {:noreply, socket}
   end
 
-  def handle_in("message", %{"content" => content, "username" => username}, socket) do
-    broadcast(socket, "message", %{content: content, username: player_display_name(username)})
+  def handle_in("rename", %{"old_name" => old_name, "new_name" => new_name}, socket) do
+    broadcast(socket, "renamed", %{
+      old_name: player_display_name(old_name),
+      new_name: player_display_name(new_name)
+    })
+
+    {:noreply, socket}
+  end
+
+  def handle_in("message", %{"content" => content, "name" => name}, socket) do
+    broadcast(socket, "message", %{content: content, name: player_display_name(name)})
     {:noreply, socket}
   end
 

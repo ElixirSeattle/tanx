@@ -2,6 +2,7 @@
 class Lobby {
 
   constructor(socket) {
+    this._playerName = "";
     this._socket = socket;
     this._gameId = null;
     this._gameChannel = null;
@@ -41,12 +42,23 @@ class Lobby {
       this._create($('#tanx-game-name-field').val());
     });
 
-    $('#tanx-name-field')
-      .on('keyup', (event) => {
+    let nameFieldJq = $('#tanx-name-field');
+    nameFieldJq
+      .off("keypress")
+      .on('keypress', (event) => {
+        if (event.which == 13) {
+          nameFieldJq.blur();
+          event.preventDefault();
+        }
+      })
+      .on('change', (event) => {
         this._renamePlayer();
         event.stopPropagation();
       })
       .on('keydown', (event) => {
+        event.stopPropagation();
+      })
+      .on('keyup', (event) => {
         event.stopPropagation();
       });
 
@@ -199,11 +211,15 @@ class Lobby {
   _renamePlayer() {
     let name = $('#tanx-name-field').val();
 
-    if (this._gameId != null) {
-      this._gameChannel.push("rename", {name: name});
-    }
-    if (this._joinPayload != null) {
-      this._joinPayload.name = name;
+    if (name != this._playerName) {
+      if (this._gameId != null) {
+        this._gameChannel.push("rename", {name: name});
+        this._chatChannel.push("rename", {old_name: this._playerName, new_name: name});
+      }
+      if (this._joinPayload != null) {
+        this._joinPayload.name = name;
+      }
+      this._playerName = name
     }
   }
 

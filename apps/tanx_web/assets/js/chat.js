@@ -13,7 +13,7 @@ class ChatClient {
         if (event.keyCode == 13){
           this.push("message", {
             content: messageInputJq.val(),
-            username: this._curPlayerName()
+            name: this._curPlayerName()
           });
           messageInputJq.val("");
         }
@@ -37,25 +37,34 @@ class ChatClient {
 
     chatChannel.on("entered", (message) => {
       messagesJq.append(
-        '<div class="row"><span class="col-xs-9 offset-xs-3 event">' +
-        this._sanitize(message.username) +
-        ' entered</span></div>')
+        '<div class="row"><div class="col-9 offset-3 event">' +
+        this._sanitize(message.name) +
+        ' entered</div></div>')
     });
 
     chatChannel.on("left", (message) => {
       messagesJq.append(
-        '<div class="row"><span class="col-xs-9 offset-xs-3 event">' +
-        this._sanitize(message.username) +
-        ' left</span></div>')
+        '<div class="row"><div class="col-9 offset-3 event">' +
+        this._sanitize(message.name) +
+        ' left</div></div>')
+    });
+
+    chatChannel.on("renamed", (message) => {
+      messagesJq.append(
+        '<div class="row"><div class="col-9 offset-3 event">' +
+        this._sanitize(message.old_name) +
+        ' is now known as ' +
+        this._sanitize(message.new_name) +
+        '.</div></div>')
     });
 
     chatChannel.on("message", (msg) => {
       messagesJq.append(
-        '<div class="row"><span class="col-xs-3 username">' +
-        this._sanitize(msg.username) +
-        '</span><span class="col-xs-9 content">' +
+        '<div class="row"><div class="col-3 username">' +
+        this._sanitize(msg.name) +
+        '</div><div class="col-9 content">' +
         this._sanitize(msg.content) +
-        '</span></div>');
+        '</div></div>');
       messagesJq.scrollTop(messagesJq[0].scrollHeight);
     });
 
