@@ -62,7 +62,7 @@ WORKDIR /opt/app
 # NodeJS is used for Brunch builds of Phoenix assets.
 # Hex and Rebar are needed to get and build dependencies.
 RUN apk update \
-    && apk --no-cache --update add build-base nodejs nodejs-npm python2 \
+    && apk --no-cache --update add build-base nodejs nodejs-npm python2 git \
     && mix local.rebar --force \
     && mix local.hex --force
 

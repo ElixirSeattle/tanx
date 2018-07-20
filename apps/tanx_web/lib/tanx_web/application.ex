@@ -4,16 +4,25 @@ defmodule TanxWeb.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    # Define workers and child supervisors to be supervised
-    children = [
-      # Start the endpoint when the application starts
-      supervisor(TanxWeb.Endpoint, [])
-      # Start your own worker by calling: TanxWeb.Worker.start_link(arg1, arg2, arg3)
-      # worker(TanxWeb.Worker, [arg1, arg2, arg3]),
-    ]
+    endpoint = supervisor(TanxWeb.Endpoint, [])
+    children =
+      if Application.get_env(:tanx_web, :cluster_active) do
+        topologies = [
+          k8s: [
+            strategy: Cluster.Strategy.Kubernetes,
+            config: [
+              mode: :ip,
+              kubernetes_selector: "run=tanx",
+              kubernetes_node_basename: "tanx",
+              polling_interval: 5_000
+            ]
+          ]
+        ]
+        [{Cluster.Supervisor, [topologies, [name: TanxWeb.ClusterSupervisor]]}, endpoint]
+      else
+        [endpoint]
+      end
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TanxWeb.Supervisor]
     result = Supervisor.start_link(children, opts)
 

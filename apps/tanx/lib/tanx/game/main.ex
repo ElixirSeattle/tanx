@@ -77,7 +77,7 @@ defmodule Tanx.Game do
 
   defmodule State do
     defstruct(
-      state: nil,
+      state: :init,
       opts: [],
       meta: %Tanx.Game.Meta{},
       data: nil,
@@ -198,19 +198,33 @@ defmodule Tanx.Game do
   end
 
   def handle_call({:start_handoff, on_node}, _from, state) do
-    if on_node == Node.self() do
+    Logger.info("**** Received start_handoff for #{inspect(state.meta.id)} from #{inspect(on_node)}")
+    if on_node == Node.self() and state.state != :init do
+      Logger.info("**** Initiating handoff")
       Swarm.Tracker.handoff(state.meta.id, state)
     end
 
     {:reply, :ok, state}
   end
 
-  def handle_cast({:swarm, :end_handoff, state}, _base_state) do
-    {:noreply, do_handoff(state)}
+  def handle_call({:swarm, :begin_handoff}, _from, state) do
+    Logger.info("**** Received swarm begin_handoff for #{inspect(state.meta.id)}")
+    {:reply, :ignore, state}
+  end
+
+  def handle_cast({:swarm, :end_handoff, state}, base_state) do
+    Logger.info("**** Received swarm end_handoff for #{inspect(state.meta.id)}")
+    {:noreply, do_handoff(state, base_state)}
+  end
+
+  def handle_cast({:swarm, :resolve_conflict, state}, base_state) do
+    Logger.info("**** Received swarm resolve_conflict for #{inspect(state.meta.id)}")
+    {:noreply, do_handoff(state, base_state)}
   end
 
   def handle_info({:swarm, :die}, state) do
     if state.updater != nil, do: send(state.updater, {:swarm, :die})
+    Logger.info("**** Swarm shutting down #{inspect(state.meta.id)}")
     {:stop, :shutdown, state}
   end
 
@@ -230,6 +244,8 @@ defmodule Tanx.Game do
     display_name = Keyword.get(opts, :display_name, @untitled_game_name)
     meta = %Tanx.Game.Meta{id: game_id, display_name: display_name, node: Node.self()}
 
+    Logger.info("**** Init game process #{inspect(game_id)}")
+
     %State{
       state: :init,
       opts: opts,
@@ -248,6 +264,8 @@ defmodule Tanx.Game do
     {data, commands, _notifications} = Variant.event(data, start_event)
     meta = %Tanx.Game.Meta{base_state.meta | state: :running}
 
+    Logger.info("**** Startup game process #{inspect(meta.id)}")
+
     %State{
       base_state
       | state: :running,
@@ -261,7 +279,9 @@ defmodule Tanx.Game do
     }
   end
 
-  defp do_handoff(state) do
+  defp do_handoff(%State{state: :init}, base_state), do: base_state
+
+  defp do_handoff(state, %State{state: :init}) do
     opts =
       Keyword.update!(state.opts, :time_config, fn
         tc when is_integer(tc) -> Tanx.Util.SystemTime.updated_offset(state.time)

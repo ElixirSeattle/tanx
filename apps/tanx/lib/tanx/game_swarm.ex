@@ -97,7 +97,7 @@ defmodule Tanx.GameSwarm do
   def handle_info(request, state), do: super(request, state)
 
   def terminate(reason, _state) do
-    Logger.info("Terminating due to #{inspect(reason)}")
+    Logger.info("**** Terminating GameSwarm due to #{inspect(reason)}")
     Swarm.multi_call(@games_group, {:start_handoff, Node.self()})
     :ok
   end

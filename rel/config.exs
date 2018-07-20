@@ -36,6 +36,7 @@ environment :prod do
   set(include_erts: true)
   set(include_src: false)
   set(cookie: :"%L=4QN,|}OAWue,UKpXklt?/28~|RSUP^j@yK1,;<;i34/]1(bf,AWTCAlYYP4|h")
+  set(vm_args: "rel/vm.args")
 end
 
 # You may define one or more releases in this file.
@@ -48,8 +49,6 @@ release :tanx do
 
   set(
     applications: [
-      :runtime_tools,
-      tanx: :permanent,
       tanx_web: :permanent
     ]
   )

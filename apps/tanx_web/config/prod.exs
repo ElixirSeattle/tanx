@@ -66,3 +66,5 @@ config :tanx_web, TanxWeb.Endpoint,
 #
 #     config :tanx_web, TanxWeb.Endpoint, server: true
 #
+
+config :tanx_web, cluster_active: true
