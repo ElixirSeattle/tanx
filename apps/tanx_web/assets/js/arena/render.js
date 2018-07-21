@@ -17,6 +17,10 @@ class ArenaRender {
 
 
   render(objects) {
+    if (objects.t == null) {
+      return;
+    }
+
     let hasTank = objects.t.some(tank => tank.me);
     let context = this._canvas.get(0).getContext("2d");
 

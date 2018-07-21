@@ -128,6 +128,7 @@ tool "deploy" do
   flag :tag, "--tag=VALUE", "-t VALUE", default: ::Time.now.strftime("%Y-%m-%d-%H%M%S")
   flag :name, "--name=VALUE", "-n VALUE", default: "tanx"
   flag :ip_addr, "--ip-addr=VALUE", "--ip=VALUE"
+  flag :yes, "--yes", "-y"
 
   include :exec, exit_on_nonzero_status: true
   include :terminal
@@ -135,7 +136,7 @@ tool "deploy" do
   def run
     project = get(:project) || capture(["gcloud", "config", "get-value", "project"]).strip
     image = "gcr.io/#{project}/#{name}:#{tag}"
-    exit(1) unless confirm("Build #{image} and deploy to GKE in project #{project}?", default: true)
+    exit(1) unless yes || confirm("Build #{image} and deploy to GKE in project #{project}?", default: true)
 
     puts("Building image: #{image} ...", :bold, :cyan)
     exec(["gcloud", "container", "builds", "submit",

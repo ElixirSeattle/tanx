@@ -23,14 +23,12 @@ class ArenaAnimate {
     this._arenaRender = new ArenaRender(arenaStructure);
 
     this._gameChannel.on("view_arena", arena => {
-      if (arena.t != null) {
-        this._receivedArenaCount++;
-        if (this._arenaRender != null) {
-          if (this._receivedFrame) {
-            this._updateArena(arena);
-          } else {
-            this._receivedArena = arena;
-          }
+      this._receivedArenaCount++;
+      if (this._arenaRender != null) {
+        if (this._receivedFrame) {
+          this._updateArena(arena);
+        } else {
+          this._receivedArena = arena;
         }
       }
     });

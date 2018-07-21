@@ -4,7 +4,7 @@ defmodule TanxWeb.GameChannel do
   require Logger
 
   def join("game:" <> game, %{"name" => player_name, "id" => player}, socket) do
-    Tanx.ContinuousGame.rename_player(Tanx.GameSwarm.game_process(game), player, player_name)
+    {:ok, ^player} = Tanx.ContinuousGame.rename_player(Tanx.GameSwarm.game_process(game), player, player_name)
 
     socket =
       socket

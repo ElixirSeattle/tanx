@@ -70,11 +70,13 @@ class ArenaSound {
   }
 
   play(objects) {
-    objects.e.forEach(explosion => {
-      if (explosion.sound != null) {
-        this._explosions.startPlaying();
-      }
-    });
+    if (objects.e != null) {
+      objects.e.forEach(explosion => {
+        if (explosion.sound != null) {
+          this._explosions.startPlaying();
+        }
+      });
+    }
 
     this._backgroundMusic.play();
   }
