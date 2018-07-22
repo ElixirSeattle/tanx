@@ -9,4 +9,8 @@ defmodule TanxWeb.PageController do
     |> assign(:build_id, build_id)
     |> render("index.html")
   end
+
+  def ready(conn, _params) do
+    text(conn, "ok")
+  end
 end
