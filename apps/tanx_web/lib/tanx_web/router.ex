@@ -14,15 +14,17 @@ defmodule TanxWeb.Router do
   end
 
   scope "/", TanxWeb do
-    # Use the default browser stack
     pipe_through(:browser)
 
     get("/", PageController, :index)
-    get("/readyz", PageController, :ready)
+    get("/readyz", PageController, :ready)  # TEMP
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", TanxWeb do
-  #   pipe_through :api
-  # end
+  scope "/k8s", TanxWeb do
+    pipe_through :api
+
+    get("/ready", K8sController, :ready)
+    get("/live", K8sController, :live)
+    get("/pre-stop", K8sController, :pre_stop)
+  end
 end

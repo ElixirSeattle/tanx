@@ -59,6 +59,11 @@ defmodule Tanx.GameSwarm do
     GenServer.call(__MODULE__, {:add_callback, callback})
   end
 
+  def kick_games() do
+    Logger.info("**** Kicking all games from #{Node.self()}")
+    Swarm.multi_call(@games_group, {:start_handoff, Node.self()})
+  end
+
   #### GenServer callbacks
 
   use GenServer
@@ -98,7 +103,7 @@ defmodule Tanx.GameSwarm do
 
   def terminate(reason, _state) do
     Logger.info("**** Terminating GameSwarm due to #{inspect(reason)}")
-    Swarm.multi_call(@games_group, {:start_handoff, Node.self()})
+    kick_games()
     :ok
   end
 

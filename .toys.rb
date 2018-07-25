@@ -136,7 +136,7 @@ tool "deploy" do
   def run
     project = get(:project) || capture(["gcloud", "config", "get-value", "project"]).strip
     image = "gcr.io/#{project}/#{name}:#{tag}"
-    exit(1) unless yes || confirm("Build #{image} and deploy to GKE in project #{project}?", default: true)
+    exit(1) unless yes || confirm("Build #{image} and deploy to GKE in project #{project}? ", default: true)
 
     puts("Building image: #{image} ...", :bold, :cyan)
     exec(["gcloud", "container", "builds", "submit",
