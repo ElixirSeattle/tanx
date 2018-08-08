@@ -14,7 +14,8 @@ defmodule TanxWeb.Application do
               mode: :ip,
               kubernetes_selector: "run=tanx",
               kubernetes_node_basename: "tanx",
-              polling_interval: 5_000
+              polling_interval: 5_000,
+              disconnect: {__MODULE__, :dummy_disconnect, []}
             ]
           ]
         ]
@@ -26,7 +27,7 @@ defmodule TanxWeb.Application do
     opts = [strategy: :one_for_one, name: TanxWeb.Supervisor]
     result = Supervisor.start_link(children, opts)
 
-    Tanx.GameSwarm.add_callback(fn _ ->
+    Tanx.Cluster.add_callback(fn _ ->
       TanxWeb.Endpoint.broadcast!("lobby", "refresh", %{})
     end)
 
@@ -35,30 +36,28 @@ defmodule TanxWeb.Application do
 
   def start_game(display_name) do
     game_spec = Tanx.ContinuousGame.create(maze: :standard)
-    {:ok, game_id} = Tanx.GameSwarm.start_game(game_spec, display_name: display_name)
-
-    game_proc = Tanx.GameSwarm.game_process(game_id)
-    {:ok, meta} = Tanx.Game.get_meta(game_proc)
+    {:ok, game_id, game_pid} = Tanx.Cluster.start_game(game_spec, display_name: display_name)
+    {:ok, meta} = Tanx.Game.get_meta(game_pid)
 
     TanxWeb.Endpoint.broadcast!("lobby", "started", meta)
 
-    Tanx.Game.add_callback(game_proc, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
+    Tanx.Game.add_callback(game_pid, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
       TanxWeb.Endpoint.broadcast!("game:" <> game_id, "view_players", event)
 
       if Enum.empty?(event.players) do
         spawn(fn ->
-          Tanx.Game.terminate(game_proc)
+          Tanx.Cluster.stop_game(game_id)
         end)
       else
         nil
       end
     end)
 
-    Tanx.Game.add_callback(game_proc, Tanx.Game.Notifications.Ended, :tanxweb, fn _event ->
+    Tanx.Game.add_callback(game_pid, Tanx.Game.Notifications.Ended, :tanxweb, fn _event ->
       TanxWeb.Endpoint.broadcast!("lobby", "ended", %{id: game_id})
     end)
 
-    Tanx.Game.add_callback(game_proc, Tanx.Game.Notifications.Moved, :tanxweb, fn event ->
+    Tanx.Game.add_callback(game_pid, Tanx.Game.Notifications.Moved, :tanxweb, fn event ->
       TanxWeb.Endpoint.broadcast!("lobby", "moved", %{
         id: game_id,
         from: event.from_node,
@@ -68,6 +67,8 @@ defmodule TanxWeb.Application do
 
     {:ok, meta}
   end
+
+  def dummy_disconnect(_node), do: true
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.

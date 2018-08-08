@@ -10,6 +10,6 @@ defmodule Tanx.Application do
   use Application
 
   def start(_type, _args) do
-    Supervisor.start_link([Tanx.GameSwarm], strategy: :one_for_one)
+    Tanx.Cluster.start_link()
   end
 end

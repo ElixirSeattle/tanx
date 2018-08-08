@@ -22,7 +22,7 @@ defmodule Tanx.Game.Walls do
   def decompose_wall(points = [p0, p1 | _]) do
     {concave, convex, segments} =
       (points ++ [p0, p1])
-      |> Enum.chunk(3, 1)
+      |> Enum.chunk_every(3, 1, :discard)
       |> Enum.reduce({[], [], []}, &decompose_wall_triplet/2)
 
     {concave ++ convex ++ segments, segments}

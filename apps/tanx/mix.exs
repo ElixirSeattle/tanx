@@ -23,7 +23,7 @@ defmodule Tanx.Mixfile do
   def application do
     [
       mod: {Tanx.Application, []},
-      extra_applications: [:logger, :runtime_tools, :swarm]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -37,7 +37,7 @@ defmodule Tanx.Mixfile do
   defp deps do
     [
       {:poison, "~> 3.1"},
-      {:swarm, git: "https://github.com/dazuma/swarm.git", branch: "tanx-fixes"}
+      {:horde, git: "https://github.com/dazuma/horde.git", branch: "tanx"}
     ]
   end
 

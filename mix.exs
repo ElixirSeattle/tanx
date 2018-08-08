@@ -23,7 +23,8 @@ defmodule Tanx.Umbrella.Mixfile do
   # and cannot be accessed from applications inside the apps folder
   defp deps do
     [
-      {:distillery, "~> 1.5"}
+      {:distillery, git: "https://github.com/dazuma/distillery.git", branch: "master"}
+      #{:distillery, "~> 1.5"}
     ]
   end
 end

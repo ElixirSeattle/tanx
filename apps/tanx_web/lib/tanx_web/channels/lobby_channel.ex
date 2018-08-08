@@ -16,7 +16,7 @@ defmodule TanxWeb.LobbyChannel do
   end
 
   def handle_in("delete", %{"id" => game_id}, socket) do
-    Tanx.Game.terminate({:via, :swarm, game_id})
+    Tanx.Cluster.stop_game(game_id)
     TanxWeb.Endpoint.broadcast!("lobby", "ended", {game_id})
     {:noreply, socket}
   end
@@ -59,7 +59,7 @@ defmodule TanxWeb.LobbyChannel do
   end
 
   defp load_all_games() do
-    Enum.sort_by(Tanx.GameSwarm.list_games(), & &1.display_name)
+    Enum.sort_by(Tanx.Cluster.list_games(), & &1.display_name)
   end
 
   defp send_update(socket, games) do

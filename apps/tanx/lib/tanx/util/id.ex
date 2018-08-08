@@ -38,7 +38,7 @@ defmodule Tanx.Util.ID do
   defp random_value(prefix, size) do
     id =
       size
-      |> random_max
+      |> random_max()
       |> :rand.uniform()
       |> Integer.to_string(36)
       |> String.downcase()

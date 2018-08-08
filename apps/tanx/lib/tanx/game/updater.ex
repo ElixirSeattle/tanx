@@ -1,15 +1,18 @@
 defmodule Tanx.Game.Updater do
-  #### Public API
-
-  def start_link(game, arena, opts \\ []) do
-    GenServer.start_link(__MODULE__, {game, arena, opts})
+  def start_link(name) do
+    GenServer.start_link(__MODULE__, {}, name: name)
   end
 
-  #### GenServer callbacks
+  use GenServer
+
+  def child_spec(name) do
+    %{
+      id: name,
+      start: {__MODULE__, :start_link, [name]}
+    }
+  end
 
   require Logger
-
-  use GenServer
 
   defmodule InternalData do
     defstruct(decomposed_walls: [])
@@ -17,6 +20,7 @@ defmodule Tanx.Game.Updater do
 
   defmodule State do
     defstruct(
+      running: false,
       game: nil,
       arena: nil,
       internal: nil,
@@ -26,7 +30,14 @@ defmodule Tanx.Game.Updater do
     )
   end
 
-  def init({game, arena, opts}) do
+  def init({}) do
+    Logger.info("**** Init updater process #{inspect(self())}")
+    {:ok, %State{}}
+  end
+
+  def handle_cast({:up, game, arena, opts}, _old_state) do
+    Logger.info("**** Up updater process #{inspect(self())} from #{inspect(game)}")
+
     interval = Keyword.get(opts, :interval, 0.02)
     time_config = Keyword.get(opts, :time_config, nil)
     rand_seed = Keyword.get(opts, :rand_seed, nil)
@@ -43,6 +54,7 @@ defmodule Tanx.Game.Updater do
     }
 
     state = %State{
+      running: true,
       game: game,
       arena: arena,
       internal: internal,
@@ -51,11 +63,12 @@ defmodule Tanx.Game.Updater do
       time: Tanx.Util.SystemTime.get(time_config)
     }
 
-    {:ok, state, next_tick_timeout(state)}
+    {:noreply, state, next_tick_timeout(state)}
   end
 
-  def handle_call(:terminate, _from, state) do
-    {:stop, :normal, :ok, state}
+  def handle_cast({:down}, _old_state) do
+    Logger.info("**** Down updater process #{inspect(self())}")
+    {:noreply, %State{running: false}}
   end
 
   def handle_cast(:update, state) do
@@ -68,13 +81,12 @@ defmodule Tanx.Game.Updater do
     {:noreply, state, next_tick_timeout(state)}
   end
 
-  def handle_info({:swarm, :die}, state) do
-    {:stop, :shutdown, state}
+  def handle_info(request, state) do
+    Logger.warn("Unexpected message: #{inspect(request)}")
+    {:noreply, state}
   end
 
-  def handle_info(request, state), do: super(request, state)
-
-  #### Logic
+  defp perform_update(%State{running: false} = state), do: state
 
   defp perform_update(state) do
     cur = Tanx.Util.SystemTime.get(state.time_config)

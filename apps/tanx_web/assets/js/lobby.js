@@ -113,15 +113,38 @@ class Lobby {
   _join(gameId) {
     if (this._gameId != null) return;
 
+    let chatChannel = this._socket.channel("chat:" + gameId, {});
+    chatChannel.onError(reason => {
+      console.log("received error on chat channel");
+      this._chatChannel = null;
+    });
+
+    let chatJoiner = chatChannel.join();
+    chatJoiner.receive("ok", reply => {
+      this._chatChannel = chatChannel;
+      if (this._gameId == null) {
+        if (this._gameChannel) {
+          this._finishJoin(gameId);
+        }
+      } else {
+        if (this._gameChannel) {
+          this._finishRejoin();
+        }
+      }
+    });
+
+    this._joinGameWithRetry(gameId, 10);
+  }
+
+
+  _joinGameWithRetry(gameId, remaining) {
+    if (remaining <= 0) return;
+
     let playerName = $('#tanx-name-field').val();
     let gameChannel = this._socket.channel("game:" + gameId, {name: playerName});
-    let chatChannel = this._socket.channel("chat:" + gameId, {});
-
     gameChannel.onError(reason => {
+      console.log("received error on game channel");
       this._gameChannel = null;
-    });
-    chatChannel.onError(reason => {
-      this._chatChannel = null;
     });
 
     let gameJoiner = gameChannel.join();
@@ -139,19 +162,10 @@ class Lobby {
         }
       }
     });
-
-    let chatJoiner = chatChannel.join();
-    chatJoiner.receive("ok", reply => {
-      this._chatChannel = chatChannel;
-      if (this._gameId == null) {
-        if (this._gameChannel) {
-          this._finishJoin(gameId);
-        }
-      } else {
-        if (this._gameChannel) {
-          this._finishRejoin();
-        }
-      }
+    gameJoiner.receive("error", reply => {
+      setTimeout(() => {
+        this._joinGameWithRetry(gameId, remaining - 1);
+      }, 100);
     });
   }
 
