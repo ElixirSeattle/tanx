@@ -139,7 +139,7 @@ tool "deploy" do
     exit(1) unless yes || confirm("Build #{image} and deploy to GKE in project #{project}? ", default: true)
 
     puts("Building image: #{image} ...", :bold, :cyan)
-    exec(["gcloud", "container", "builds", "submit",
+    exec(["gcloud", "builds", "submit",
           "--project", project,
           "--config", "cloudbuild.yaml",
           "--substitutions", "_IMAGE=#{image},_BUILD_ID=#{tag}"])

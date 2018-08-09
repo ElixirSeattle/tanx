@@ -2,20 +2,19 @@ defmodule TanxWeb.Application do
   use Application
 
   def start(_type, _args) do
-    import Supervisor.Spec
-
-    endpoint = supervisor(TanxWeb.Endpoint, [])
+    endpoint = {TanxWeb.Endpoint, []}
     children =
       if Application.get_env(:tanx_web, :cluster_active) do
         topologies = [
           k8s: [
             strategy: Cluster.Strategy.Kubernetes,
+            connect: {__MODULE__, :connect_node, []},
+            disconnect: {__MODULE__, :disconnect_node, []},
             config: [
               mode: :ip,
               kubernetes_selector: "run=tanx",
               kubernetes_node_basename: "tanx",
-              polling_interval: 5_000,
-              disconnect: {__MODULE__, :dummy_disconnect, []}
+              polling_interval: 5_000
             ]
           ]
         ]
@@ -68,7 +67,15 @@ defmodule TanxWeb.Application do
     {:ok, meta}
   end
 
-  def dummy_disconnect(_node), do: true
+  def connect_node(node) do
+    :net_kernel.connect_node(node)
+    Tanx.Cluster.connect_node(node)
+    true
+  end
+
+  def disconnect_node(node) do
+    true
+  end
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
