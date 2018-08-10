@@ -40,7 +40,7 @@
           </thead>
           <tbody id="game-rows">
             <tr id="create-game-row">
-              <td><input type="text" id="tanx-game-name-field" class="form-control input-sm" size="30" maxlength="30" placeholder="Game Name"></td>
+              <td><input type="text" id="tanx-game-name-field" class="form-control input-sm" size="30" maxlength="30" placeholder="(new game name)"></td>
               <td class="align-middle"><button class="btn btn-primary btn-sm" id="tanx-create-btn">Create Game</button></td>
             </tr>
           </tbody>
@@ -57,7 +57,7 @@
           <div>Connected to node: <span id="client-node-name"></span></div>
           <div class="form-inline">
             <span class="mr-2">as</span>
-            <input type="text" id="tanx-name-field" class="form-control input-sm" size="30" maxlength="30" placeholder="(Player Name)">
+            <input type="text" id="tanx-name-field" class="form-control input-sm" size="30" maxlength="30" placeholder="(player name)">
           </div>
         </div>
       </div>
@@ -84,7 +84,7 @@
       <div class="row" id="tanx-chat">
         <div class="col-12 mt-3">
           <div id="messages"></div>
-          <input id="message-input" type="text" placeholder="Chat!">
+          <input id="message-input" type="text" placeholder="(chat)">
         </div>
       </div>
 
@@ -107,11 +107,14 @@
           Developed by Daniel Azuma, Greg Hill, Kyle Rippey, and Ben Stephens
         </div>
         <h3>Instructions</h3>
-        <p>Enter your name and join the game in the upper left.<p>
-        <p>Click on one of the pulsing yellow entry points to start your tank.</p>
-        <p>Move your tank with the arrow keys: forward, right, left, and back. Alternately, you can use the I, J, L, and K keys.</p>
-        <p>Space bar fires a missile. Shoot down the other players' tanks!</p>
-        <p>The Z key aborts (self-destructs) your tank.</p>
+        <ul>
+          <li>Enter your name in the upper right.</li>
+          <li>Click an existing game in the game list to join it, or create a new one.</li>
+          <li>Click on one of the pulsing yellow entry points to start your tank.</li>
+          <li>Move your tank with the arrow keys: forward, right, left, and back. Alternately, you can use the I, J, L, and K keys.</li>
+          <li>The space bar fires a missile. Shoot down the other players' tanks!</li>
+          <li>The Z key aborts (self-destructs) your tank.</li>
+        </ul>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>

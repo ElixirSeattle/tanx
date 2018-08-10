@@ -43,8 +43,7 @@ class PlayerList {
         if (player.me) {
           row.addClass('info');
         }
-        let name = player.n || "(Anonymous coward)";
-        row.append($('<td>').text(name));
+        row.append($('<td>').text(player.n || "(Anonymous Coward)"));
         row.append($('<td>').text(player.k));
         row.append($('<td>').text(player.d));
         playerTable.append(row);

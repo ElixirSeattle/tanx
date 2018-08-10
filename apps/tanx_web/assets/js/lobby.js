@@ -77,7 +77,7 @@ class Lobby {
       update.g.forEach((game) => {
         this._gameInfo[game.i] = game;
         if (game.i == this._gameId) {
-          $('#game-name-span').text(game.n);
+          $('#game-name-span').text(game.n || "(untitled game)");
           $('#game-node-span').text(game.d);
         }
       });
@@ -93,7 +93,7 @@ class Lobby {
     let createGameRow = $('#create-game-row');
     games.forEach(game => {
       $('<tr>').addClass("tanx-game-row")
-        .append($('<td>').text(game.n || "(Untitled game)"))
+        .append($('<td>').text(game.n || "(untitled game)"))
         .append($('<td>').text(game.d))
         .on('click', (event) => {
           this._join(game.i);
@@ -149,7 +149,7 @@ class Lobby {
 
   _finishJoin(gameId) {
     let game = this._gameInfo[gameId];
-    $('#game-name-span').text(game.n);
+    $('#game-name-span').text(game.n || "(untitled game)");
     $('#game-node-span').text(game.d);
 
     $('#tanx-game-list').hide();
