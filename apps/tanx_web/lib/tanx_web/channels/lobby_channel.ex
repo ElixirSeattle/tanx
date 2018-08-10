@@ -6,13 +6,14 @@ defmodule TanxWeb.LobbyChannel do
   def join("lobby", _message, socket) do
     send(self(), :after_join)
 
+    Tanx.Cluster.add_receiver(self(), :games_changed)
+
     games =
       Tanx.Cluster.list_live_game_ids()
       |> Tanx.Cluster.load_game_meta()
       |> Enum.filter(& &1)
       |> Enum.sort_by(& &1.display_name)
 
-    Tanx.Cluster.add_receiver(self(), :games_changed)
     {:ok, assign(socket, :games, games)}
   end
 
@@ -28,7 +29,7 @@ defmodule TanxWeb.LobbyChannel do
     {:noreply, socket}
   end
 
-  intercept(["started", "ended", "moved", "refresh"])
+  intercept(["started", "ended", "moved"])
 
   def handle_out("started", meta, socket) do
     games = [meta | socket.assigns[:games]]
