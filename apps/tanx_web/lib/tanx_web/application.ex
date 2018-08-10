@@ -1,6 +1,8 @@
 defmodule TanxWeb.Application do
   use Application
 
+  require Logger
+
   def start(_type, _args) do
     endpoint = {TanxWeb.Endpoint, []}
     children =
@@ -23,14 +25,7 @@ defmodule TanxWeb.Application do
         [endpoint]
       end
 
-    opts = [strategy: :one_for_one, name: TanxWeb.Supervisor]
-    result = Supervisor.start_link(children, opts)
-
-    Tanx.Cluster.add_callback(fn _ ->
-      TanxWeb.Endpoint.broadcast!("lobby", "refresh", %{})
-    end)
-
-    result
+    Supervisor.start_link(children, strategy: :one_for_one, name: TanxWeb.Supervisor)
   end
 
   def start_game(display_name) do
@@ -70,10 +65,12 @@ defmodule TanxWeb.Application do
   def connect_node(node) do
     :net_kernel.connect_node(node)
     Tanx.Cluster.connect_node(node)
+    Logger.info("**** Connected #{inspect(node())} to #{inspect(node)}")
     true
   end
 
   def disconnect_node(node) do
+    Logger.info("**** Disconnected #{inspect(node())} from #{inspect(node)}")
     true
   end
 

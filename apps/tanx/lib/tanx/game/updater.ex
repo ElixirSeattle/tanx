@@ -31,12 +31,10 @@ defmodule Tanx.Game.Updater do
   end
 
   def init({}) do
-    Logger.info("**** Init updater process #{inspect(self())}")
     {:ok, %State{}}
   end
 
   def handle_cast({:up, game, arena, opts}, _old_state) do
-    Logger.info("**** Up updater process #{inspect(self())} from #{inspect(game)}")
 
     interval = Keyword.get(opts, :interval, 0.02)
     time_config = Keyword.get(opts, :time_config, nil)
@@ -67,7 +65,6 @@ defmodule Tanx.Game.Updater do
   end
 
   def handle_cast({:down}, _old_state) do
-    Logger.info("**** Down updater process #{inspect(self())}")
     {:noreply, %State{running: false}}
   end
 

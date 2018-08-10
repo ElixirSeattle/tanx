@@ -30,17 +30,17 @@ class TanxApp {
     this._settings = new Settings(arenaSound);
     this._arena = new Arena(arenaSound);
 
-    this._lobby.onJoin((gameId, gameChannel, chatChannel) => {
+    this._lobby.onJoin((gameId, gameChannel) => {
       this._playerList.start(gameChannel);
-      this._chatClient.start(chatChannel);
+      this._chatClient.start(gameChannel);
       this._arena.start(gameChannel);
     });
-    this._lobby.onLeave((gameId, gameChannel, chatChannel) => {
+    this._lobby.onLeave((gameId, gameChannel) => {
       this._playerList.stop();
       this._chatClient.stop();
       this._arena.stop();
     });
-    this._lobby.onRejoin((gameId, gameChannel, chatChannel) => {
+    this._lobby.onRejoin((gameId, gameChannel) => {
       this._playerList.restart(gameChannel);
       this._arena.restart(gameChannel);
     });

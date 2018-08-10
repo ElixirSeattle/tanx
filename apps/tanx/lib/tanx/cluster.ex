@@ -20,29 +20,56 @@ defmodule Tanx.Cluster do
   end
 
   def start_game(game_spec, opts \\ []) do
-    GenServer.call(Tanx.Cluster.Node, {:start_game, game_spec, opts})
+    game_id = Tanx.Util.ID.create("G", Tanx.Cluster.list_game_ids(), 8)
+    opts =
+      opts
+      |> Keyword.put(:handoff, Tanx.HordeHandoff)
+      |> Keyword.put(:game_address, Tanx.Cluster.game_process(game_id))
+    child_spec = Tanx.Game.child_spec({game_id, opts})
+    {:ok, supervisor_pid} = Horde.Supervisor.start_child(Tanx.HordeSupervisor, child_spec)
+
+    manager_id = Tanx.Game.manager_process_id(game_id)
+    game_pid =
+      supervisor_pid
+      |> Supervisor.which_children()
+      |> Enum.find_value(fn
+        {^manager_id, pid, :worker, _} -> pid
+        _ -> false
+      end)
+    Tanx.Game.up(game_pid, game_spec)
+
+    {:ok, game_id, game_pid}
   end
 
   def stop_game(game_id) do
-    GenServer.call(Tanx.Cluster.Node, {:stop_game, game_id})
+    Tanx.Game.down(Tanx.Cluster.game_process(game_id))
+    Horde.Registry.unregister(Tanx.HordeRegistry, game_id)
+    Horde.Supervisor.terminate_child(Tanx.HordeSupervisor, Tanx.Game.supervisor_process_id(game_id))
+    :ok
   end
 
   def list_game_ids() do
     Map.keys(Horde.Registry.processes(Tanx.HordeRegistry))
   end
 
-  def list_games() do
-    list_game_ids()
-    |> Enum.map(fn game_id ->
-      game_id
-      |> game_process()
-      |> GenServer.call({:meta})
-      |> case do
-        {:ok, meta} -> meta
-        {:error, _} -> nil
+  def load_game_meta(game_ids) do
+    Enum.map(game_ids, fn game_id ->
+      try do
+        game_id
+        |> game_process()
+        |> GenServer.call({:meta})
+        |> case do
+          {:ok, meta} -> meta
+          {:error, _} -> nil
+        end
+      catch
+        :exit, {:noproc, _} -> nil
       end
     end)
-    |> Enum.filter(&(&1 != nil))
+  end
+
+  def game_alive?(game_id) do
+    Horde.Registry.lookup(Tanx.HordeRegistry, game_id) != :undefined
   end
 
   def list_nodes() do
@@ -52,8 +79,12 @@ defmodule Tanx.Cluster do
 
   def game_process(game_id), do: {:via, Horde.Registry, {Tanx.HordeRegistry, game_id}}
 
-  def add_callback(callback) do
-    GenServer.call(Tanx.Cluster.Node, {:add_callback, callback})
+  def list_live_game_ids() do
+    GenServer.call(Tanx.Cluster.State, {:list_live_game_ids})
+  end
+
+  def add_receiver(receiver, message) do
+    GenServer.call(Tanx.Cluster.State, {:add_receiver, receiver, message})
   end
 
   defp start_supervisor() do
@@ -61,7 +92,7 @@ defmodule Tanx.Cluster do
       {Tanx.Util.Handoff, name: Tanx.HordeHandoff},
       {Horde.Supervisor, name: Tanx.HordeSupervisor, strategy: :one_for_one, children: []},
       {Horde.Registry, name: Tanx.HordeRegistry},
-      {Tanx.Cluster.Node, []}
+      {Tanx.Cluster.State, []}
     ]
     {:ok, sup} = Supervisor.start_link(children, strategy: :one_for_one, name: Tanx.Cluster.Supervisor)
     sup
@@ -77,8 +108,9 @@ defmodule Tanx.Cluster do
     :ok
   end
 
-  defmodule Node do
+  defmodule State do
     @interval_millis 1000
+    @expiration_millis 60000
 
     require Logger
 
@@ -90,8 +122,9 @@ defmodule Tanx.Cluster do
 
     defmodule State do
       defstruct(
-        nodes: [],
-        callbacks: []
+        game_ids: [],
+        dead_game_ids: %{},
+        receivers: []
       )
     end
 
@@ -104,47 +137,17 @@ defmodule Tanx.Cluster do
     end
 
     def init({}) do
-      Process.send_after(self(), :check_changes, @interval_millis)
+      Process.send_after(self(), :update_game_ids, @interval_millis)
       {:ok, %State{}}
     end
 
-    def handle_call({:add_callback, callback}, _from, state) do
-      {:reply, :ok, %State{state | callbacks: [callback | state.callbacks]}}
-    end
-
-    def handle_call({:start_game, game_spec, opts}, _from, state) do
-      game_id = Tanx.Util.ID.create("G", Tanx.Cluster.list_game_ids(), 8)
-      opts =
-        opts
-        |> Keyword.put(:handoff, Tanx.HordeHandoff)
-        |> Keyword.put(:game_address, Tanx.Cluster.game_process(game_id))
-      child_spec = Tanx.Game.child_spec({game_id, opts})
-      {:ok, supervisor_pid} = Horde.Supervisor.start_child(Tanx.HordeSupervisor, child_spec)
-
-      manager_id = Tanx.Game.manager_process_id(game_id)
-      game_pid =
-        supervisor_pid
-        |> Supervisor.which_children()
-        |> Enum.find_value(fn
-          {^manager_id, pid, :worker, _} -> pid
-          _ -> false
-        end)
-      Tanx.Game.up(game_pid, game_spec)
-
-      {:reply, {:ok, game_id, game_pid}, state}
-    end
-
-    def handle_call({:stop_game, game_id}, _from, state) do
-      Tanx.Game.down(Tanx.Cluster.game_process(game_id))
-      Horde.Supervisor.terminate_child(Tanx.HordeSupervisor, Tanx.Game.supervisor_process_id(game_id))
-
-      {:reply, :ok, state}
-    end
-
-    def handle_info(:check_changes, state) do
-      state = check_node_changes(state)
-      Process.send_after(self(), :check_changes, @interval_millis)
-      {:noreply, state}
+    def handle_info(:update_game_ids, state) do
+      {alive, dead} = Enum.split_with(Tanx.Cluster.list_game_ids(), &Tanx.Cluster.game_alive?/1)
+      dgi = update_dead_game_ids(dead, state.dead_game_ids)
+      agi = Enum.sort(alive)
+      receivers = send_update(state.receivers, agi, state.game_ids)
+      Process.send_after(self(), :update_game_ids, @interval_millis)
+      {:noreply, %State{state | game_ids: agi, dead_game_ids: dgi, receivers: receivers}}
     end
 
     def handle_info(request, state) do
@@ -152,25 +155,44 @@ defmodule Tanx.Cluster do
       {:noreply, state}
     end
 
-    def terminate(reason, _state) do
-      Logger.info("**** Terminating Cluster due to #{inspect(reason)}")
-      # TODO
-      :ok
+    def handle_call({:add_receiver, receiver, message}, _from, state) do
+      {:reply, :ok, %State{state | receivers: [{receiver, message} | state.receivers]}}
     end
 
-    defp check_node_changes(state) do
-      # TODO: Eliminate this polling in favor of pushing changes from handoff
-      nodes = Tanx.Cluster.list_nodes()
+    def handle_call({:list_live_game_ids}, _from, state) do
+      {:reply, state.game_ids, state}
+    end
 
-      if nodes == state.nodes do
-        state
-      else
-        Enum.each(state.callbacks, fn callback ->
-          callback.(nodes)
-        end)
+    defp update_dead_game_ids(dead, old_dgi) do
+      time = System.monotonic_time(:millisecond)
+      Enum.reduce(dead, %{}, fn g, d ->
+        if Map.has_key?(old_dgi, g) do
+          old_time = old_dgi[g]
+          if time - old_time > @expiration_millis do
+            Horde.Registry.unregister(Tanx.HordeRegistry, g)
+            Logger.warn("**** Unregistered stale game #{inspect(g)}")
+            d
+          else
+            Map.put(d, g, old_time)
+          end
+        else
+          Map.put(d, g, time)
+        end
+      end)
+    end
 
-        %State{state | nodes: nodes}
-      end
+    defp send_update(receivers, agi, agi), do: receivers
+
+    defp send_update(receivers, agi, _old_agi) do
+      Logger.info("**** Sending cluster update #{inspect(agi)}")
+      Enum.filter(receivers, fn {receiver, message} ->
+        if Process.alive?(receiver) do
+          send(receiver, {message, agi})
+          true
+        else
+          false
+        end
+      end)
     end
   end
 end

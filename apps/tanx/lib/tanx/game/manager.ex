@@ -56,20 +56,7 @@ defmodule Tanx.Game.Manager do
   end
 
   def handle_call({:down}, _from, state) do
-    GenServer.cast(Tanx.Game.updater_process_id(state.game_id), {:down})
-
-    notification_data = Tanx.Game.Variant.stop(state.data, state.arena, state.time)
-
-    notification = %Tanx.Game.Notifications.Ended{
-      id: state.meta.id,
-      time: state.time,
-      data: notification_data
-    }
-
-    send_notifications([notification], state.callbacks)
-    Logger.info("**** Stopped game: #{inspect(state.meta.id)}")
-
-    {:reply, :ok, down_state(state)}
+    {:reply, :ok, do_down(state)}
   end
 
   def handle_call({:meta}, _from, state) do
@@ -168,13 +155,13 @@ defmodule Tanx.Game.Manager do
   end
 
   def handle_info(whatevah, state) do
-    Logger.warn("**** Received unexpected message: #{inspect(whatevah)}")
+    Logger.warn("Received unexpected message: #{inspect(whatevah)}")
     {:noreply, state}
   end
 
   def terminate(reason, state) do
-    Logger.info("**** Terminating game due to #{inspect(reason)}")
     do_handoff(state)
+    Logger.info("**** Terminate game process #{inspect(state.game_id)} due to #{inspect(reason)}")
     :ok
   end
 
@@ -195,8 +182,10 @@ defmodule Tanx.Game.Manager do
       from_node: from_node,
       to_node: Node.self()
     }
-
     send_notifications([notification], data.callbacks)
+
+    Logger.info("**** Received handoff for #{inspect(base_state.game_id)}")
+
     %State{data | handoff: base_state.handoff, opts: opts, meta: meta}
   end
 
@@ -252,7 +241,7 @@ defmodule Tanx.Game.Manager do
     {data, commands, _notifications} = Tanx.Game.Variant.event(data, start_event)
     meta = %Tanx.Game.Meta{base_state.meta | running: true}
 
-    Logger.info("**** Startup game process #{inspect(meta.id)}")
+    Logger.info("**** Up game #{inspect(base_state.game_id)}")
 
     %State{
       base_state
@@ -272,7 +261,25 @@ defmodule Tanx.Game.Manager do
     GenServer.cast(Tanx.Game.updater_process_id(state.game_id), {:down})
     if state.handoff do
       Tanx.Util.Handoff.store(state.handoff, state.game_id, state)
+      Logger.info("**** Sent handoff for #{inspect(state.game_id)}")
     end
+    down_state(state)
+  end
+
+  defp do_down(state) do
+    GenServer.cast(Tanx.Game.updater_process_id(state.game_id), {:down})
+
+    notification_data = Tanx.Game.Variant.stop(state.data, state.arena, state.time)
+
+    notification = %Tanx.Game.Notifications.Ended{
+      id: state.meta.id,
+      time: state.time,
+      data: notification_data
+    }
+
+    send_notifications([notification], state.callbacks)
+    Logger.info("**** Down game: #{inspect(state.game_id)}")
+
     down_state(state)
   end
 

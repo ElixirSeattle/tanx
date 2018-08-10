@@ -13,6 +13,7 @@ defmodule TanxWeb.GameChannel do
       socket
       |> assign(:game, game)
       |> assign(:player, player)
+      |> assign(:player_name, player_name)
 
     {:ok, %{i: player}, socket}
   end
@@ -64,14 +65,20 @@ defmodule TanxWeb.GameChannel do
     {:noreply, socket}
   end
 
-  def handle_in("rename", %{"name" => name}, socket) do
+  def handle_in("rename", %{"name" => name, "old_name" => old_name}, socket) do
     player = socket.assigns[:player]
+    socket = assign(socket, :player_name, name)
 
     if player do
       socket.assigns[:game]
       |> Tanx.Cluster.game_process()
       |> Tanx.ContinuousGame.rename_player(player, name)
     end
+
+    broadcast(socket, "chat_renamed", %{
+      old_name: player_display_name(old_name),
+      name: player_display_name(name)
+    })
 
     {:noreply, socket}
   end
@@ -118,6 +125,24 @@ defmodule TanxWeb.GameChannel do
     {:noreply, socket}
   end
 
+  def handle_in("chat_join", _, socket) do
+    player_name = socket.assigns[:player_name]
+    broadcast(socket, "chat_entered", %{name: player_display_name(player_name)})
+    {:noreply, socket}
+  end
+
+  def handle_in("chat_leave", _, socket) do
+    player_name = socket.assigns[:player_name]
+    broadcast(socket, "chat_left", %{name: player_display_name(player_name)})
+    {:noreply, socket}
+  end
+
+  def handle_in("chat_message", %{"content" => content}, socket) do
+    player_name = socket.assigns[:player_name]
+    broadcast(socket, "message", %{content: content, name: player_display_name(player_name)})
+    {:noreply, socket}
+  end
+
   def handle_in(msg, payload, socket) do
     Logger.error("Unknown message received on game channel: #{inspect(msg)}: #{inspect(payload)}")
     {:noreply, socket}
@@ -159,4 +184,7 @@ defmodule TanxWeb.GameChannel do
 
     {reason, socket}
   end
+
+  defp player_display_name(""), do: "Anonymous Coward"
+  defp player_display_name(name), do: name
 end

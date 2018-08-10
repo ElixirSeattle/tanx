@@ -11,9 +11,8 @@ class ChatClient {
       .off("keypress")
       .on("keypress", (event) => {
         if (event.keyCode == 13){
-          this.push("message", {
-            content: messageInputJq.val(),
-            name: this._curPlayerName()
+          this.push("chat_message", {
+            content: messageInputJq.val()
           });
           messageInputJq.val("");
         }
@@ -27,29 +26,29 @@ class ChatClient {
   }
 
 
-  start(chatChannel) {
-    this._channel = chatChannel;
+  start(gameChannel) {
+    this._channel = gameChannel;
 
     $('#tanx-chat').show();
 
     let messagesJq = $('#messages');
     messagesJq.empty();
 
-    chatChannel.on("entered", (message) => {
+    gameChannel.on("chat_entered", (message) => {
       messagesJq.append(
         '<div class="row"><div class="col-9 offset-3 event">' +
         this._sanitize(message.name) +
         ' entered</div></div>')
     });
 
-    chatChannel.on("left", (message) => {
+    gameChannel.on("chat_left", (message) => {
       messagesJq.append(
         '<div class="row"><div class="col-9 offset-3 event">' +
         this._sanitize(message.name) +
         ' left</div></div>')
     });
 
-    chatChannel.on("renamed", (message) => {
+    gameChannel.on("chat_renamed", (message) => {
       messagesJq.append(
         '<div class="row"><div class="col-9 offset-3 event">' +
         this._sanitize(message.old_name) +
@@ -58,7 +57,7 @@ class ChatClient {
         '.</div></div>')
     });
 
-    chatChannel.on("message", (msg) => {
+    gameChannel.on("chat_message", (msg) => {
       messagesJq.append(
         '<div class="row"><div class="col-3 username">' +
         this._sanitize(msg.name) +
@@ -68,13 +67,13 @@ class ChatClient {
       messagesJq.scrollTop(messagesJq[0].scrollHeight);
     });
 
-    this.push("join", {name: this._curPlayerName()});
+    this.push("chat_join", {});
   }
 
 
   stop() {
     $('#tanx-chat').hide();
-    this.push("leave", {name: this._curPlayerName()});
+    this.push("chat_leave", {});
     this._channel = null;
   }
 
@@ -88,10 +87,6 @@ class ChatClient {
     }
   }
 
-
-  _curPlayerName() {
-    return $("#tanx-name-field").val();
-  }
 
   _sanitize(html) {
     return $("<span/>").text(html).html();

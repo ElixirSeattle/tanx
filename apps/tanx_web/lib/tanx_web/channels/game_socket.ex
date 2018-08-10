@@ -4,7 +4,6 @@ defmodule TanxWeb.GameSocket do
   ## Channels
   channel("lobby", TanxWeb.LobbyChannel)
   channel("game:*", TanxWeb.GameChannel)
-  channel("chat:*", TanxWeb.ChatChannel)
 
   ## Transports
   transport(:websocket, Phoenix.Transports.WebSocket)

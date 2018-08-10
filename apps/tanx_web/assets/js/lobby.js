@@ -6,7 +6,6 @@ class Lobby {
     this._socket = socket;
     this._gameId = null;
     this._gameChannel = null;
-    this._chatChannel = null;
     this._joinPayload = null;
     this._joinCallbacks = [];
     this._leaveCallbacks = [];
@@ -113,26 +112,6 @@ class Lobby {
   _join(gameId) {
     if (this._gameId != null) return;
 
-    let chatChannel = this._socket.channel("chat:" + gameId, {});
-    chatChannel.onError(reason => {
-      console.log("received error on chat channel");
-      this._chatChannel = null;
-    });
-
-    let chatJoiner = chatChannel.join();
-    chatJoiner.receive("ok", reply => {
-      this._chatChannel = chatChannel;
-      if (this._gameId == null) {
-        if (this._gameChannel) {
-          this._finishJoin(gameId);
-        }
-      } else {
-        if (this._gameChannel) {
-          this._finishRejoin();
-        }
-      }
-    });
-
     this._joinGameWithRetry(gameId, 10);
   }
 
@@ -153,19 +132,17 @@ class Lobby {
       this._gameChannel = gameChannel;
       if (this._gameId == null) {
         gameJoiner.payload.id = reply.i;
-        if (this._chatChannel) {
-          this._finishJoin(gameId);
-        }
+        this._finishJoin(gameId);
       } else {
-        if (this._chatChannel) {
-          this._finishRejoin();
-        }
+        this._finishRejoin();
       }
     });
     gameJoiner.receive("error", reply => {
-      setTimeout(() => {
-        this._joinGameWithRetry(gameId, remaining - 1);
-      }, 100);
+      if (this._gameId == null) {
+        setTimeout(() => {
+          this._joinGameWithRetry(gameId, remaining - 1);
+        }, 100);
+      }
     });
   }
 
@@ -180,14 +157,14 @@ class Lobby {
 
     this._gameId = gameId;
     this._joinCallbacks.forEach(callback => {
-      callback(gameId, this._gameChannel, this._chatChannel);
+      callback(gameId, this._gameChannel);
     });
   }
 
 
   _finishRejoin() {
     this._rejoinCallbacks.forEach(callback => {
-      callback(this._gameId, this._gameChannel, this._chatChannel);
+      callback(this._gameId, this._gameChannel);
     });
   }
 
@@ -209,16 +186,13 @@ class Lobby {
 
     let gameId = this._gameId;
     let gameChannel = this._gameChannel;
-    let chatChannel = this._chatChannel;
     this._gameChannel = null;
-    this._chatChannel = null;
     this._gameId = null;
     this._joinPayload = null;
     this._leaveCallbacks.forEach(callback => {
-      callback(gameId, gameChannel, chatChannel);
+      callback(gameId, gameChannel);
     });
     gameChannel.leave();
-    chatChannel.leave();
   }
 
 
@@ -227,8 +201,7 @@ class Lobby {
 
     if (name != this._playerName) {
       if (this._gameId != null) {
-        this._gameChannel.push("rename", {name: name});
-        this._chatChannel.push("rename", {old_name: this._playerName, new_name: name});
+        this._gameChannel.push("rename", {name: name, old_name: this._playerName});
       }
       if (this._joinPayload != null) {
         this._joinPayload.name = name;
