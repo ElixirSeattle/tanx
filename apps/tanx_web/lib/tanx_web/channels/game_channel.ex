@@ -139,7 +139,7 @@ defmodule TanxWeb.GameChannel do
 
   def handle_in("chat_message", %{"content" => content}, socket) do
     player_name = socket.assigns[:player_name]
-    broadcast(socket, "message", %{content: content, name: player_display_name(player_name)})
+    broadcast(socket, "chat_message", %{content: content, name: player_display_name(player_name)})
     {:noreply, socket}
   end
 

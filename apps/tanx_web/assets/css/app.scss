@@ -8,6 +8,11 @@ body {
 
 #messages {
   background: #fff;
+  border: 1px solid #ccc;
+  height: 300px;
+  width: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 #messages .row {
   margin: 8px 0px;
@@ -29,7 +34,7 @@ body {
   font-style: italic;
 }
 
-#tanx-player-list table {
+#tanx-player-list {
   background: #fff;
 }
 #tanx-game-list table {
@@ -50,13 +55,6 @@ body {
 }
 #message-input {
   width: 100%;
-}
-#messages {
-  border: 1px solid #ccc;
-  height: 565px;
-  width: 100%;
-  overflow-y: scroll;
-  overflow-x: hidden;
 }
 .slider-container {
   padding-top: 15px;
