@@ -5,6 +5,7 @@ defmodule Tanx.Game.Manager do
         {:ok, addr} -> [name: addr]
         :error -> []
       end
+
     GenServer.start(__MODULE__, {game_id, opts}, process_opts)
   end
 
@@ -113,7 +114,9 @@ defmodule Tanx.Game.Manager do
   end
 
   def handle_call({:control, control_params}, _from, state) do
-    {result, new_data, new_commands, notifications} = Tanx.Game.Variant.control(state.data, control_params)
+    {result, new_data, new_commands, notifications} =
+      Tanx.Game.Variant.control(state.data, control_params)
+
     send_notifications(notifications, state.callbacks)
     new_state = %State{state | data: new_data, commands: [new_commands | state.commands]}
     {:reply, result, new_state}
@@ -137,8 +140,15 @@ defmodule Tanx.Game.Manager do
         {d, [c | c_acc]}
       end)
 
-    new_state = %State{state |
-      arena: arena, data: data, time: time, commands: all_commands, sent_commands: []}
+    new_state = %State{
+      state
+      | arena: arena,
+        data: data,
+        time: time,
+        commands: all_commands,
+        sent_commands: []
+    }
+
     {:reply, :ok, new_state}
   end
 
@@ -182,6 +192,7 @@ defmodule Tanx.Game.Manager do
       from_node: from_node,
       to_node: Node.self()
     }
+
     send_notifications([notification], data.callbacks)
 
     Logger.info("**** Received handoff for #{inspect(base_state.game_id)}")
@@ -221,6 +232,7 @@ defmodule Tanx.Game.Manager do
     case Tanx.Util.Handoff.request(base_state.handoff, base_state.game_id, :receive_handoff) do
       {:ok, :requested} ->
         base_state
+
       {:ok, :data, data} ->
         state_from_handoff(base_state, data)
     end
@@ -259,10 +271,12 @@ defmodule Tanx.Game.Manager do
 
   defp do_handoff(state) do
     GenServer.cast(Tanx.Game.updater_process_id(state.game_id), {:down})
+
     if state.handoff do
       Tanx.Util.Handoff.store(state.handoff, state.game_id, state)
       Logger.info("**** Sent handoff for #{inspect(state.game_id)}")
     end
+
     down_state(state)
   end
 
@@ -285,6 +299,7 @@ defmodule Tanx.Game.Manager do
 
   defp down_state(state) do
     meta = %Tanx.Game.Meta{state.meta | running: false}
+
     %State{
       game_id: state.game_id,
       running: false,

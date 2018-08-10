@@ -5,6 +5,7 @@ defmodule TanxWeb.Application do
 
   def start(_type, _args) do
     endpoint = {TanxWeb.Endpoint, []}
+
     children =
       if Application.get_env(:tanx_web, :cluster_active) do
         topologies = [
@@ -20,6 +21,7 @@ defmodule TanxWeb.Application do
             ]
           ]
         ]
+
         [{Cluster.Supervisor, [topologies, [name: TanxWeb.ClusterSupervisor]]}, endpoint]
       else
         [endpoint]

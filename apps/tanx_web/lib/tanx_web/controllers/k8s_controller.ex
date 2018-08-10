@@ -10,7 +10,7 @@ defmodule TanxWeb.K8sController do
   end
 
   def pre_stop(conn, _params) do
-    #Tanx.Cluster.stop()
+    # Tanx.Cluster.stop()
     text(conn, "ok")
   end
 end

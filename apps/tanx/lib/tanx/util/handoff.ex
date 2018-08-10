@@ -103,8 +103,10 @@ defmodule Tanx.Util.Handoff do
           state.processes_pid,
           {:operation, {:remove, [name]}}
         )
+
         :ets.delete(state.ets_table, name)
         {:reply, {:ok, :data, data}, state}
+
       _ ->
         requests = Map.put(state.requests, name, {pid, message})
         {:reply, {:ok, :requested}, %State{state | requests: requests}}
@@ -123,10 +125,13 @@ defmodule Tanx.Util.Handoff do
           state.processes_pid,
           {:operation, {:add, [name, data]}}
         )
+
         :ets.insert(state.ets_table, {name, data})
+
       {pid, message} ->
         send(pid, {message, data})
     end
+
     {:noreply, state}
   end
 
@@ -158,17 +163,21 @@ defmodule Tanx.Util.Handoff do
         case Map.get(processes, name) do
           nil ->
             true
+
           data ->
             send(pid, {message, data})
+
             GenServer.cast(
               state.processes_pid,
               {:operation, {:remove, [name]}}
             )
+
             :ets.delete(state.ets_table, name)
             false
         end
       end)
       |> Enum.into(%{})
+
     state = %State{state | requests: requests}
 
     {:noreply, state}
@@ -210,6 +219,7 @@ defmodule Tanx.Util.Handoff do
 
   def terminate(reason, state) do
     Logger.info("**** Terminating handoff due to #{inspect(reason)}")
+
     GenServer.cast(
       state.members_pid,
       {:operation, {:remove, [state.node_id]}}

@@ -24,7 +24,7 @@ defmodule Tanx.Umbrella.Mixfile do
   defp deps do
     [
       {:distillery, git: "https://github.com/dazuma/distillery.git", branch: "master"}
-      #{:distillery, "~> 1.5"}
+      # {:distillery, "~> 1.5"}
     ]
   end
 end

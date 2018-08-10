@@ -5,11 +5,13 @@ defmodule TanxWeb.LobbyChannel do
 
   def join("lobby", _message, socket) do
     send(self(), :after_join)
+
     games =
       Tanx.Cluster.list_live_game_ids()
       |> Tanx.Cluster.load_game_meta()
       |> Enum.filter(& &1)
       |> Enum.sort_by(& &1.display_name)
+
     Tanx.Cluster.add_receiver(self(), :games_changed)
     {:ok, assign(socket, :games, games)}
   end
@@ -62,6 +64,7 @@ defmodule TanxWeb.LobbyChannel do
     old_game_ids = Enum.map(old_games, fn meta -> meta.id end)
     add_game_ids = game_ids -- old_game_ids
     del_game_ids = old_game_ids -- game_ids
+
     if Enum.empty?(add_game_ids) && Enum.empty?(del_game_ids) do
       {:noreply, socket}
     else
@@ -69,7 +72,10 @@ defmodule TanxWeb.LobbyChannel do
         add_game_ids
         |> Tanx.Cluster.load_game_meta()
         |> Enum.filter(& &1)
-      games = Enum.filter(old_games, fn g -> not Enum.member?(del_game_ids, g.id) end) ++ add_games
+
+      games =
+        Enum.filter(old_games, fn g -> not Enum.member?(del_game_ids, g.id) end) ++ add_games
+
       send_update(socket, games)
       {:noreply, assign(socket, :games, games)}
     end

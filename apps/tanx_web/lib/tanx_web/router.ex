@@ -17,11 +17,12 @@ defmodule TanxWeb.Router do
     pipe_through(:browser)
 
     get("/", PageController, :index)
-    get("/readyz", PageController, :ready)  # TEMP
+    # TEMP
+    get("/readyz", PageController, :ready)
   end
 
   scope "/k8s", TanxWeb do
-    pipe_through :api
+    pipe_through(:api)
 
     get("/ready", K8sController, :ready)
     get("/live", K8sController, :live)

@@ -21,14 +21,17 @@ defmodule Tanx.Cluster do
 
   def start_game(game_spec, opts \\ []) do
     game_id = Tanx.Util.ID.create("G", Tanx.Cluster.list_game_ids(), 8)
+
     opts =
       opts
       |> Keyword.put(:handoff, Tanx.HordeHandoff)
       |> Keyword.put(:game_address, Tanx.Cluster.game_process(game_id))
+
     child_spec = Tanx.Game.child_spec({game_id, opts})
     {:ok, supervisor_pid} = Horde.Supervisor.start_child(Tanx.HordeSupervisor, child_spec)
 
     manager_id = Tanx.Game.manager_process_id(game_id)
+
     game_pid =
       supervisor_pid
       |> Supervisor.which_children()
@@ -36,6 +39,7 @@ defmodule Tanx.Cluster do
         {^manager_id, pid, :worker, _} -> pid
         _ -> false
       end)
+
     Tanx.Game.up(game_pid, game_spec)
 
     {:ok, game_id, game_pid}
@@ -44,7 +48,12 @@ defmodule Tanx.Cluster do
   def stop_game(game_id) do
     Tanx.Game.down(Tanx.Cluster.game_process(game_id))
     Horde.Registry.unregister(Tanx.HordeRegistry, game_id)
-    Horde.Supervisor.terminate_child(Tanx.HordeSupervisor, Tanx.Game.supervisor_process_id(game_id))
+
+    Horde.Supervisor.terminate_child(
+      Tanx.HordeSupervisor,
+      Tanx.Game.supervisor_process_id(game_id)
+    )
+
     :ok
   end
 
@@ -94,17 +103,22 @@ defmodule Tanx.Cluster do
       {Horde.Registry, name: Tanx.HordeRegistry},
       {Tanx.Cluster.State, []}
     ]
-    {:ok, sup} = Supervisor.start_link(children, strategy: :one_for_one, name: Tanx.Cluster.Supervisor)
+
+    {:ok, sup} =
+      Supervisor.start_link(children, strategy: :one_for_one, name: Tanx.Cluster.Supervisor)
+
     sup
   end
 
   defp connect_initial_nodes(opts) do
     default_connect = String.split(System.get_env(@connect_env) || "", ",")
+
     opts
     |> Keyword.get(:connect, default_connect)
     |> Enum.each(fn node ->
       node |> String.to_atom() |> connect_node()
     end)
+
     :ok
   end
 
@@ -165,9 +179,11 @@ defmodule Tanx.Cluster do
 
     defp update_dead_game_ids(dead, old_dgi) do
       time = System.monotonic_time(:millisecond)
+
       Enum.reduce(dead, %{}, fn g, d ->
         if Map.has_key?(old_dgi, g) do
           old_time = old_dgi[g]
+
           if time - old_time > @expiration_millis do
             Horde.Registry.unregister(Tanx.HordeRegistry, g)
             Logger.warn("**** Unregistered stale game #{inspect(g)}")
@@ -185,6 +201,7 @@ defmodule Tanx.Cluster do
 
     defp send_update(receivers, agi, _old_agi) do
       Logger.info("**** Sending cluster update #{inspect(agi)}")
+
       Enum.filter(receivers, fn {receiver, message} ->
         if Process.alive?(receiver) do
           send(receiver, {message, agi})

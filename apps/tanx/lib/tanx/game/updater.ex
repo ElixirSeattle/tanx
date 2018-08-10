@@ -35,7 +35,6 @@ defmodule Tanx.Game.Updater do
   end
 
   def handle_cast({:up, game, arena, opts}, _old_state) do
-
     interval = Keyword.get(opts, :interval, 0.02)
     time_config = Keyword.get(opts, :time_config, nil)
     rand_seed = Keyword.get(opts, :rand_seed, nil)

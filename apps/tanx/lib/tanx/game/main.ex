@@ -4,6 +4,7 @@ defmodule Tanx.Game do
       {Tanx.Game.Updater, Tanx.Game.updater_process_id(game_id)},
       {Tanx.Game.Manager, {game_id, opts}}
     ]
+
     Supervisor.start_link(children, strategy: :one_for_all)
   end
 
