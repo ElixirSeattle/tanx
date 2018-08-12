@@ -14,15 +14,22 @@ class ArenaAnimate {
 
   constructor(arenaSound) {
     this._arenaSound = arenaSound;
+    this._playerBootedCallbacks = []
     this.stop();
   }
 
 
-  start(gameChannel, arenaStructure) {
+  start(gameId, gameChannel, arenaStructure) {
     this._gameChannel = gameChannel;
     this._arenaRender = new ArenaRender(arenaStructure);
 
     this._gameChannel.on("view_arena", arena => {
+      if (arena.cp == null) {
+        this._playerBootedCallbacks.forEach(callback => {
+          callback(gameId, gameChannel);
+        });
+        return;
+      }
       this._receivedArenaCount++;
       if (this._arenaRender != null) {
         if (this._receivedFrame) {
@@ -82,6 +89,11 @@ class ArenaAnimate {
     this._fpsMeasurer = null;
     this._fpsCount = 0;
     this._fpsSum = 0;
+  }
+
+
+  onPlayerBooted(callback) {
+    this._playerBootedCallbacks.push(callback);
   }
 
 

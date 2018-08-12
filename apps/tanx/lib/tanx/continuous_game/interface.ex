@@ -5,15 +5,15 @@ defmodule Tanx.ContinuousGame do
   end
 
   def view_players(game, player_handle) do
-    Tanx.Game.get_view(game, {:players, player_handle})
+    Tanx.Game.control(game, {:view_players, player_handle})
   end
 
   def view_arena(game, player_handle) do
-    Tanx.Game.get_view(game, {:arena, player_handle})
+    Tanx.Game.control(game, {:view_arena, player_handle})
   end
 
   def view_static(game) do
-    Tanx.Game.get_view(game, :static)
+    Tanx.Game.control(game, {:view_static})
   end
 
   def add_player(game, name \\ "(anonymous coward)") do
@@ -56,6 +56,7 @@ defmodule Tanx.ContinuousGame do
   defmodule PlayerPrivate do
     defstruct(
       player_id: nil,
+      last_seen_at: 0.0,
       tank_id: nil,
       left: false,
       right: false,

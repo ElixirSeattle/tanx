@@ -28,10 +28,6 @@ defmodule Tanx.Game do
     game |> GenServer.call({:remove_callback, type, name})
   end
 
-  def get_view(game, view_context) do
-    game |> GenServer.call({:view, view_context})
-  end
-
   def control(game, params) do
     game |> GenServer.call({:control, params})
   end

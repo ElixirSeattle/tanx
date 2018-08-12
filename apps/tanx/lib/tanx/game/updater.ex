@@ -1,4 +1,6 @@
 defmodule Tanx.Game.Updater do
+  @default_interval 0.02
+
   def start_link(name) do
     GenServer.start_link(__MODULE__, {}, name: name)
   end
@@ -35,7 +37,7 @@ defmodule Tanx.Game.Updater do
   end
 
   def handle_cast({:up, game, arena, opts}, _old_state) do
-    interval = Keyword.get(opts, :interval, 0.02)
+    interval = Keyword.get(opts, :interval, @default_interval)
     time_config = Keyword.get(opts, :time_config, nil)
     rand_seed = Keyword.get(opts, :rand_seed, nil)
     id_strategy = Keyword.get(opts, :id_strategy, :random)

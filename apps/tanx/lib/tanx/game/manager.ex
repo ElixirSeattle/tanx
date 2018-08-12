@@ -28,13 +28,14 @@ defmodule Tanx.Game.Manager do
       running: false,
       handoff: nil,
       opts: [],
-      meta: %Tanx.Game.Meta{},
+      node: nil,
+      display_name: "",
       data: nil,
       arena: nil,
       commands: [],
       sent_commands: [],
       callbacks: %{},
-      time: 0
+      time: 0.0
     )
   end
 
@@ -61,7 +62,13 @@ defmodule Tanx.Game.Manager do
   end
 
   def handle_call({:meta}, _from, state) do
-    {:reply, {:ok, state.meta}, state}
+    meta = %Tanx.Game.Meta{
+      id: state.game_id,
+      running: state.running,
+      display_name: state.display_name,
+      node: Node.self()
+    }
+    {:reply, {:ok, meta}, state}
   end
 
   def handle_call({:add_callback, type, name, callback}, _from, state) do
@@ -91,6 +98,19 @@ defmodule Tanx.Game.Manager do
     {:reply, :ok, new_state}
   end
 
+  def handle_call({:control, _control_params}, _from, %State{running: false} = state) do
+    {:reply, {:error, :not_running}, state}
+  end
+
+  def handle_call({:control, control_params}, _from, state) do
+    {result, new_data, new_commands, notifications} =
+      Tanx.Game.Variant.control(state.data, state.arena, state.time, control_params)
+
+    send_notifications(notifications, state.callbacks)
+    new_state = %State{state | data: new_data, commands: [new_commands | state.commands]}
+    {:reply, result, new_state}
+  end
+
   def handle_call(:get_commands, _from, %State{running: false} = state) do
     {:reply, [], state}
   end
@@ -100,28 +120,6 @@ defmodule Tanx.Game.Manager do
     {:reply, commands, %State{state | commands: [], sent_commands: commands}}
   end
 
-  def handle_call({:view, _view_context}, _from, %State{running: false} = state) do
-    {:reply, {:error, :not_running}, state}
-  end
-
-  def handle_call({:view, view_context}, _from, state) do
-    view = Tanx.Game.Variant.view(state.data, state.arena, state.time, view_context)
-    {:reply, view, state}
-  end
-
-  def handle_call({:control, _control_params}, _from, %State{running: false} = state) do
-    {:reply, {:error, :not_running}, state}
-  end
-
-  def handle_call({:control, control_params}, _from, state) do
-    {result, new_data, new_commands, notifications} =
-      Tanx.Game.Variant.control(state.data, control_params)
-
-    send_notifications(notifications, state.callbacks)
-    new_state = %State{state | data: new_data, commands: [new_commands | state.commands]}
-    {:reply, result, new_state}
-  end
-
   def handle_call({:update, _time, _arena, _events}, _from, %State{running: false} = state) do
     {:reply, {:error, :not_running}, state}
   end
@@ -129,23 +127,21 @@ defmodule Tanx.Game.Manager do
   def handle_call({:update, time, arena, events}, _from, state) do
     callbacks = state.callbacks
     update_event = %Tanx.Game.Events.ArenaUpdated{time: time, arena: arena}
-    {data, commands, notifications} = Tanx.Game.Variant.event(state.data, update_event)
-    all_commands = [commands | state.commands]
-    send_notifications(notifications, callbacks)
 
-    {data, all_commands} =
-      Enum.reduce(events, {data, all_commands}, fn event, {d, c_acc} ->
-        {d, c, n} = Tanx.Game.Variant.event(d, event)
-        send_notifications(n, callbacks)
-        {d, [c | c_acc]}
+    {new_data, new_commands} =
+      [update_event | events]
+      |> Enum.reduce({state.data, state.commands}, fn event, {data, commands} ->
+        {ndata, command, notifications} = Tanx.Game.Variant.event(data, event)
+        send_notifications(notifications, callbacks)
+        {ndata, [command | commands]}
       end)
 
     new_state = %State{
       state
       | arena: arena,
-        data: data,
+        data: new_data,
         time: time,
-        commands: all_commands,
+        commands: new_commands,
         sent_commands: []
     }
 
@@ -175,29 +171,27 @@ defmodule Tanx.Game.Manager do
     :ok
   end
 
-  defp state_from_handoff(base_state, data) do
+  defp state_from_handoff(base_state, handoff_state) do
     opts =
-      Keyword.update!(data.opts, :time_config, fn
-        tc when is_integer(tc) -> Tanx.Util.SystemTime.updated_offset(data.time)
+      Keyword.update!(handoff_state.opts, :time_config, fn
+        tc when is_integer(tc) -> Tanx.Util.SystemTime.updated_offset(handoff_state.time)
         tc -> tc
       end)
 
-    from_node = data.meta.node
-    meta = %Tanx.Game.Meta{data.meta | node: Node.self()}
-    GenServer.cast(Tanx.Game.updater_process_id(data.game_id), {:up, self(), data.arena, opts})
+    GenServer.cast(Tanx.Game.updater_process_id(handoff_state.game_id), {:up, self(), handoff_state.arena, opts})
 
     notification = %Tanx.Game.Notifications.Moved{
-      id: meta.id,
-      time: data.time,
-      from_node: from_node,
+      id: handoff_state.game_id,
+      time: handoff_state.time,
+      from_node: handoff_state.node,
       to_node: Node.self()
     }
 
-    send_notifications([notification], data.callbacks)
+    send_notifications([notification], handoff_state.callbacks)
 
     Logger.info("**** Received handoff for #{inspect(base_state.game_id)}")
 
-    %State{data | handoff: base_state.handoff, opts: opts, meta: meta}
+    %State{handoff_state | handoff: base_state.handoff, opts: opts, node: Node.self()}
   end
 
   defp do_init(game_id, opts) do
@@ -211,7 +205,6 @@ defmodule Tanx.Game.Manager do
     Tanx.Util.ID.set_strategy(id_strategy)
 
     display_name = Keyword.get(opts, :display_name, @untitled_game_name)
-    meta = %Tanx.Game.Meta{id: game_id, display_name: display_name, node: Node.self()}
 
     handoff = Keyword.get(opts, :handoff, nil)
 
@@ -222,7 +215,8 @@ defmodule Tanx.Game.Manager do
       running: false,
       handoff: handoff,
       opts: opts,
-      meta: meta
+      display_name: display_name,
+      node: Node.self()
     }
   end
 
@@ -251,7 +245,6 @@ defmodule Tanx.Game.Manager do
     start_event = %Tanx.Game.Events.ArenaUpdated{time: time, arena: arena}
     GenServer.cast(Tanx.Game.updater_process_id(base_state.game_id), {:up, self(), arena, opts})
     {data, commands, _notifications} = Tanx.Game.Variant.event(data, start_event)
-    meta = %Tanx.Game.Meta{base_state.meta | running: true}
 
     Logger.info("**** Up game #{inspect(base_state.game_id)}")
 
@@ -259,7 +252,6 @@ defmodule Tanx.Game.Manager do
       base_state
       | running: true,
         opts: opts,
-        meta: meta,
         data: data,
         arena: arena,
         commands: commands,
@@ -286,7 +278,7 @@ defmodule Tanx.Game.Manager do
     notification_data = Tanx.Game.Variant.stop(state.data, state.arena, state.time)
 
     notification = %Tanx.Game.Notifications.Ended{
-      id: state.meta.id,
+      id: state.game_id,
       time: state.time,
       data: notification_data
     }
@@ -298,13 +290,13 @@ defmodule Tanx.Game.Manager do
   end
 
   defp down_state(state) do
-    meta = %Tanx.Game.Meta{state.meta | running: false}
-
     %State{
       game_id: state.game_id,
       running: false,
+      handoff: state.handoff,
       opts: state.opts,
-      meta: meta
+      display_name: state.display_name,
+      node: Node.self()
     }
   end
 

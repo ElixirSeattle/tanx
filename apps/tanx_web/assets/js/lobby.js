@@ -1,3 +1,6 @@
+const JOIN_RETRY_INTERVAL = 100;
+const JOIN_RETRY_COUNT = 10;
+
 
 class Lobby {
 
@@ -18,6 +21,33 @@ class Lobby {
   }
 
 
+  leave() {
+    $('#tanx-game-list').show();
+    $('#tanx-game-info').hide();
+
+    $('#game-name-span').text('');
+    $('#game-node-span').text('');
+
+    let backgroundMusic = $('#background-music')[0];
+    backgroundMusic.pause();
+    if (backgroundMusic.currentTime) {
+      backgroundMusic.currentTime = "0";
+    }
+
+    if (this._gameId == null) return;
+
+    let gameId = this._gameId;
+    let gameChannel = this._gameChannel;
+    this._gameChannel = null;
+    this._gameId = null;
+    this._joinPayload = null;
+    this._leaveCallbacks.forEach(callback => {
+      callback(gameId, gameChannel);
+    });
+    gameChannel.leave();
+  }
+
+
   onJoin(callback) {
     this._joinCallbacks.push(callback);
   }
@@ -35,7 +65,7 @@ class Lobby {
 
   _setupControls() {
     $('#tanx-leave-btn').on('click', () => {
-      this._leave();
+      this.leave();
     });
     $('#tanx-create-btn').on('click', () => {
       this._create($('#tanx-game-name-field').val());
@@ -61,7 +91,7 @@ class Lobby {
         event.stopPropagation();
       });
 
-    this._leave();
+    this.leave();
   }
 
 
@@ -112,7 +142,7 @@ class Lobby {
   _join(gameId) {
     if (this._gameId != null) return;
 
-    this._joinGameWithRetry(gameId, 10);
+    this._joinGameWithRetry(gameId, JOIN_RETRY_COUNT);
   }
 
 
@@ -139,9 +169,9 @@ class Lobby {
     });
     gameJoiner.receive("error", reply => {
       if (this._gameId == null) {
-        setTimeout(() => {
+        window.setTimeout(() => {
           this._joinGameWithRetry(gameId, remaining - 1);
-        }, 100);
+        }, JOIN_RETRY_INTERVAL);
       }
     });
   }
@@ -166,33 +196,6 @@ class Lobby {
     this._rejoinCallbacks.forEach(callback => {
       callback(this._gameId, this._gameChannel);
     });
-  }
-
-
-  _leave() {
-    $('#tanx-game-list').show();
-    $('#tanx-game-info').hide();
-
-    $('#game-name-span').text('');
-    $('#game-node-span').text('');
-
-    let backgroundMusic = $('#background-music')[0];
-    backgroundMusic.pause();
-    if (backgroundMusic.currentTime) {
-      backgroundMusic.currentTime = "0";
-    }
-
-    if (this._gameId == null) return;
-
-    let gameId = this._gameId;
-    let gameChannel = this._gameChannel;
-    this._gameChannel = null;
-    this._gameId = null;
-    this._joinPayload = null;
-    this._leaveCallbacks.forEach(callback => {
-      callback(gameId, gameChannel);
-    });
-    gameChannel.leave();
   }
 
 

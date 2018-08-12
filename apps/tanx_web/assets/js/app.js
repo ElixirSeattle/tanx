@@ -4,6 +4,7 @@ import "phoenix_html"
 
 import ChatClient from "js/chat"
 import Arena from "js/arena"
+import ArenaAnimate from "js/arena/animate"
 import ArenaSound from "js/arena/sound"
 import Lobby from "js/lobby"
 import PlayerList from "js/player_list"
@@ -22,18 +23,19 @@ class TanxApp {
     socket.connect();
 
     let arenaSound = new ArenaSound();
+    let arenaAnimate = new ArenaAnimate(arenaSound);
 
     this._lobby = new Lobby(socket);
     this._playerList = new PlayerList();
     this._chatClient = new ChatClient();
     this._about = new About();
     this._settings = new Settings(arenaSound);
-    this._arena = new Arena(arenaSound);
+    this._arena = new Arena(arenaAnimate);
 
     this._lobby.onJoin((gameId, gameChannel) => {
       this._playerList.start(gameChannel);
       this._chatClient.start(gameChannel);
-      this._arena.start(gameChannel);
+      this._arena.start(gameId, gameChannel);
     });
     this._lobby.onLeave((gameId, gameChannel) => {
       this._playerList.stop();
@@ -43,6 +45,10 @@ class TanxApp {
     this._lobby.onRejoin((gameId, gameChannel) => {
       this._playerList.restart(gameChannel);
       this._arena.restart(gameChannel);
+    });
+
+    arenaAnimate.onPlayerBooted((gameId, gameChannel) => {
+      this._lobby.leave();
     });
   }
 

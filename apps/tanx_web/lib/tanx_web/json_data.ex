@@ -37,7 +37,8 @@ defmodule TanxWeb.JsonData do
       m: [],
       e: [],
       p: [],
-      epa: %{}
+      epa: %{},
+      cp: nil
     )
   end
 
@@ -151,10 +152,10 @@ defmodule TanxWeb.JsonData do
   end
 
   def format_arena({:ok, arena_view}) do
-    cur_player_tank_id =
+    {cur_player_id, cur_player_tank_id} =
       case arena_view.cur_player do
-        nil -> nil
-        player_private -> player_private.tank_id
+        nil -> {nil, nil}
+        player_private -> {player_private.player_id, player_private.tank_id}
       end
 
     tanks = format_tanks(arena_view.tanks, arena_view.players, cur_player_tank_id)
@@ -172,7 +173,8 @@ defmodule TanxWeb.JsonData do
       e: explosions,
       m: missiles,
       p: power_ups,
-      epa: epa
+      epa: epa,
+      cp: cur_player_id
     }
   end
 
