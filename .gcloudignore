@@ -4,5 +4,5 @@
 /apps/tanx_web/priv/static/
 /apps/tanx_web/test/
 /deps/
-/kube/
 /test/
+/tmp/

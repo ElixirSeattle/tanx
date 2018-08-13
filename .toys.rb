@@ -127,7 +127,6 @@ tool "deploy" do
   flag :project, "--project=VALUE", "-p VALUE"
   flag :tag, "--tag=VALUE", "-t VALUE", default: ::Time.now.strftime("%Y-%m-%d-%H%M%S")
   flag :name, "--name=VALUE", "-n VALUE", default: "tanx"
-  flag :ip_addr, "--ip-addr=VALUE", "--ip=VALUE"
   flag :yes, "--yes", "-y"
 
   include :exec, exit_on_nonzero_status: true
@@ -141,22 +140,11 @@ tool "deploy" do
     puts("Building image: #{image} ...", :bold, :cyan)
     exec(["gcloud", "builds", "submit",
           "--project", project,
-          "--config", "cloudbuild.yaml",
-          "--substitutions", "_IMAGE=#{image},_BUILD_ID=#{tag}"])
-    if ip_addr
-      puts("Creating new deployment...", :bold, :cyan)
-      exec(["kubectl", "run", name, "--image", image, "--port", "8080"])
-      puts("Creating service...", :bold, :cyan)
-      cmd = ["kubectl", "expose", "deployment", name,
-             "--type", "LoadBalancer",
-             "--port", "80",
-             "--target-port", "8080"]
-      cmd.concat(["--load-balancer-ip", ip_addr]) unless ip_addr == "new"
-      exec(cmd)
-    else
-      puts("Updating deployment...", :bold, :cyan)
-      exec(["kubectl", "set", "image", "deployment/#{name}", "#{name}=#{image}"])
-    end
+          "--config", "deploy/cloudbuild.yml",
+          "--substitutions", "_BUILD_ID=#{tag}",
+          "."])
+    puts("Updating deployment...", :bold, :cyan)
+    exec(["kubectl", "set", "image", "deployment/#{name}", "#{name}=#{image}"])
     puts("Done", :bold, :cyan)
   end
 end

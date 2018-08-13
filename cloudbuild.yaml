@@ -1,6 +1,0 @@
-steps:
-  - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "$_IMAGE", "--build-arg", "build_id=$_BUILD_ID", "."]
-
-images:
-  - "$_IMAGE"
