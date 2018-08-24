@@ -89,11 +89,11 @@ defmodule Tanx.Cluster do
   def game_process(game_id), do: {:via, Horde.Registry, {Tanx.HordeRegistry, game_id}}
 
   def list_live_game_ids() do
-    GenServer.call(Tanx.Cluster.State, {:list_live_game_ids})
+    GenServer.call(Tanx.Cluster.Tracker, {:list_live_game_ids})
   end
 
   def add_receiver(receiver, message) do
-    GenServer.call(Tanx.Cluster.State, {:add_receiver, receiver, message})
+    GenServer.call(Tanx.Cluster.Tracker, {:add_receiver, receiver, message})
   end
 
   defp start_supervisor() do
@@ -101,7 +101,7 @@ defmodule Tanx.Cluster do
       {Tanx.Util.Handoff, name: Tanx.HordeHandoff},
       {Horde.Supervisor, name: Tanx.HordeSupervisor, strategy: :one_for_one, children: []},
       {Horde.Registry, name: Tanx.HordeRegistry},
-      {Tanx.Cluster.State, []}
+      {Tanx.Cluster.Tracker, []}
     ]
 
     {:ok, sup} =
@@ -122,7 +122,7 @@ defmodule Tanx.Cluster do
     :ok
   end
 
-  defmodule State do
+  defmodule Tracker do
     @interval_millis 1000
     @expiration_millis 60000
 

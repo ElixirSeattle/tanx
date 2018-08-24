@@ -9,27 +9,27 @@ defmodule Tanx.Game do
   end
 
   def up(game, data) do
-    game |> GenServer.call({:up, data})
+    game |> resolve_game() |> GenServer.call({:up, data})
   end
 
   def down(game) do
-    game |> GenServer.call({:down})
+    game |> resolve_game() |> GenServer.call({:down})
   end
 
   def get_meta(game) do
-    game |> GenServer.call({:meta})
+    game |> resolve_game() |> GenServer.call({:meta})
   end
 
   def add_callback(game, type, name \\ nil, callback) do
-    game |> GenServer.call({:add_callback, type, name, callback})
+    game |> resolve_game() |> GenServer.call({:add_callback, type, name, callback})
   end
 
   def remove_callback(game, type, name) do
-    game |> GenServer.call({:remove_callback, type, name})
+    game |> resolve_game() |> GenServer.call({:remove_callback, type, name})
   end
 
   def control(game, params) do
-    game |> GenServer.call({:control, params})
+    game |> resolve_game() |> GenServer.call({:control, params})
   end
 
   defmodule Meta do
@@ -55,4 +55,12 @@ defmodule Tanx.Game do
   def manager_process_id(game_id), do: :"Tanx.Game.Manager.#{game_id}"
 
   def supervisor_process_id(game_id), do: :"Tanx.Game.Supervisor.#{game_id}"
+
+  def resolve_game({:via, Horde.Registry, {Tanx.HordeRegistry, _}} = game), do: game
+
+  def resolve_game(game_id) when is_binary(game_id) do
+    {:via, Horde.Registry, {Tanx.HordeRegistry, game_id}}
+  end
+
+  def resolve_game(game_pid) when is_pid(game_pid), do: game_pid
 end
