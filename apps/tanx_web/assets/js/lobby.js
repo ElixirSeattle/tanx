@@ -115,6 +115,7 @@ class Lobby {
     this._lobbyChannel.on("update", update => {
       this._updateGameTable(update.g)
       $('#client-node-name').text(update.d);
+      $('#client-build-id').text(update.b);
       this._gameInfo = {};
       update.g.forEach((game) => {
         this._gameInfo[game.i] = game;

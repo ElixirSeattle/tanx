@@ -80,30 +80,48 @@ Google Kubernetes Engine.
 
 ### Building
 
-We will use Google's [Cloud Build](https://cloud.google.com/cloud-build/)
-service to build the Tanx application in a Docker image. Notice that there is
-a Dockerfile provided. It uses Distillery to produce an OTP release, and
-installs it in a Docker image based on bitwalker's Alpine-Erlang image. We
-will just hand this to Google Cloud Build to build an image and upload it to
-your project's container registry.
+Tanx builds are done in two stages. First, you build base images that include
+precompiled dependencies, and build tools such as brunch. This build can take
+several minutes to complete. Then, a normal application build uses those base
+images and just builds the app itself, which is usually pretty quick.
+Generally, you must perform a base build once at the beginning, and then any
+time your dependencies change. Otherwise, you can perform normal builds.
 
-To perform the first build.
+Tanx uses Google's [Cloud Build](https://cloud.google.com/cloud-build/)
+service to build Docker images in the cloud. The builds are based on
+bitwalker's Alpine-Erlang image, and use Distillery to produce an OTP release
+that can be run by Kubernetes or any other container orchestration system.
 
-    gcloud builds submit --config deploy/cloudbuild.yml .
+To perform a base build:
+
+    gcloud builds submit --config deploy/built-base.yml .
 
 The period at the end is required; it is the root directory for the application
-you are building.
+you are building. This builds the base images (including precompiling the hex
+dependencies and node module tools) and uploads them to your project.
 
-This will build your image in the cloud, and upload it to your project's image
-registry.
+Once that is done, you can perform an application build using the base images:
+
+    gcloud builds submit --config deploy/build-tanx.yml .
+
+This builds the application image itself and uploads it to your project. The
+image is uploaded as `gcr.io/${PROJECT_ID}/tanx:latest`.
+
+Thereafter, you can rebuild the application by just performing application
+builds. Another base build is required whenever the dependencies change.
 
 ### Local builds (optional)
 
-You may also build an image locally using, for example:
+You may also build images locally using Docker. To build the base images:
 
-    docker build -f deploy/Dockerfile -t tanx .
+    docker build -f deploy/Dockerfile-builder-base -t tanx-builder-base .
+    docker build -f deploy/Dockerfile-runtime-base -t tanx-runtime-base .
 
 Note that Docker 17.05 or later is required.
+
+Then, to perform an application build using those base images:
+
+    docker build -f deploy/Dockerfile-tanx -t tanx .
 
 You may run a local build using:
 
@@ -185,10 +203,10 @@ at that URL to view the running application.
 ### Updating the app
 
 To update the tanx app to reflect changes you have made, rebuild with a new
-version tag. For example, if your original build image was tagged
-`gcr.io/${PROJECT_ID}/tanx:v1`, you might do a new build as:
+version tag. To supply a version tag, pass a `_BUILD_ID` substitution into the
+build command. For example, to tag a build as `v2`, do this:
 
-    gcloud builds submit --config deploy/cloudbuild.yml \
+    gcloud builds submit --config deploy/build-tanx.yml \
       --substitutions _BUILD_ID=v2 .
 
 Now the new image `gcr.io/${PROJECT_ID}/tanx:v2` will be available in your
@@ -198,6 +216,15 @@ to the new image:
     kubectl set image deployment/tanx tanx=gcr.io/${PROJECT_ID}/tanx:v2
 
 This performs a "rolling" update for zero downtime deploys.
+
+If you do not provide a `_BUILD_ID`, then the tag will default to `latest`. For
+example, in the initial application build we did previously, we did not provide
+a `_BUILD_ID`, so that image was tagged as `gcr.io/${PROJECT_ID}/tanx:latest`.
+
+Remember that if dependencies have been updated, you need to perform a base
+build first, to prebuild the dependencies and update your base images. Do not
+pass a `_BUILD_ID` to the base build. Just perform the base build as described
+earlier, then perform an application build setting `_BUILD_ID`.
 
 ### Cleanup and tearing down a deployment
 

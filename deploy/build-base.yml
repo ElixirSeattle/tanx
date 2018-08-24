@@ -1,0 +1,13 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-f", "deploy/Dockerfile-builder-base",
+           "-t", "gcr.io/$PROJECT_ID/tanx-builder-base:latest",
+           "."]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-f", "deploy/Dockerfile-runtime-base",
+           "-t", "gcr.io/$PROJECT_ID/tanx-runtime-base:latest",
+           "."]
+
+images:
+  - "gcr.io/$PROJECT_ID/tanx-builder-base:latest"
+  - "gcr.io/$PROJECT_ID/tanx-runtime-base:latest"

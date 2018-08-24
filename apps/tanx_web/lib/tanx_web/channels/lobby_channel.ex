@@ -88,6 +88,8 @@ defmodule TanxWeb.LobbyChannel do
         %{i: meta.id, n: meta.display_name, d: meta.node}
       end)
 
-    push(socket, "update", %{g: games, d: Node.self()})
+    build_id = System.get_env("TANX_BUILD_ID") || "local"
+    node_name = Node.self()
+    push(socket, "update", %{g: games, d: node_name, b: build_id})
   end
 end

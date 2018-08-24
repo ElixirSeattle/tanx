@@ -123,6 +123,27 @@ tool "launch" do
   end
 end
 
+tool "predeploy" do
+  flag :project, "--project=VALUE", "-p VALUE"
+  flag :name, "--name=VALUE", "-n VALUE", default: "tanx"
+  flag :yes, "--yes", "-y"
+
+  include :exec, exit_on_nonzero_status: true
+  include :terminal
+
+  def run
+    project = get(:project) || capture(["gcloud", "config", "get-value", "project"]).strip
+    exit(1) unless yes || confirm("Prebuild tanx dependencies in #{project}? ", default: true)
+
+    puts("Building base images...", :bold, :cyan)
+    exec(["gcloud", "builds", "submit",
+          "--project", project,
+          "--config", "deploy/build-base.yml",
+          "."])
+    puts("Done", :bold, :cyan)
+  end
+end
+
 tool "deploy" do
   flag :project, "--project=VALUE", "-p VALUE"
   flag :tag, "--tag=VALUE", "-t VALUE", default: ::Time.now.strftime("%Y-%m-%d-%H%M%S")
@@ -134,13 +155,13 @@ tool "deploy" do
 
   def run
     project = get(:project) || capture(["gcloud", "config", "get-value", "project"]).strip
-    image = "gcr.io/#{project}/#{name}:#{tag}"
-    exit(1) unless yes || confirm("Build #{image} and deploy to GKE in project #{project}? ", default: true)
+    exit(1) unless yes || confirm("Deploy build #{tag} in project #{project}? ", default: true)
 
+    image = "gcr.io/#{project}/#{name}:#{tag}"
     puts("Building image: #{image} ...", :bold, :cyan)
     exec(["gcloud", "builds", "submit",
           "--project", project,
-          "--config", "deploy/cloudbuild.yml",
+          "--config", "deploy/build-tanx.yml",
           "--substitutions", "_BUILD_ID=#{tag}",
           "."])
     puts("Updating deployment...", :bold, :cyan)

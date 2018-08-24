@@ -1,0 +1,20 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['pull', 'gcr.io/$PROJECT_ID/tanx-builder-base:latest']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['tag', 'gcr.io/$PROJECT_ID/tanx-builder-base:latest', 'tanx-builder-base']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['pull', 'gcr.io/$PROJECT_ID/tanx-runtime-base:latest']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['tag', 'gcr.io/$PROJECT_ID/tanx-runtime-base:latest', 'tanx-runtime-base']
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-f", "deploy/Dockerfile-tanx",
+           "-t", "gcr.io/$PROJECT_ID/tanx:$_BUILD_ID",
+           "--build-arg", "build_id=$_BUILD_ID",
+           "."]
+
+substitutions:
+  _BUILD_ID: latest
+
+images:
+  - "gcr.io/$PROJECT_ID/tanx:$_BUILD_ID"
