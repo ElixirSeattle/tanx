@@ -68,6 +68,7 @@ defmodule Tanx.Game.Manager do
       display_name: state.display_name,
       node: Node.self()
     }
+
     {:reply, {:ok, meta}, state}
   end
 
@@ -178,7 +179,10 @@ defmodule Tanx.Game.Manager do
         tc -> tc
       end)
 
-    GenServer.cast(Tanx.Game.updater_process_id(handoff_state.game_id), {:up, self(), handoff_state.arena, opts})
+    GenServer.cast(
+      Tanx.Game.updater_process_id(handoff_state.game_id),
+      {:up, self(), handoff_state.arena, opts}
+    )
 
     notification = %Tanx.Game.Notifications.Moved{
       id: handoff_state.game_id,

@@ -57,6 +57,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
   def control(data, arena, time, {:view_arena, player_handle}) do
     player_handles = data.player_handles
     player_private = Map.get(player_handles, player_handle)
+
     view = %Tanx.ContinuousGame.ArenaView{
       entry_points: arena.entry_points,
       tanks: arena.tanks,
@@ -66,6 +67,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
       players: data.players,
       cur_player: player_private
     }
+
     new_data =
       if player_private == nil do
         data
@@ -278,14 +280,16 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
 
   def event(data, %Tanx.Game.Events.ArenaUpdated{time: time}) do
     timeout = data.player_timeout
+
     {data, commands, notification} =
-      Enum.reduce(data.player_handles, {data, [], nil}, fn({ph, pp}, {d, c, n}) ->
+      Enum.reduce(data.player_handles, {data, [], nil}, fn {ph, pp}, {d, c, n} ->
         if time - pp.last_seen_at > timeout do
           remove_player(d, ph, c, n)
         else
           {d, c, n}
         end
       end)
+
     notifications = if notification, do: [notification], else: []
     {data, commands, notifications}
   end
@@ -410,6 +414,7 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
         player_handles: new_player_handles,
         player_id_map: new_player_id_map
     }
+
     {new_data, commands, notification}
   end
 
