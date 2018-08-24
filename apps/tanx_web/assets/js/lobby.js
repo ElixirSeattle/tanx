@@ -64,19 +64,29 @@ class Lobby {
 
 
   _setupControls() {
+    let playerNameFieldJq = $('#tanx-name-field');
+    let gameNameFieldJq = $('#tanx-game-name-field');
+
     $('#tanx-leave-btn').on('click', () => {
       this.leave();
     });
     $('#tanx-create-btn').on('click', () => {
-      this._create($('#tanx-game-name-field').val());
+      this._create(gameNameFieldJq.val());
     });
 
-    let nameFieldJq = $('#tanx-name-field');
-    nameFieldJq
+    gameNameFieldJq
+      .off('keypress')
+      .on('keypress', (event) => {
+        if (event.which == 13) {
+          this._create(gameNameFieldJq.val());
+        }
+      });
+
+    playerNameFieldJq
       .off("keypress")
       .on('keypress', (event) => {
         if (event.which == 13) {
-          nameFieldJq.blur();
+          playerNameFieldJq.blur();
           event.preventDefault();
         }
       })
@@ -90,6 +100,8 @@ class Lobby {
       .on('keyup', (event) => {
         event.stopPropagation();
       });
+
+
 
     this.leave();
   }

@@ -28,6 +28,7 @@ defmodule TanxWeb.GameChannel do
       socket
       |> assign(:game, game)
       |> assign(:player, player)
+      |> assign(:player_name, player_name)
 
     {:ok, %{i: player}, socket}
   end
