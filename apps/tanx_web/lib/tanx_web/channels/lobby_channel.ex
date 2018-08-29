@@ -3,6 +3,8 @@ defmodule TanxWeb.LobbyChannel do
 
   require Logger
 
+  @interval_millis 1000
+
   def join("lobby", _message, socket) do
     send(self(), :after_join)
 
@@ -13,6 +15,8 @@ defmodule TanxWeb.LobbyChannel do
       |> Tanx.Cluster.load_game_meta()
       |> Enum.filter(& &1)
       |> Enum.sort_by(& &1.display_name)
+
+    Process.send_after(self(), :interval, @interval_millis)
 
     {:ok, assign(socket, :games, games)}
   end
@@ -60,6 +64,25 @@ defmodule TanxWeb.LobbyChannel do
     {:noreply, socket}
   end
 
+  # Temporary hack until I can figure out why some updates aren't getting
+  # through.
+  def handle_info(:interval, socket) do
+    game_ids = Tanx.Cluster.list_live_game_ids() |> Enum.sort()
+    old_game_ids =
+      socket.assigns[:games]
+      |> Enum.map(fn meta -> meta.id end)
+      |> Enum.sort()
+    result =
+      if game_ids == old_game_ids do
+        {:noreply, socket}
+      else
+        Logger.info("Updated game list on interval")
+        handle_info({:games_changed, game_ids}, socket)
+      end
+    Process.send_after(self(), :interval, @interval_millis)
+    result
+  end
+
   def handle_info({:games_changed, game_ids}, socket) do
     old_games = socket.assigns[:games]
     old_game_ids = Enum.map(old_games, fn meta -> meta.id end)
@@ -76,6 +99,7 @@ defmodule TanxWeb.LobbyChannel do
 
       games =
         Enum.filter(old_games, fn g -> not Enum.member?(del_game_ids, g.id) end) ++ add_games
+      games = Enum.sort_by(games, & &1.display_name)
 
       send_update(socket, games)
       {:noreply, assign(socket, :games, games)}

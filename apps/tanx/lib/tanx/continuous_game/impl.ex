@@ -1,5 +1,5 @@
 defmodule Tanx.ContinuousGame.Impl do
-  @default_player_timeout 900.0
+  @default_player_timeout 7200.0
 
   defstruct(
     maze: nil,
@@ -11,6 +11,8 @@ defmodule Tanx.ContinuousGame.Impl do
 end
 
 defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
+  require Logger
+
   @tank_starting_armor 2.0
   @tank_explosion_intensity 1.0
   @tank_explosion_radius 1.0

@@ -117,8 +117,9 @@ defmodule Tanx.Game.Manager do
   end
 
   def handle_call(:get_commands, _from, state) do
-    commands = List.flatten(state.commands ++ state.sent_commands)
-    {:reply, commands, %State{state | commands: [], sent_commands: commands}}
+    commands =
+      [] |> flatten_and_reverse(state.commands) |> flatten_and_reverse(state.sent_commands)
+    {:reply, commands, %State{state | commands: [], sent_commands: state.commands}}
   end
 
   def handle_call({:update, _time, _arena, _events}, _from, %State{running: false} = state) do
@@ -171,6 +172,14 @@ defmodule Tanx.Game.Manager do
     Logger.info("**** Terminate game process #{inspect(state.game_id)} due to #{inspect(reason)}")
     :ok
   end
+
+  def flatten_and_reverse(output, []), do: output
+
+  def flatten_and_reverse(output, [cmd | cmds]) do
+    output |> flatten_and_reverse(cmd) |> flatten_and_reverse(cmds)
+  end
+
+  def flatten_and_reverse(output, cmd), do: [cmd | output]
 
   defp state_from_handoff(base_state, handoff_state) do
     opts =

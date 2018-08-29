@@ -58,7 +58,9 @@ defmodule Tanx.Cluster do
   end
 
   def list_game_ids() do
-    Map.keys(Horde.Registry.processes(Tanx.HordeRegistry))
+    Tanx.HordeRegistry
+    |> Horde.Registry.processes()
+    |> Map.keys()
   end
 
   def load_game_meta(game_ids) do

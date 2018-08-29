@@ -26,6 +26,7 @@ class ArenaControls {
     this._gameChannel = gameChannel;
     this._arenaStructure = arenaStructure;
     this._upKey = false;
+    this._downKey = false;
     this._leftKey = false;
     this._rightKey = false;
   }
@@ -66,9 +67,7 @@ class ArenaControls {
         event.preventDefault();
         break;
       case 38: // up arrow
-
       case 73: // I
-      //case 75: // K
         if (this._upKey != isDown) {
           this._upKey = isDown;
           this._gameChannel.push("control_tank", {button: "forward", down: isDown})
@@ -83,7 +82,6 @@ class ArenaControls {
         }
         event.preventDefault();
         break;
-      //case 68: // D
       case 90: // Z
         if (isDown) {
           this._gameChannel.push("self_destruct_tank", {});
