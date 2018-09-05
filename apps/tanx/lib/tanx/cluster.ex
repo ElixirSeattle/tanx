@@ -82,6 +82,7 @@ defmodule Tanx.Cluster do
   end
 
   def game_alive?(game_id) do
+    # Logger.info("**** Checking game_alive for #{inspect(game_id)}")
     Horde.Registry.lookup(Tanx.HordeRegistry, game_id) != :undefined
   end
 
@@ -155,11 +156,19 @@ defmodule Tanx.Cluster do
     end
 
     def init({}) do
+      Logger.info("**** Starting tracker")
+      Process.flag(:trap_exit, true)
       Process.send_after(self(), :update_game_ids, @interval_millis)
       {:ok, %State{}}
     end
 
+    def handle_info({:EXIT, _pid, reason}, state) do
+      Logger.info("**** Tracker received exit because #{inspect(reason)}")
+      {:stop, reason, state}
+    end
+
     def handle_info(:update_game_ids, state) do
+      Logger.info("**** Starting update_game_ids")
       {alive, dead} = Enum.split_with(Tanx.Cluster.list_game_ids(), &Tanx.Cluster.game_alive?/1)
       dgi = update_dead_game_ids(dead, state.dead_game_ids)
       agi = Enum.sort(alive)
@@ -169,7 +178,7 @@ defmodule Tanx.Cluster do
     end
 
     def handle_info(request, state) do
-      Logger.warn("Unexpected message: #{inspect(request)}")
+      Logger.warn("Unexpected message in tracker: #{inspect(request)}")
       {:noreply, state}
     end
 
@@ -181,7 +190,13 @@ defmodule Tanx.Cluster do
       {:reply, state.game_ids, state}
     end
 
+    def terminate(reason, _state) do
+      Logger.info("**** Terminating tracker due to #{inspect(reason)}")
+      :ok
+    end
+
     defp update_dead_game_ids(dead, old_dgi) do
+      Logger.info("**** Starting update_dead_game_ids")
       time = System.monotonic_time(:millisecond)
 
       Enum.reduce(dead, %{}, fn g, d ->
@@ -201,7 +216,10 @@ defmodule Tanx.Cluster do
       end)
     end
 
-    defp send_update(receivers, agi, agi), do: receivers
+    defp send_update(receivers, agi, agi) do
+      Logger.info("**** No cluster update to send")
+      receivers
+    end
 
     defp send_update(receivers, agi, _old_agi) do
       Logger.info("**** Sending cluster update #{inspect(agi)}")

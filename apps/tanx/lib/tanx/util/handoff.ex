@@ -230,6 +230,7 @@ defmodule Tanx.Util.Handoff do
     Logger.info("**** Terminating handoff due to #{inspect(reason)}")
 
     GenServer.call(state.processes_pid, :sync)
+    Process.sleep(100)
 
     GenServer.call(
       state.members_pid,
@@ -238,6 +239,7 @@ defmodule Tanx.Util.Handoff do
 
     GenServer.stop(state.members_pid, reason, 2000)
     GenServer.stop(state.processes_pid, reason, 2000)
+    :ok
   end
 
   defp generate_node_id(bytes \\ 16) do
