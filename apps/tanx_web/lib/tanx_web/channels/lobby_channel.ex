@@ -14,7 +14,7 @@ defmodule TanxWeb.LobbyChannel do
       Tanx.Cluster.list_live_game_ids()
       |> Tanx.Cluster.load_game_meta()
       |> Enum.filter(& &1)
-      |> Enum.sort_by(& &1.display_name)
+      |> Enum.sort_by(& Map.get(&1.settings, :display_name))
 
     Process.send_after(self(), :interval, @interval_millis)
 
@@ -37,7 +37,7 @@ defmodule TanxWeb.LobbyChannel do
 
   def handle_out("started", meta, socket) do
     games = [meta | socket.assigns[:games]]
-    games = Enum.sort_by(games, & &1.display_name)
+    games = Enum.sort_by(games, & Map.get(&1.settings, :display_name))
     send_update(socket, games)
     {:noreply, assign(socket, :games, games)}
   end
@@ -99,7 +99,7 @@ defmodule TanxWeb.LobbyChannel do
 
       games =
         Enum.filter(old_games, fn g -> not Enum.member?(del_game_ids, g.id) end) ++ add_games
-      games = Enum.sort_by(games, & &1.display_name)
+      games = Enum.sort_by(games, & Map.get(&1.settings, :display_name))
 
       send_update(socket, games)
       {:noreply, assign(socket, :games, games)}
@@ -109,7 +109,7 @@ defmodule TanxWeb.LobbyChannel do
   defp send_update(socket, games) do
     games =
       Enum.map(games, fn meta ->
-        %{i: meta.id, n: meta.display_name, d: meta.node}
+        %{i: meta.id, n: Map.get(meta.settings, :display_name), d: meta.node}
       end)
 
     build_id = System.get_env("TANX_BUILD_ID") || "local"

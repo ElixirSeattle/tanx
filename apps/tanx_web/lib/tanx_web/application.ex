@@ -38,7 +38,9 @@ defmodule TanxWeb.Application do
     TanxWeb.Endpoint.broadcast!("lobby", "started", meta)
 
     Tanx.Game.add_callback(game_pid, Tanx.ContinuousGame.PlayersChanged, :tanxweb, fn event ->
-      TanxWeb.Endpoint.broadcast!("game:" <> game_id, "view_players", event)
+      spawn(fn ->
+        TanxWeb.Endpoint.broadcast!("game:" <> game_id, "view_players", event)
+      end)
 
       if Enum.empty?(event.players) do
         spawn(fn ->
@@ -50,15 +52,19 @@ defmodule TanxWeb.Application do
     end)
 
     Tanx.Game.add_callback(game_pid, Tanx.Game.Notifications.Ended, :tanxweb, fn _event ->
-      TanxWeb.Endpoint.broadcast!("lobby", "ended", %{id: game_id})
+      spawn(fn ->
+        TanxWeb.Endpoint.broadcast!("lobby", "ended", %{id: game_id})
+      end)
     end)
 
     Tanx.Game.add_callback(game_pid, Tanx.Game.Notifications.Moved, :tanxweb, fn event ->
-      TanxWeb.Endpoint.broadcast!("lobby", "moved", %{
-        id: game_id,
-        from: event.from_node,
-        to: event.to_node
-      })
+      spawn(fn ->
+        TanxWeb.Endpoint.broadcast!("lobby", "moved", %{
+          id: game_id,
+          from: event.from_node,
+          to: event.to_node
+        })
+      end)
     end)
 
     {:ok, meta}

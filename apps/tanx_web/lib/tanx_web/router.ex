@@ -17,8 +17,7 @@ defmodule TanxWeb.Router do
     pipe_through(:browser)
 
     get("/", PageController, :index)
-    # TEMP
-    get("/readyz", PageController, :ready)
+    get("/statz", PageController, :stats)
   end
 
   scope "/k8s", TanxWeb do

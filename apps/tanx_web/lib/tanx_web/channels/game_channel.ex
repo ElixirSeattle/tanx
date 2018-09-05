@@ -4,25 +4,30 @@ defmodule TanxWeb.GameChannel do
   require Logger
 
   def join("game:" <> game, %{"name" => player_name, "id" => player}, socket) do
-    {:ok, ^player} =
-      game
-      |> Tanx.Cluster.game_process()
-      |> Tanx.ContinuousGame.rename_player(player, player_name)
+    game_proc = Tanx.Cluster.game_process(game)
+    case Tanx.ContinuousGame.rename_player(game_proc, player, player_name) do
+      {:ok, ^player} ->
+        {:ok, meta} = Tanx.Game.get_meta(game_proc)
+        game_info = %{i: meta.id, n: meta.settings.display_name, d: meta.node}
 
-    socket =
-      socket
-      |> assign(:game, game)
-      |> assign(:player, player)
-      |> assign(:player_name, player_name)
+        socket =
+          socket
+          |> assign(:game, game)
+          |> assign(:player, player)
+          |> assign(:player_name, player_name)
 
-    {:ok, %{i: player}, socket}
+        {:ok, %{i: player, g: game_info}, socket}
+
+      {:error, :player_not_found, _} ->
+        {:error, %{e: "player_not_found"}}
+    end
   end
 
   def join("game:" <> game, %{"name" => player_name}, socket) do
-    {:ok, player} =
-      game
-      |> Tanx.Cluster.game_process()
-      |> Tanx.ContinuousGame.add_player(player_name)
+    game_proc = Tanx.Cluster.game_process(game)
+    {:ok, player} = Tanx.ContinuousGame.add_player(game_proc, player_name)
+    {:ok, meta} = Tanx.Game.get_meta(game_proc)
+    game_info = %{i: meta.id, n: meta.settings.display_name, d: meta.node}
 
     socket =
       socket
@@ -30,7 +35,7 @@ defmodule TanxWeb.GameChannel do
       |> assign(:player, player)
       |> assign(:player_name, player_name)
 
-    {:ok, %{i: player}, socket}
+    {:ok, %{i: player, g: game_info}, socket}
   end
 
   def handle_in("view_players", _msg, socket) do
@@ -141,6 +146,24 @@ defmodule TanxWeb.GameChannel do
     {:noreply, socket}
   end
 
+  def handle_in("leave", _, socket) do
+    socket =
+      case socket.assigns[:player] do
+        nil ->
+          socket
+
+        player ->
+          game_id = socket.assigns[:game]
+          Logger.info("**** Removing #{inspect(player)} from #{inspect(game_id)}")
+          game_id
+          |> Tanx.Cluster.game_process()
+          |> Tanx.ContinuousGame.remove_player(player)
+
+          assign(socket, :player, nil)
+      end
+    {:noreply, socket}
+  end
+
   def handle_in(msg, payload, socket) do
     Logger.error("Unknown message received on game channel: #{inspect(msg)}: #{inspect(payload)}")
     {:noreply, socket}
@@ -165,21 +188,7 @@ defmodule TanxWeb.GameChannel do
   end
 
   def terminate(reason, socket) do
-    # Logger.info("Connection terminated due to #{inspect(reason)}")
-
-    socket =
-      case socket.assigns[:player] do
-        nil ->
-          socket
-
-        player ->
-          socket.assigns[:game]
-          |> Tanx.Cluster.game_process()
-          |> Tanx.ContinuousGame.remove_player(player)
-
-          assign(socket, :player, nil)
-      end
-
+    Logger.info("Channel terminated due to #{inspect(reason)}")
     {reason, socket}
   end
 end

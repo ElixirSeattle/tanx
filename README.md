@@ -148,6 +148,7 @@ Now we'll set up Google Kubernetes Engine to host an online tanx server.
 3.  Configure gcloud to use your cluster as default so you don't have to
     specify it every time for the remaining gcloud commands.
 
+        gcloud container clusters get-credentials tanx-cluster-1
         gcloud config set container/cluster tanx-cluster-1
 
     Replace the name if you named your cluster differently.

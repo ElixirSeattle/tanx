@@ -1,5 +1,5 @@
 defmodule Tanx.ContinuousGame.Impl do
-  @default_player_timeout 7200.0
+  @default_player_timeout 3600.0
 
   defstruct(
     maze: nil,
@@ -371,6 +371,10 @@ defimpl Tanx.Game.Variant, for: Tanx.ContinuousGame.Impl do
 
   def event(data, _event) do
     {data, [], []}
+  end
+
+  def stats(data, _arena, _time) do
+    %{player_count: Enum.count(data.player_handles)}
   end
 
   def stop(_data, _arena, _time) do

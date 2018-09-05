@@ -1,12 +1,6 @@
 defmodule Tanx.Game.Manager do
   def start_link(game_id, opts \\ []) do
-    process_opts =
-      case Keyword.fetch(opts, :game_address) do
-        {:ok, addr} -> [name: addr]
-        :error -> []
-      end
-
-    GenServer.start(__MODULE__, {game_id, opts}, process_opts)
+    GenServer.start(__MODULE__, {game_id, opts})
   end
 
   use GenServer
@@ -29,13 +23,13 @@ defmodule Tanx.Game.Manager do
       handoff: nil,
       opts: [],
       node: nil,
-      display_name: "",
       data: nil,
       arena: nil,
       commands: [],
       sent_commands: [],
       callbacks: %{},
-      time: 0.0
+      time: 0.0,
+      settings: %{}
     )
   end
 
@@ -62,11 +56,13 @@ defmodule Tanx.Game.Manager do
   end
 
   def handle_call({:meta}, _from, state) do
+    stats = Tanx.Game.Variant.stats(state.data, state.arena, state.time)
     meta = %Tanx.Game.Meta{
       id: state.game_id,
       running: state.running,
-      display_name: state.display_name,
-      node: Node.self()
+      node: Node.self(),
+      settings: state.settings,
+      stats: stats
     }
 
     {:reply, {:ok, meta}, state}
@@ -182,6 +178,8 @@ defmodule Tanx.Game.Manager do
   def flatten_and_reverse(output, cmd), do: [cmd | output]
 
   defp state_from_handoff(base_state, handoff_state) do
+    Horde.Registry.register(Tanx.HordeRegistry, handoff_state.game_id)
+
     opts =
       Keyword.update!(handoff_state.opts, :time_config, fn
         tc when is_integer(tc) -> Tanx.Util.SystemTime.updated_offset(handoff_state.time)
@@ -228,7 +226,7 @@ defmodule Tanx.Game.Manager do
       running: false,
       handoff: handoff,
       opts: opts,
-      display_name: display_name,
+      settings: %{display_name: display_name},
       node: Node.self()
     }
   end
@@ -249,6 +247,8 @@ defmodule Tanx.Game.Manager do
     if base_state.handoff do
       Tanx.Util.Handoff.unrequest(base_state.handoff, base_state.game_id)
     end
+
+    Horde.Registry.register(Tanx.HordeRegistry, base_state.game_id)
 
     opts = base_state.opts
     time_config = Keyword.get(opts, :time_config, Tanx.Util.SystemTime.cur_offset())
@@ -308,7 +308,7 @@ defmodule Tanx.Game.Manager do
       running: false,
       handoff: state.handoff,
       opts: state.opts,
-      display_name: state.display_name,
+      settings: state.settings,
       node: Node.self()
     }
   end

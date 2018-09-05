@@ -36,9 +36,9 @@ defmodule Tanx.Game do
     defstruct(
       id: nil,
       running: false,
-      display_name: "",
       node: nil,
-      data: nil
+      settings: %{},
+      stats: %{}
     )
   end
 

@@ -13,6 +13,8 @@ defmodule Tanx.Cluster do
     Supervisor.stop(Tanx.Cluster.Supervisor)
   end
 
+  def connect_node(:""), do: nil
+
   def connect_node(node) do
     Horde.Cluster.join_hordes(Tanx.HordeHandoff, {Tanx.HordeHandoff, node})
     Horde.Cluster.join_hordes(Tanx.HordeSupervisor, {Tanx.HordeSupervisor, node})

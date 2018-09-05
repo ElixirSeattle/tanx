@@ -1,5 +1,6 @@
-const JOIN_RETRY_INTERVAL = 100;
+const JOIN_RETRY_INTERVAL = 200;
 const JOIN_RETRY_COUNT = 10;
+const REJOIN_RETRY_COUNT = 20;
 
 
 class Lobby {
@@ -14,10 +15,15 @@ class Lobby {
     this._leaveCallbacks = [];
     this._rejoinCallbacks = [];
     this._gameInfo = {};
+    this._rejoinRetries = REJOIN_RETRY_COUNT;
 
     this._setupControls();
 
     this._setupGameList();
+
+    $(window).on('beforeunload', () => {
+      this.leave();
+    });
   }
 
 
@@ -44,6 +50,7 @@ class Lobby {
     this._leaveCallbacks.forEach(callback => {
       callback(gameId, gameChannel);
     });
+    gameChannel.push('leave', {});
     gameChannel.leave();
   }
 
@@ -100,8 +107,6 @@ class Lobby {
       .on('keyup', (event) => {
         event.stopPropagation();
       });
-
-
 
     this.leave();
   }
@@ -165,8 +170,8 @@ class Lobby {
     let playerName = $('#tanx-name-field').val();
     let gameChannel = this._socket.channel("game:" + gameId, {name: playerName});
     gameChannel.onError(reason => {
-      console.log("received error on game channel");
-      this._gameChannel = null;
+      console.log("Received error on game channel");
+      //this._gameChannel = null;
     });
 
     let gameJoiner = gameChannel.join();
@@ -174,38 +179,52 @@ class Lobby {
       this._joinPayload = gameJoiner.payload;
       this._gameChannel = gameChannel;
       if (this._gameId == null) {
-        gameJoiner.payload.id = reply.i;
-        this._finishJoin(gameId);
+        this._joinPayload.id = reply.i;
+        this._finishJoin(reply.g);
       } else {
-        this._finishRejoin();
+        this._finishRejoin(reply.g);
       }
+      this._rejoinRetries = REJOIN_RETRY_COUNT;
     });
     gameJoiner.receive("error", reply => {
       if (this._gameId == null) {
+        console.log("Error on join");
+        gameChannel.leave();
         window.setTimeout(() => {
           this._joinGameWithRetry(gameId, remaining - 1);
         }, JOIN_RETRY_INTERVAL);
+      } else {
+        console.log("Error on rejoin");
+        this._rejoinRetries--;
+        if (reply.e == "player_not_found") {
+          console.log("Leaving due to player not found");
+          this.leave();
+        } else if (this._rejoinRetries <= 0) {
+          console.log("Leaving due to too many failed rejoins");
+          this.leave();
+        }
       }
     });
   }
 
 
-  _finishJoin(gameId) {
-    let game = this._gameInfo[gameId];
+  _finishJoin(game) {
+    console.log("Joining game channel for game " + game.i);
     $('#game-name-span').text(game.n || "(untitled game)");
     $('#game-node-span').text(game.d);
 
     $('#tanx-game-list').hide();
     $('#tanx-game-info').show();
 
-    this._gameId = gameId;
+    this._gameId = game.i;
     this._joinCallbacks.forEach(callback => {
-      callback(gameId, this._gameChannel);
+      callback(game.i, this._gameChannel);
     });
   }
 
 
-  _finishRejoin() {
+  _finishRejoin(game) {
+    console.log("Rejoining game channel for game " + game.i);
     this._rejoinCallbacks.forEach(callback => {
       callback(this._gameId, this._gameChannel);
     });
