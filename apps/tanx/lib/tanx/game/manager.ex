@@ -5,6 +5,8 @@ defmodule Tanx.Game.Manager do
 
   use GenServer
 
+  @handoff_timeout 120_000
+
   def child_spec({game_id, opts}) do
     %{
       id: Tanx.Game.manager_process_id(game_id),
@@ -36,6 +38,7 @@ defmodule Tanx.Game.Manager do
   def init({game_id, opts}) do
     Process.flag(:trap_exit, true)
     game_data = Keyword.get(opts, :game_data, nil)
+    Process.send_after(self(), {:handoff_timeout}, @handoff_timeout)
     {:ok, do_init(game_id, opts) |> do_up(game_data)}
   end
 
@@ -156,6 +159,15 @@ defmodule Tanx.Game.Manager do
 
   def handle_info({:EXIT, _pid, reason}, state) do
     {:stop, reason, state}
+  end
+
+  def handle_info({:handoff_timeout}, %State{running: false} = state) do
+    Logger.warn("**** Stopping stale game: #{inspect(state.game_id)}")
+    {:stop, :normal, state}
+  end
+
+  def handle_info({:handoff_timeout}, state) do
+    {:noreply, state}
   end
 
   def handle_info(whatevah, state) do

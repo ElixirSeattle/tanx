@@ -168,7 +168,7 @@ defmodule Tanx.Cluster do
     end
 
     def handle_info(:update_game_ids, state) do
-      Logger.info("**** Starting update_game_ids")
+      # Logger.info("**** Starting update_game_ids")
       {alive, dead} = Enum.split_with(Tanx.Cluster.list_game_ids(), &Tanx.Cluster.game_alive?/1)
       dgi = update_dead_game_ids(dead, state.dead_game_ids)
       agi = Enum.sort(alive)
@@ -196,7 +196,7 @@ defmodule Tanx.Cluster do
     end
 
     defp update_dead_game_ids(dead, old_dgi) do
-      Logger.info("**** Starting update_dead_game_ids")
+      # Logger.info("**** Starting update_dead_game_ids")
       time = System.monotonic_time(:millisecond)
 
       Enum.reduce(dead, %{}, fn g, d ->
@@ -217,7 +217,7 @@ defmodule Tanx.Cluster do
     end
 
     defp send_update(receivers, agi, agi) do
-      Logger.info("**** No cluster update to send")
+      # Logger.info("**** No cluster update to send")
       receivers
     end
 
