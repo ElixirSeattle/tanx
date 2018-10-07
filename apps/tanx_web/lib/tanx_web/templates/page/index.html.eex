@@ -54,7 +54,7 @@
       <div class="row" id="tanx-player-info">
         <div class="col-12">
           <h4>Player Info</h4>
-          <div>Connected to node: <span id="client-node-name"></span></div>
+          <div>On node: <span id="client-node-name"></span></div>
           <div>Running build: <span id="client-build-id"></span></div>
           <div class="form-inline">
             <span class="mr-2">as</span>
