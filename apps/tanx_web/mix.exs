@@ -44,7 +44,7 @@ defmodule TanxWeb.Mixfile do
       {:phoenix_live_reload, "~> 1.1", only: :dev},
       {:gettext, "~> 0.11"},
       {:tanx, in_umbrella: true},
-      {:cowboy, "~> 1.1"}
+      {:plug_cowboy, "~> 1.0"}
     ]
   end
 

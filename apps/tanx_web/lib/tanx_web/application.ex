@@ -71,9 +71,10 @@ defmodule TanxWeb.Application do
   end
 
   def connect_node(node) do
-    :net_kernel.connect_node(node)
-    Tanx.Cluster.connect_node(node)
-    Logger.info("**** Connected #{inspect(node())} to #{inspect(node)}")
+    Node.connect(node)
+    nodes = Node.list()
+    Tanx.Cluster.connect_nodes(nodes)
+    Logger.info("**** Connected #{inspect(node())} to #{inspect(nodes)}")
     true
   end
 

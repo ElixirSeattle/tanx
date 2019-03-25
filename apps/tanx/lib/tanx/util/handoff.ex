@@ -48,7 +48,7 @@ defmodule Tanx.Util.Handoff do
     node_id = generate_node_id()
 
     {:ok, members_pid} =
-      DeltaCrdt.CausalCrdt.start_link(
+      DeltaCrdt.start_link(
         DeltaCrdt.AWLWWMap,
         notify: {self(), :members_updated},
         sync_interval: 5,
@@ -57,7 +57,7 @@ defmodule Tanx.Util.Handoff do
       )
 
     {:ok, processes_pid} =
-      DeltaCrdt.CausalCrdt.start_link(
+      DeltaCrdt.start_link(
         DeltaCrdt.AWLWWMap,
         sync_interval: 5,
         ship_interval: 50,
@@ -150,7 +150,7 @@ defmodule Tanx.Util.Handoff do
   end
 
   def handle_info({:processes_updated, reply_to}, state) do
-    processes = DeltaCrdt.CausalCrdt.read(state.processes_pid, 2000)
+    processes = DeltaCrdt.read(state.processes_pid, 2000)
 
     :ets.insert(state.ets_table, Map.to_list(processes))
 
@@ -191,7 +191,7 @@ defmodule Tanx.Util.Handoff do
   end
 
   def handle_info({:members_updated, reply_to}, state) do
-    members = DeltaCrdt.CausalCrdt.read(state.members_pid, 2000)
+    members = DeltaCrdt.read(state.members_pid, 2000)
 
     member_pids =
       MapSet.new(members, fn {_key, {members_pid, _processes_pid}} -> members_pid end)

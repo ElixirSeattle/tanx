@@ -13,12 +13,17 @@ defmodule Tanx.Cluster do
     Supervisor.stop(Tanx.Cluster.Supervisor)
   end
 
-  def connect_node(:""), do: nil
+  def connect_nodes([]), do: :ok
 
-  def connect_node(node) do
-    Horde.Cluster.join_hordes(Tanx.HordeHandoff, {Tanx.HordeHandoff, node})
-    Horde.Cluster.join_hordes(Tanx.HordeSupervisor, {Tanx.HordeSupervisor, node})
-    Horde.Cluster.join_hordes(Tanx.HordeRegistry, {Tanx.HordeRegistry, node})
+  def connect_nodes(nodes) do
+    nodes = [Node.self() | nodes]
+    Horde.Cluster.set_members(Tanx.HordeHandoff,
+                              Enum.map(nodes, fn n -> {Tanx.HordeHandoff, n} end))
+    Horde.Cluster.set_members(Tanx.HordeSupervisor,
+                              Enum.map(nodes, fn n -> {Tanx.HordeSupervisor, n} end))
+    Horde.Cluster.set_members(Tanx.HordeRegistry,
+                              Enum.map(nodes, fn n -> {Tanx.HordeRegistry, n} end))
+    :ok
   end
 
   def start_game(game_spec, opts \\ []) do
@@ -82,7 +87,6 @@ defmodule Tanx.Cluster do
   end
 
   def game_alive?(game_id) do
-    # Logger.info("**** Checking game_alive for #{inspect(game_id)}")
     Horde.Registry.lookup(Tanx.HordeRegistry, game_id) != :undefined
   end
 
@@ -103,9 +107,9 @@ defmodule Tanx.Cluster do
 
   defp start_supervisor() do
     children = [
-      {Tanx.Util.Handoff, name: Tanx.HordeHandoff},
+      {Tanx.Handoff, name: Tanx.HordeHandoff},
       {Horde.Supervisor, name: Tanx.HordeSupervisor, strategy: :one_for_one, children: []},
-      {Horde.Registry, name: Tanx.HordeRegistry},
+      {Horde.Registry, name: Tanx.HordeRegistry, keys: :unique},
       {Tanx.Cluster.Tracker, []}
     ]
 
@@ -120,9 +124,8 @@ defmodule Tanx.Cluster do
 
     opts
     |> Keyword.get(:connect, default_connect)
-    |> Enum.each(fn node ->
-      node |> String.to_atom() |> connect_node()
-    end)
+    |> Enum.map(fn node -> node |> String.to_atom() end)
+    |> connect_nodes()
 
     :ok
   end

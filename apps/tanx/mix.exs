@@ -37,7 +37,7 @@ defmodule Tanx.Mixfile do
   defp deps do
     [
       {:poison, "~> 3.1"},
-      {:horde, git: "https://github.com/dazuma/horde.git", branch: "tanx"}
+      {:horde, "~> 0.5.0-rc.7"}
     ]
   end
 

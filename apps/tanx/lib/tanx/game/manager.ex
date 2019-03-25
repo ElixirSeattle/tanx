@@ -190,7 +190,7 @@ defmodule Tanx.Game.Manager do
   def flatten_and_reverse(output, cmd), do: [cmd | output]
 
   defp state_from_handoff(base_state, handoff_state) do
-    Horde.Registry.register(Tanx.HordeRegistry, handoff_state.game_id)
+    Horde.Registry.register(Tanx.HordeRegistry, handoff_state.game_id, self())
 
     opts =
       Keyword.update!(handoff_state.opts, :time_config, fn
@@ -260,7 +260,7 @@ defmodule Tanx.Game.Manager do
       Tanx.Util.Handoff.unrequest(base_state.handoff, base_state.game_id)
     end
 
-    Horde.Registry.register(Tanx.HordeRegistry, base_state.game_id)
+    Horde.Registry.register(Tanx.HordeRegistry, base_state.game_id, self())
 
     opts = base_state.opts
     time_config = Keyword.get(opts, :time_config, Tanx.Util.SystemTime.cur_offset())
