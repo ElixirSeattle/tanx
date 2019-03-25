@@ -1,3 +1,13 @@
+# Temporary hack: bypass asdf 0.7.0 because its shims are eating signals.
+# See https://github.com/asdf-vm/asdf/issues/475
+elixir_path = (`asdf which elixir` rescue "").strip
+erl_path = (`asdf which erl` rescue "").strip
+unless elixir_path.empty? || erl_path.empty?
+  elixir_path = ::File.dirname(elixir_path)
+  erl_path = ::File.dirname(erl_path)
+  ENV["PATH"] = "#{erl_path}:#{elixir_path}:#{ENV['PATH']}"
+end
+
 tool "launch" do
   flag :base_port, accept: Integer, default: 4000
 

@@ -168,7 +168,8 @@ class Lobby {
     if (remaining <= 0) return;
 
     let playerName = $('#tanx-name-field').val();
-    let gameChannel = this._socket.channel("game:" + gameId, {name: playerName});
+    this._joinPayload = {name: playerName};
+    let gameChannel = this._socket.channel("game:" + gameId, this._joinPayload);
     gameChannel.onError(reason => {
       console.log("Received error on game channel");
       //this._gameChannel = null;
@@ -176,7 +177,6 @@ class Lobby {
 
     let gameJoiner = gameChannel.join();
     gameJoiner.receive("ok", reply => {
-      this._joinPayload = gameJoiner.payload;
       this._gameChannel = gameChannel;
       if (this._gameId == null) {
         this._joinPayload.id = reply.i;

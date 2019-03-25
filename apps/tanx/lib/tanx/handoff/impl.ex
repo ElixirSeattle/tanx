@@ -159,11 +159,6 @@ defmodule Tanx.Handoff.Impl do
   def handle_call({:request, name, message, pid}, _from, state) do
     case :ets.lookup(state.ets_table, name) do
       [{^name, data}] ->
-        GenServer.cast(
-          state.processes_pid,
-          {:operation, {:remove, [name]}}
-        )
-
         Logger.info("**** Handoff fulfilling request for: #{inspect(name)}")
         DeltaCrdt.mutate_async(handoff_crdt_name(state.name), :remove, [name])
         :ets.delete(state.ets_table, name)
@@ -185,12 +180,7 @@ defmodule Tanx.Handoff.Impl do
     Logger.info("**** Handoff storing data for: #{inspect(name)}")
     case Map.get(state.requests, name) do
       nil ->
-        GenServer.call(
-          state.processes_pid,
-          {:operation, {:add, [name, data]}}
-        )
-
-        DeltaCrdt.mutate_async(handoff_crdt_name(state.name), :add, [name, data])
+        DeltaCrdt.mutate(handoff_crdt_name(state.name), :add, [name, data])
         :ets.insert(state.ets_table, {name, data})
 
       {pid, message} ->
