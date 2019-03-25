@@ -8,8 +8,8 @@
     <meta name="author" content="">
 
     <title>Elixir Tanx</title>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/bootstrap-4.1.1.min.css") %>">
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/bootstrap-4.1.1.min.css") %>">
+    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>">
   </head>
 
   <body>

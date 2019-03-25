@@ -1,4 +1,4 @@
-import ArenaRender from "js/arena/render"
+import ArenaRender from "./render"
 
 
 const NUM_TIMESTAMPS = 10;

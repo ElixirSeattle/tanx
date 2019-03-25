@@ -37,14 +37,16 @@ defmodule TanxWeb.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:gettext, "~> 0.16"},
+      {:jason, "~> 1.0"},
       {:libcluster, "~> 3.0"},
-      {:phoenix, "~> 1.3.0"},
-      {:phoenix_pubsub, "~> 1.0"},
-      {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.1", only: :dev},
-      {:gettext, "~> 0.11"},
-      {:tanx, in_umbrella: true},
-      {:plug_cowboy, "~> 1.0"}
+      {:phoenix, "~> 1.4.2"},
+      {:phoenix_html, "~> 2.13"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:phoenix_pubsub, "~> 1.1"},
+      {:plug, "~> 1.7"},
+      {:plug_cowboy, "~> 2.0"},
+      {:tanx, in_umbrella: true}
     ]
   end
 

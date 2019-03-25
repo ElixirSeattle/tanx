@@ -1,6 +1,6 @@
 defmodule TanxWeb.JsonData do
   defmodule Player do
-    @derive [Poison.Encoder]
+    @derive Jason.Encoder
     defstruct(
       n: "",
       me: false,
@@ -11,7 +11,7 @@ defmodule TanxWeb.JsonData do
   end
 
   defmodule Structure do
-    @derive [Poison.Encoder]
+    @derive Jason.Encoder
     defstruct(
       h: 20.0,
       w: 20.0,
@@ -22,7 +22,7 @@ defmodule TanxWeb.JsonData do
   end
 
   defmodule EntryPoint do
-    @derive [Poison.Encoder]
+    @derive Jason.Encoder
     defstruct(
       n: "",
       x: 0.0,
@@ -31,7 +31,7 @@ defmodule TanxWeb.JsonData do
   end
 
   defmodule Arena do
-    @derive [Poison.Encoder]
+    @derive Jason.Encoder
     defstruct(
       t: [],
       m: [],
@@ -43,7 +43,7 @@ defmodule TanxWeb.JsonData do
   end
 
   defmodule Tank do
-    @derive [Poison.Encoder]
+    @derive Jason.Encoder
     defstruct(
       me: false,
       n: "",
@@ -58,7 +58,7 @@ defmodule TanxWeb.JsonData do
   end
 
   defmodule Missile do
-    @derive [Poison.Encoder]
+    @derive Jason.Encoder
     defstruct(
       me: false,
       x: 0.0,
@@ -68,7 +68,7 @@ defmodule TanxWeb.JsonData do
   end
 
   defmodule Explosion do
-    @derive [Poison.Encoder]
+    @derive Jason.Encoder
     defstruct(
       x: 0.0,
       y: 0.0,
@@ -79,7 +79,7 @@ defmodule TanxWeb.JsonData do
   end
 
   defmodule PowerUp do
-    @derive [Poison.Encoder]
+    @derive Jason.Encoder
     defstruct(
       x: 0.0,
       y: 0.0,

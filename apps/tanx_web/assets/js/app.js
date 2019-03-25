@@ -1,15 +1,17 @@
+import '../css/app.scss';
+
 
 import {Socket} from "phoenix"
 import "phoenix_html"
 
-import ChatClient from "js/chat"
-import Arena from "js/arena"
-import ArenaAnimate from "js/arena/animate"
-import ArenaSound from "js/arena/sound"
-import Lobby from "js/lobby"
-import PlayerList from "js/player_list"
-import Settings from "js/settings"
-import About from "js/about"
+import ChatClient from "./chat"
+import Arena from "./arena"
+import ArenaAnimate from "./arena/animate"
+import ArenaSound from "./arena/sound"
+import Lobby from "./lobby"
+import PlayerList from "./player_list"
+import Settings from "./settings"
+import About from "./about"
 
 
 class TanxApp {

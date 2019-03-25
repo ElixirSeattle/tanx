@@ -1,7 +1,7 @@
 defmodule TanxWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :tanx_web
 
-  socket("/ws", TanxWeb.GameSocket)
+  socket("/ws", TanxWeb.GameSocket, websocket: true)
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -30,7 +30,7 @@ defmodule TanxWeb.Endpoint do
     Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
-    json_decoder: Poison
+    json_decoder: Jason
   )
 
   plug(Plug.MethodOverride)

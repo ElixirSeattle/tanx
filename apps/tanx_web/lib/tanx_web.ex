@@ -21,7 +21,7 @@ defmodule TanxWeb do
     quote do
       use Phoenix.Controller, namespace: TanxWeb
       import Plug.Conn
-      import TanxWeb.Router.Helpers
+      alias TanxWeb.Router.Helpers, as: Routes
       import TanxWeb.Gettext
     end
   end
@@ -38,7 +38,7 @@ defmodule TanxWeb do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import TanxWeb.Router.Helpers
+      alias TanxWeb.Router.Helpers, as: Routes
       import TanxWeb.ErrorHelpers
       import TanxWeb.Gettext
     end

@@ -1,5 +1,5 @@
-import ArenaStructure from "js/arena/structure"
-import ArenaControls from "js/arena/controls"
+import ArenaStructure from "./arena/structure"
+import ArenaControls from "./arena/controls"
 
 
 class Arena {

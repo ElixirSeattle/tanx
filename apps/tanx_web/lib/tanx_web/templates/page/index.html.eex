@@ -191,10 +191,10 @@
   <source src="sounds/tanx-music-loop.m4a" type="audio/mp4" />
 </audio>
 
-<script src="<%= static_path(@conn, "/js/jquery-3.3.1.min.js") %>"></script>
-<script src="<%= static_path(@conn, "/js/bootstrap-4.1.1.min.js") %>"></script>
+<script src="<%= Routes.static_path(@conn, "/js/jquery-3.3.1.min.js") %>"></script>
+<script src="<%= Routes.static_path(@conn, "/js/bootstrap-4.1.1.min.js") %>"></script>
 
-<script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+<script src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
 <script>
   require("js/app");
 </script>

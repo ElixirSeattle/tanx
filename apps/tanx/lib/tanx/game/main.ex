@@ -33,6 +33,7 @@ defmodule Tanx.Game do
   end
 
   defmodule Meta do
+    @derive Jason.Encoder
     defstruct(
       id: nil,
       running: false,
