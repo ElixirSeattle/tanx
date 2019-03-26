@@ -81,7 +81,7 @@ Google Kubernetes Engine.
 ### Building
 
 Tanx builds are done in two stages. First, you build base images that include
-precompiled dependencies, and build tools such as brunch. This build can take
+precompiled dependencies, and build tools such as webpack. This build can take
 several minutes to complete. Then, a normal application build uses those base
 images and just builds the app itself, which is usually pretty quick.
 Generally, you must perform a base build once at the beginning, and then any

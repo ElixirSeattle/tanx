@@ -6,7 +6,7 @@ RUN mv /opt/base-app/_build _build \
     && mv /opt/base-app/apps/tanx_web/assets/node_modules apps/tanx_web/assets/node_modules \
     && mix compile \
     && cd apps/tanx_web/assets \
-    && node_modules/brunch/bin/brunch build -p \
+    && node_modules/webpack/bin/webpack.js --mode production \
     && cd .. \
     && mix phx.digest
 RUN mix release --env=prod --verbose \
