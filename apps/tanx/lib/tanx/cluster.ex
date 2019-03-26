@@ -13,19 +13,6 @@ defmodule Tanx.Cluster do
     Supervisor.stop(Tanx.Cluster.Supervisor)
   end
 
-  def connect_nodes([]), do: :ok
-
-  def connect_nodes(nodes) do
-    nodes = [Node.self() | nodes]
-    Horde.Cluster.set_members(Tanx.HordeHandoff,
-                              Enum.map(nodes, fn n -> {Tanx.HordeHandoff, n} end))
-    Horde.Cluster.set_members(Tanx.HordeSupervisor,
-                              Enum.map(nodes, fn n -> {Tanx.HordeSupervisor, n} end))
-    Horde.Cluster.set_members(Tanx.HordeRegistry,
-                              Enum.map(nodes, fn n -> {Tanx.HordeRegistry, n} end))
-    :ok
-  end
-
   def start_game(game_spec, opts \\ []) do
     game_id = Tanx.Util.ID.create("G", Tanx.Cluster.list_game_ids(), 8)
 
@@ -95,6 +82,18 @@ defmodule Tanx.Cluster do
     members |> Map.keys() |> Enum.sort()
   end
 
+  def update_nodes() do
+    nodes = Enum.sort([Node.self() | Node.list()])
+    Logger.info("**** Node list updated to #{inspect(nodes)}")
+    Horde.Cluster.set_members(Tanx.HordeHandoff,
+                              Enum.map(nodes, fn n -> {Tanx.HordeHandoff, n} end))
+    Horde.Cluster.set_members(Tanx.HordeSupervisor,
+                              Enum.map(nodes, fn n -> {Tanx.HordeSupervisor, n} end))
+    Horde.Cluster.set_members(Tanx.HordeRegistry,
+                              Enum.map(nodes, fn n -> {Tanx.HordeRegistry, n} end))
+    nodes
+  end
+
   def game_process(game_id), do: {:via, Horde.Registry, {Tanx.HordeRegistry, game_id}}
 
   def list_live_game_ids() do
@@ -124,8 +123,9 @@ defmodule Tanx.Cluster do
 
     opts
     |> Keyword.get(:connect, default_connect)
-    |> Enum.map(fn node -> node |> String.to_atom() end)
-    |> connect_nodes()
+    |> Enum.each(fn node ->
+      node |> String.to_atom() |> Node.connect()
+    end)
 
     :ok
   end
@@ -146,6 +146,7 @@ defmodule Tanx.Cluster do
       defstruct(
         game_ids: [],
         dead_game_ids: %{},
+        nodes: [],
         receivers: []
       )
     end
@@ -160,9 +161,11 @@ defmodule Tanx.Cluster do
 
     def init({}) do
       Logger.info("**** Starting tracker")
+      :net_kernel.monitor_nodes(true, [])
+      Tanx.Cluster.update_nodes()
       Process.flag(:trap_exit, true)
       Process.send_after(self(), :update_game_ids, @interval_millis)
-      {:ok, %State{}}
+      {:ok, %State{nodes: [Node.self()]}}
     end
 
     def handle_info({:EXIT, _pid, reason}, state) do
@@ -178,6 +181,11 @@ defmodule Tanx.Cluster do
       receivers = send_update(state.receivers, agi, state.game_ids)
       Process.send_after(self(), :update_game_ids, @interval_millis)
       {:noreply, %State{state | game_ids: agi, dead_game_ids: dgi, receivers: receivers}}
+    end
+
+    def handle_info({node_event, _node}, state) when node_event == :nodeup or node_event == :nodedown do
+      nodes = Tanx.Cluster.update_nodes()
+      {:noreply, %State{state | nodes: nodes}}
     end
 
     def handle_info(request, state) do
