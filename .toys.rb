@@ -40,9 +40,14 @@ tool "launch" do
     controller = exec(cmd, env: env, background: true, out: :controller)
     spinner(leading_text: "Starting port #{port} with pid #{controller.pid} ...",
             final_text: "Done\n") do
+      log_name = "tmp/#{port}.log"
+      log_file = File.open(log_name, "a")
       loop do
-        if controller.out.gets =~ /Running TanxWeb\.Endpoint/
-          controller.redirect_out("tmp/#{port}.log", "a")
+        line = controller.out.gets
+        log_file.puts line
+        if line =~ /Running TanxWeb\.Endpoint/
+          log_file.close
+          controller.redirect_out(log_name, "a")
           break
         end
       end
