@@ -37,7 +37,7 @@ defmodule Tanx.Mixfile do
   defp deps do
     [
       {:jason, "~> 1.0"},
-      {:horde, "~> 0.5.0-rc.7"}
+      {:horde, "~> 0.5.0-rc.11"}
     ]
   end
 

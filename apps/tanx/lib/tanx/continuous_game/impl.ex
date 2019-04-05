@@ -1,5 +1,5 @@
 defmodule Tanx.ContinuousGame.Impl do
-  @default_player_timeout 3600.0
+  @default_player_timeout 60.0
 
   defstruct(
     maze: nil,
